@@ -6,6 +6,10 @@
 
 **FRs Covered:** FR35, FR36, FR37, FR38, FR39, FR40, FR41, FR42, FR43, FR44, FR45, FR46, FR47, FR48, FR56
 
+> **MANDATORY:** A Tech Spec MUST be drafted before creating stories for this epic. This requirement was established in the Epic 2+3 retrospective (2025-11-30) after identifying that missing tech specs made AC validation and review more difficult.
+
+> **MANDATORY:** Each story MUST include a **Smoke Test Guide** in Dev Notes (or explicitly mark "Smoke test: N/A" for internal-only functions). Build/test/lint alone do not verify runtime behavior. This requirement was established in the Epic 2+3 retrospective (2025-11-30).
+
 ---
 
 ## Story 5.1: Implement Full Output JSON Generation

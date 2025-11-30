@@ -6,6 +6,10 @@
 
 **FRs Covered:** FR9, FR10, FR11, FR12, FR13, FR14, FR15, FR16, FR17, FR18, FR19, FR20, FR21, FR22, FR23, FR24
 
+> **MANDATORY:** A Tech Spec MUST be drafted before creating stories for this epic. Skipping the tech spec for Epic 3 was identified as a mistake in the Epic 2+3 retrospective (2025-11-30). The tech spec provides critical traceability for AC validation and review.
+
+> **MANDATORY:** Each story MUST include a **Smoke Test Guide** in Dev Notes (or explicitly mark "Smoke test: N/A" for internal-only functions). Build/test/lint alone do not verify runtime behavior. This requirement was established in the Epic 2+3 retrospective (2025-11-30).
+
 ---
 
 ## Story 3.1: Implement Protocol Filtering by Oracle Name

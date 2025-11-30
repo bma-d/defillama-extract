@@ -6,6 +6,10 @@
 
 **FRs Covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR7, FR8, FR55
 
+> **MANDATORY:** A Tech Spec MUST be drafted before creating stories for this epic. Skipping the tech spec for Epic 2 was identified as a mistake in the Epic 2+3 retrospective (2025-11-30). The tech spec provides critical traceability for AC validation and review.
+
+> **MANDATORY:** Each story MUST include a **Smoke Test Guide** in Dev Notes (or explicitly mark "Smoke test: N/A" for internal-only functions). Build/test/lint alone do not verify runtime behavior. This requirement was established in the Epic 2+3 retrospective (2025-11-30).
+
 ---
 
 ## Story 2.1: Implement Base HTTP Client with Timeout and User-Agent

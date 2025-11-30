@@ -6,6 +6,10 @@
 
 **FRs Covered:** FR25, FR26, FR27, FR28, FR29, FR30, FR31, FR32, FR33, FR34
 
+> **MANDATORY:** A Tech Spec MUST be drafted before creating stories for this epic. This requirement was established in the Epic 2+3 retrospective (2025-11-30) after identifying that missing tech specs made AC validation and review more difficult.
+
+> **MANDATORY:** Each story MUST include a **Smoke Test Guide** in Dev Notes (or explicitly mark "Smoke test: N/A" for internal-only functions). Build/test/lint alone do not verify runtime behavior. This requirement was established in the Epic 2+3 retrospective (2025-11-30).
+
 ---
 
 ## Story 4.1: Implement State File Structure and Loading
