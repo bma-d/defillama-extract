@@ -1,6 +1,6 @@
 # Story 3.2: Extract Protocol Metadata and TVS Data
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -26,37 +26,37 @@ Source: Epic 3.2 / PRD FR11-FR14
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define AggregatedProtocol struct (AC: 1, 3)
-  - [ ] 1.1: Create `internal/aggregator/models.go` with `AggregatedProtocol` struct
-  - [ ] 1.2: Include fields: `Name`, `Slug`, `Category`, `URL`, `TVL`, `Chains`, `TVS` (total), `TVSByChain` (map[string]float64)
-  - [ ] 1.3: Add JSON struct tags for output serialization
+- [x] Task 1: Define AggregatedProtocol struct (AC: 1, 3)
+  - [x] 1.1: Create `internal/aggregator/models.go` with `AggregatedProtocol` struct
+  - [x] 1.2: Include fields: `Name`, `Slug`, `Category`, `URL`, `TVL`, `Chains`, `TVS` (total), `TVSByChain` (map[string]float64)
+  - [x] 1.3: Add JSON struct tags for output serialization
 
-- [ ] Task 2: Implement ExtractProtocolData function (AC: 1, 2, 3, 5)
-  - [ ] 2.1: Create `internal/aggregator/extractor.go` with function signature
-  - [ ] 2.2: Iterate over filtered protocols and copy metadata fields
-  - [ ] 2.3: For each protocol, cross-reference `Chains` with `oracleResp.OraclesTVS[oracleName]`
-  - [ ] 2.4: Sum TVS across all chains for protocol's total TVS
-  - [ ] 2.5: Populate `TVSByChain` map with per-chain TVS values
-  - [ ] 2.6: Handle empty/missing chains gracefully (return zero TVS)
+- [x] Task 2: Implement ExtractProtocolData function (AC: 1, 2, 3, 5)
+  - [x] 2.1: Create `internal/aggregator/extractor.go` with function signature
+  - [x] 2.2: Iterate over filtered protocols and copy metadata fields
+  - [x] 2.3: For each protocol, cross-reference `Chains` with `oracleResp.OraclesTVS[oracleName]`
+  - [x] 2.4: Sum TVS across all chains for protocol's total TVS
+  - [x] 2.5: Populate `TVSByChain` map with per-chain TVS values
+  - [x] 2.6: Handle empty/missing chains gracefully (return zero TVS)
 
-- [ ] Task 3: Implement timestamp extraction (AC: 4)
-  - [ ] 3.1: Create `ExtractLatestTimestamp(oracleResp *api.OracleAPIResponse)` helper function
-  - [ ] 3.2: Parse chart data keys as Unix timestamps (strings to int64)
-  - [ ] 3.3: Return the maximum timestamp found
+- [x] Task 3: Implement timestamp extraction (AC: 4)
+  - [x] 3.1: Create `ExtractLatestTimestamp(oracleResp *api.OracleAPIResponse)` helper function
+  - [x] 3.2: Parse chart data keys as Unix timestamps (strings to int64)
+  - [x] 3.3: Return the maximum timestamp found
 
-- [ ] Task 4: Write unit tests (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 4.1: Create `internal/aggregator/extractor_test.go`
-  - [ ] 4.2: Test: ExtractProtocolData populates all metadata fields correctly
-  - [ ] 4.3: Test: TVS calculated correctly from OraclesTVS by matching chain
-  - [ ] 4.4: Test: TVSByChain map populated for multi-chain protocol
-  - [ ] 4.5: Test: Protocol with missing chains returns zero TVS (no panic)
-  - [ ] 4.6: Test: ExtractLatestTimestamp returns max timestamp from chart keys
-  - [ ] 4.7: Test: Empty oracle response returns zero timestamp
+- [x] Task 4: Write unit tests (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 4.1: Create `internal/aggregator/extractor_test.go`
+  - [x] 4.2: Test: ExtractProtocolData populates all metadata fields correctly
+  - [x] 4.3: Test: TVS calculated correctly from OraclesTVS by matching chain
+  - [x] 4.4: Test: TVSByChain map populated for multi-chain protocol
+  - [x] 4.5: Test: Protocol with missing chains returns zero TVS (no panic)
+  - [x] 4.6: Test: ExtractLatestTimestamp returns max timestamp from chart keys
+  - [x] 4.7: Test: Empty oracle response returns zero timestamp
 
-- [ ] Task 5: Verification (AC: all)
-  - [ ] 5.1: Run `go build ./...` and verify success
-  - [ ] 5.2: Run `go test ./internal/aggregator/...` and verify all pass
-  - [ ] 5.3: Run `make lint` and verify no errors
+- [x] Task 5: Verification (AC: all)
+  - [x] 5.1: Run `go build ./...` and verify success
+  - [x] 5.2: Run `go test ./internal/aggregator/...` and verify all pass
+  - [x] 5.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -217,13 +217,72 @@ func TestExtractProtocolData(t *testing.T) {
 BMad SM Agent (Bob) using GPT-5 class model
 
 ### Debug Log References
-None captured for this drafting pass
+- 2025-11-30: Plan: derive latest timestamp from chart keys; resolve chain TVS from OraclesTVS[oracle][timestamp]; copy protocol metadata and chains defensively; accumulate per-chain TVS with empty-map safe defaults; follow table-driven pattern from `internal/aggregator/filter_test.go`; tests aligned with `docs/architecture/testing-strategy.md`.
 ### Completion Notes List
-2025-11-30: Draft reviewed and updated Dev Notes/testing reference; added anchored citations; Dev Agent Record populated; pending dev handoff
+- 2025-11-30: Implemented `AggregatedProtocol`, `ExtractLatestTimestamp`, and `ExtractProtocolData`; added table-driven unit tests for metadata, multi-chain TVS, missing data, and timestamp parsing; ran `go build ./...`, `go test ./internal/aggregator/...`, `go test ./...`, and `make lint`.
 ### File List
 - docs/sprint-artifacts/3-2-extract-protocol-metadata-and-tvs-data.md
+- docs/sprint-artifacts/sprint-status.yaml
+- internal/aggregator/models.go
+- internal/aggregator/extractor.go
+- internal/aggregator/extractor_test.go
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-3-data-processing-pipeline.md |
+| 2025-11-30 | Amelia (Dev Agent) | Implemented protocol aggregation models/functions with tests; updated sprint status to in-progress and story to review |
+| 2025-11-30 | Amelia (Dev Agent) | Senior Developer Review completed; status set to done |
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad
+- Date: 2025-11-30
+- Outcome: Approve
+
+### Summary
+- All ACs implemented; tests pass; no action items.
+
+### Key Findings
+- None.
+
+### Acceptance Criteria Coverage
+
+| AC# | Status | Evidence |
+| --- | --- | --- |
+| AC1 | Implemented | AggregatedProtocol fields copied and TVS accumulated in `internal/aggregator/extractor.go:20-38`; struct defined in `internal/aggregator/models.go:5-12`; validated by `internal/aggregator/extractor_test.go:10-55`. |
+| AC2 | Implemented | Chain TVS contribution applied per chain match in `internal/aggregator/extractor.go:30-38`; verified with Solana TVS case in `internal/aggregator/extractor_test.go:10-55`. |
+| AC3 | Implemented | Multi-chain accumulation populates TVSByChain in `internal/aggregator/extractor.go:30-38`; covered by `internal/aggregator/extractor_test.go:58-87`. |
+| AC4 | Implemented | Latest timestamp parsed from chart keys in `internal/aggregator/extractor.go:49-65`; tested in `internal/aggregator/extractor_test.go:154-189`. |
+| AC5 | Implemented | Empty/missing chains handled with safe copies and zero TVS in `internal/aggregator/extractor.go:30-38,82-89`; tested in `internal/aggregator/extractor_test.go:89-112`. |
+| AC6 | Implemented | Function returns slice and timestamp, including empty-input path in `internal/aggregator/extractor.go:10-45`; verified by `internal/aggregator/extractor_test.go:142-152`. |
+
+Summary: 6 / 6 ACs implemented.
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+| --- | --- | --- | --- |
+| Task 1: AggregatedProtocol struct | Complete | Verified | Struct created with JSON tags in `internal/aggregator/models.go:5-12`. |
+| Task 2: ExtractProtocolData function | Complete | Verified | Implementation and TVS accumulation in `internal/aggregator/extractor.go:10-45`. |
+| Task 3: ExtractLatestTimestamp helper | Complete | Verified | Timestamp extraction logic in `internal/aggregator/extractor.go:49-65`. |
+| Task 4: Unit tests | Complete | Verified | Table-driven tests in `internal/aggregator/extractor_test.go:10-189`. |
+| Task 5: Verification commands | Complete | Verified | `go test ./...` (2025-11-30) successful. |
+
+Summary: 5 / 5 tasks verified (no false completions).
+
+### Test Coverage and Gaps
+- `internal/aggregator/extractor_test.go` covers metadata copy, multi-chain TVS, missing chain handling, timestamp extraction, and empty inputs.
+- Gap: No fallback test when chart timestamp is missing but OraclesTVS has data (low risk; input contract expects aligned timestamps).
+
+### Architectural Alignment
+- Uses data models from `docs/architecture/data-architecture.md` (OracleAPIResponse, Protocol) and table-driven tests per `docs/architecture/testing-strategy.md`.
+
+### Security Notes
+- No security surfaces added; functions operate on in-memory data only.
+
+### Best-Practices and References
+- Go 1.24 module; follows table-driven testing standard (`docs/architecture/testing-strategy.md`).
+
+### Action Items
+- None.
