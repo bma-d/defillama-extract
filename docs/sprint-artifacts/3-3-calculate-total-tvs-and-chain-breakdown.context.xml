@@ -1,0 +1,223 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>3</storyId>
+    <title>Calculate Total TVS and Chain Breakdown</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-3-calculate-total-tvs-and-chain-breakdown.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to calculate total TVS and breakdown by chain</iWant>
+    <soThat>I can show Switchboard's presence across different blockchains</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <title>Define ChainBreakdown struct</title>
+        <subtasks>
+          <subtask id="1.1">Add ChainBreakdown struct to internal/aggregator/models.go</subtask>
+          <subtask id="1.2">Include fields: Chain (string), TVS (float64), Percentage (float64), ProtocolCount (int)</subtask>
+          <subtask id="1.3">Add JSON struct tags for output serialization</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="1,2,3,4,5">
+        <title>Implement CalculateChainBreakdown function</title>
+        <subtasks>
+          <subtask id="2.1">Create internal/aggregator/metrics.go with function signature</subtask>
+          <subtask id="2.2">Iterate over protocols and aggregate TVS by chain from TVSByChain maps</subtask>
+          <subtask id="2.3">Track protocol count per chain (count protocols that have non-zero TVS on that chain)</subtask>
+          <subtask id="2.4">Calculate total TVS across all chains</subtask>
+          <subtask id="2.5">Calculate percentage for each chain as (chainTVS / totalTVS) * 100</subtask>
+          <subtask id="2.6">Handle zero total TVS gracefully (return percentages as 0)</subtask>
+          <subtask id="2.7">Sort results by TVS descending using sort.Slice()</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="1,2,3,4,5">
+        <title>Write unit tests</title>
+        <subtasks>
+          <subtask id="3.1">Create internal/aggregator/metrics_test.go</subtask>
+          <subtask id="3.2">Test: ChainBreakdown returned with correct fields populated</subtask>
+          <subtask id="3.3">Test: TVS sums correctly across multiple protocols on same chain</subtask>
+          <subtask id="3.4">Test: Percentages calculate correctly (verify 50/30/20 split example)</subtask>
+          <subtask id="3.5">Test: Results sorted by TVS descending</subtask>
+          <subtask id="3.6">Test: Zero total TVS returns empty slice or zero percentages (no panic)</subtask>
+          <subtask id="3.7">Test: Empty protocols slice returns empty result</subtask>
+          <subtask id="3.8">Test: Protocol count reflects number of protocols per chain</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="all">
+        <title>Verification</title>
+        <subtasks>
+          <subtask id="4.1">Run go build ./... and verify success</subtask>
+          <subtask id="4.2">Run go test ./internal/aggregator/... and verify all pass</subtask>
+          <subtask id="4.3">Run make lint and verify no errors</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Given aggregated protocol data When CalculateChainBreakdown(protocols []AggregatedProtocol) is called Then a ChainBreakdown slice is returned with each unique chain represented, including TVS sum for that chain, Percentage of total TVS, and ProtocolCount on that chain</criterion>
+    <criterion id="2">Given protocols with TVS: Solana=$500M, Sui=$300M, Aptos=$200M When calculating breakdown Then total TVS = $1B And Solana percentage = 50% And Sui percentage = 30% And Aptos percentage = 20%</criterion>
+    <criterion id="3">Given chain breakdown results When sorting Then chains are ordered by TVS descending (highest first)</criterion>
+    <criterion id="4">Given zero total TVS (no protocols or all protocols have zero TVS) When calculating breakdown Then percentages are set to 0 (no division by zero panic)</criterion>
+    <criterion id="5">Given valid inputs When CalculateChainBreakdown completes Then total TVS across all returned chain breakdowns equals the sum of all protocol TVS values</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR15-FR16 (Aggregation and Metrics)</section>
+        <snippet>FR15: System calculates total TVS across all protocols using the oracle. FR16: System calculates TVS breakdown by chain with percentage of total.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-3-data-processing-pipeline.md</path>
+        <title>Epic 3: Data Processing Pipeline</title>
+        <section>Story 3.3</section>
+        <snippet>Calculate total TVS and breakdown by chain to show Switchboard's presence across different blockchains. ChainBreakdown struct: Chain, TVS, Percentage, ProtocolCount.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests co-located as *_test.go files. Table-driven tests in all test files. Aggregation logic requires high coverage (business-critical).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>internal/aggregator</section>
+        <snippet>Contains metrics.go for derived metric calculations, metrics_test.go for tests. Package handles filtering, aggregation, and metrics calculation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/fr-category-to-architecture-mapping.md</path>
+        <title>FR to Architecture Mapping</title>
+        <section>Aggregation and Metrics (FR15-FR24)</section>
+        <snippet>Maps to internal/aggregator package, specifically aggregator.go and metrics.go files.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/3-2-extract-protocol-metadata-and-tvs-data.md</path>
+        <title>Story 3.2 (Previous)</title>
+        <section>Dev Agent Record</section>
+        <snippet>AggregatedProtocol struct available at internal/aggregator/models.go with TVSByChain map. ExtractProtocolData returns []AggregatedProtocol as input for this story.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>internal/aggregator/models.go</path>
+        <kind>model</kind>
+        <symbol>AggregatedProtocol</symbol>
+        <lines>1-13</lines>
+        <reason>Input type for CalculateChainBreakdown - contains TVSByChain map to iterate for chain breakdown</reason>
+      </file>
+      <file>
+        <path>internal/aggregator/extractor.go</path>
+        <kind>service</kind>
+        <symbol>ExtractProtocolData</symbol>
+        <lines>10-45</lines>
+        <reason>Returns []AggregatedProtocol which is the input for CalculateChainBreakdown</reason>
+      </file>
+      <file>
+        <path>internal/aggregator/filter.go</path>
+        <kind>service</kind>
+        <symbol>FilterByOracle</symbol>
+        <lines>7-20</lines>
+        <reason>Earlier pipeline stage - understand data flow context</reason>
+      </file>
+      <file>
+        <path>internal/aggregator/extractor_test.go</path>
+        <kind>test</kind>
+        <symbol>TestExtractProtocolData_*</symbol>
+        <lines>1-191</lines>
+        <reason>Reference for table-driven test patterns and test data structures</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <goVersion>1.24.0</goVersion>
+        <toolchain>go1.24.10</toolchain>
+        <deps>
+          <dep>golang.org/x/sync v0.18.0</dep>
+          <dep>gopkg.in/yaml.v3 v3.0.1</dep>
+        </deps>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface>
+      <name>AggregatedProtocol</name>
+      <kind>struct</kind>
+      <signature>type AggregatedProtocol struct {
+    Name       string             `json:"name"`
+    Slug       string             `json:"slug"`
+    Category   string             `json:"category"`
+    URL        string             `json:"url"`
+    TVL        float64            `json:"tvl"`
+    Chains     []string           `json:"chains"`
+    TVS        float64            `json:"tvs"`
+    TVSByChain map[string]float64 `json:"tvs_by_chain"`
+}</signature>
+      <path>internal/aggregator/models.go</path>
+    </interface>
+    <interface>
+      <name>ChainBreakdown (to create)</name>
+      <kind>struct</kind>
+      <signature>type ChainBreakdown struct {
+    Chain         string  `json:"chain"`
+    TVS           float64 `json:"tvs"`
+    Percentage    float64 `json:"percentage"`
+    ProtocolCount int     `json:"protocol_count"`
+}</signature>
+      <path>internal/aggregator/models.go</path>
+    </interface>
+    <interface>
+      <name>CalculateChainBreakdown (to create)</name>
+      <kind>function</kind>
+      <signature>func CalculateChainBreakdown(protocols []AggregatedProtocol) []ChainBreakdown</signature>
+      <path>internal/aggregator/metrics.go</path>
+    </interface>
+    <interface>
+      <name>ExtractProtocolData</name>
+      <kind>function</kind>
+      <signature>func ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResponse, oracleName string) ([]AggregatedProtocol, int64)</signature>
+      <path>internal/aggregator/extractor.go</path>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint source="docs/architecture/testing-strategy.md">Use table-driven tests with multiple inputs/outputs per test function</constraint>
+    <constraint source="docs/architecture/testing-strategy.md">Unit tests must be co-located as *_test.go files</constraint>
+    <constraint source="docs/architecture/testing-strategy.md">Aggregation logic requires high coverage (business-critical)</constraint>
+    <constraint source="docs/prd.md">Use float64 for TVS values (can be large numbers)</constraint>
+    <constraint source="epic-3">Calculate percentage as (chainTVS / totalTVS) * 100</constraint>
+    <constraint source="epic-3">Sort chains by TVS descending (highest first)</constraint>
+    <constraint source="story">Handle zero total TVS gracefully - no division by zero panic</constraint>
+    <constraint source="docs/architecture/project-structure.md">New file goes in internal/aggregator/metrics.go</constraint>
+    <constraint source="docs/architecture/project-structure.md">ChainBreakdown struct should be added to internal/aggregator/models.go</constraint>
+  </constraints>
+
+  <tests>
+    <standards>Follow Go table-driven testing conventions. Each test function uses a slice of test cases with name, input, and expected output. Use t.Run() for subtests. Follow arrange/act/assert pattern. Tests co-located in *_test.go files. High coverage required for aggregation logic (business-critical). Reference existing patterns in internal/aggregator/extractor_test.go and internal/aggregator/filter_test.go.</standards>
+    <locations>
+      <location>internal/aggregator/metrics_test.go</location>
+      <location>internal/aggregator/*_test.go</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Test that ChainBreakdown fields are populated correctly for single chain</idea>
+      <idea ac="2">Test percentage calculation with known values (500M/300M/200M = 50%/30%/20%)</idea>
+      <idea ac="3">Test sorting order is TVS descending</idea>
+      <idea ac="4">Test zero total TVS returns percentages as 0 without panic</idea>
+      <idea ac="5">Test TVS total equals sum of all protocol TVS values</idea>
+      <idea ac="1,5">Test empty protocols slice returns empty ChainBreakdown slice</idea>
+      <idea ac="1">Test protocol count is accurate per chain</idea>
+      <idea ac="2,3">Test multi-chain protocol contributes to multiple chain breakdowns</idea>
+    </ideas>
+  </tests>
+</story-context>
