@@ -1,0 +1,260 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>6</storyId>
+    <title>Implement API Request Logging</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-6-implement-api-request-logging.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>operator</asA>
+    <iWant>API requests logged with timing and outcome</iWant>
+    <soThat>I can monitor API health and debug issues</soThat>
+    <tasks>
+      <task id="1">Add request start logging to doRequest (AC: 1, 6)
+        <subtask id="1.1">Add `start := time.Now()` at beginning of `doRequest`</subtask>
+        <subtask id="1.2">Add debug log immediately after request creation with url, method attributes</subtask>
+        <subtask id="1.3">Ensure log appears before HTTP client.Do call</subtask>
+      </task>
+      <task id="2">Add request success logging to doRequest (AC: 2)
+        <subtask id="2.1">After successful status check (2xx), add info log with url, status, duration_ms</subtask>
+        <subtask id="2.2">Place log after status validation but before JSON decode</subtask>
+      </task>
+      <task id="3">Add request failure logging to doRequest (AC: 3)
+        <subtask id="3.1">When returning APIError for non-2xx status, log at warn with url, status, attempt, duration_ms</subtask>
+        <subtask id="3.2">When returning APIError for network error, log at warn with status=0</subtask>
+        <subtask id="3.3">Ensure `attempt` attribute is included (pull from retry wrapper context; default to 1 if missing)</subtask>
+      </task>
+      <task id="4">Write unit tests for request start logging (AC: 1, 6)
+        <subtask id="4.1">Create test with custom slog handler to capture log entries</subtask>
+        <subtask id="4.2">Call FetchOracles with mock server</subtask>
+        <subtask id="4.3">Verify debug log with "starting API request", correct url and method</subtask>
+        <subtask id="4.4">Verify start log appears before completion log (check timestamps or order)</subtask>
+      </task>
+      <task id="5">Write unit tests for request success logging (AC: 2)
+        <subtask id="5.1">Mock server returns 200 OK with valid JSON</subtask>
+        <subtask id="5.2">Verify info log with "API request completed"</subtask>
+        <subtask id="5.3">Verify attributes: url, status=200, duration_ms > 0</subtask>
+      </task>
+      <task id="6">Write unit tests for request failure logging (AC: 3)
+        <subtask id="6.1">Mock server returns 500 Internal Server Error</subtask>
+        <subtask id="6.2">Verify warn log with "API request failed"</subtask>
+        <subtask id="6.3">Verify attributes: url, status=500, duration_ms, error</subtask>
+      </task>
+      <task id="7">Write unit test for concurrent request logging (AC: 7)
+        <subtask id="7.1">Use FetchAll with mock server</subtask>
+        <subtask id="7.2">Capture all log entries</subtask>
+        <subtask id="7.3">Verify distinct logs for oracle and protocol URLs</subtask>
+        <subtask id="7.4">Verify each has start and completion entries</subtask>
+      </task>
+      <task id="8">Verification (AC: all)
+        <subtask id="8.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="8.2">Run `go test ./internal/api/...` and verify all pass</subtask>
+        <subtask id="8.3">Run `make lint` and verify no errors</subtask>
+        <subtask id="8.4">Manual verification: run with DEBUG log level, observe request lifecycle logs</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given an API request is initiated When the request starts Then a debug log is emitted: "starting API request" with url, method attributes</criterion>
+    <criterion id="AC2">Given an API request completes successfully When response is received Then an info log is emitted: "API request completed" with url, status, duration_ms attributes</criterion>
+    <criterion id="AC3">Given an API request fails When error occurs Then a warn log is emitted: "API request failed" with url, error, duration_ms, attempt attributes</criterion>
+    <criterion id="AC4">Given a retry is attempted When retry starts Then a warn log is emitted: "retrying API request" with url, attempt, max_attempts, backoff_ms attributes (NOTE: Already implemented in Story 2.4)</criterion>
+    <criterion id="AC5">Given all retries are exhausted When final failure occurs Then an error log is emitted with url, total_attempts, final_error attributes (NOTE: Already implemented in Story 2.4)</criterion>
+    <criterion id="AC6">Given debug logging is enabled When viewing logs Then request start entries appear before completion entries for the same request</criterion>
+    <criterion id="AC7">Given multiple concurrent requests (FetchAll) When both complete Then each request has its own start/completion log entries distinguishable by URL</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: API Integration</title>
+        <section>AC-2.6: Request Logging</section>
+        <snippet>Request start logged at DEBUG: "starting API request" with url, method. Request success logged at INFO: "API request completed" with url, status, duration_ms. Request failure logged at WARN: "API request failed" with url, error, duration_ms, attempt.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: API Integration</title>
+        <section>Observability</section>
+        <snippet>Log Event table defines: Request start (Debug), Request success (Info), Request failure (Warn), Retry attempt (Warn), Max retries exceeded (Error) with their attributes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-2-api-integration.md</path>
+        <title>Epic 2: API Integration</title>
+        <section>Story 2.6: Implement API Request Logging</section>
+        <snippet>As an operator, I want API requests logged with timing and outcome, so that I can monitor API health and debug issues. Use time.Since(start).Milliseconds() for duration.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR55</section>
+        <snippet>System logs API request attempts, retries, and failures.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-004: Structured Logging with slog</section>
+        <snippet>Use log/slog (stdlib) with JSON output in daemon mode. Built into Go 1.21+, structured fields enable log aggregation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests co-located in *_test.go files. Mock Server Tests use httptest for HTTP client testing. Table-driven tests for multiple scenarios.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>internal/api/</section>
+        <snippet>client.go - HTTP client with retry logic. client_test.go - Client tests with mock server. responses.go - DefiLlama API response structs.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/implementation-patterns.md</path>
+        <title>Implementation Patterns</title>
+        <section>Context Propagation</section>
+        <snippet>All I/O functions accept context.Context as first parameter. Use http.NewRequestWithContext for request creation.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>internal/api/client.go</path>
+        <kind>service</kind>
+        <symbol>doRequest</symbol>
+        <lines>64-97</lines>
+        <reason>Primary method to modify - needs start timing, debug log at start, info log on success, warn log on failure with duration</reason>
+      </file>
+      <file>
+        <path>internal/api/client.go</path>
+        <kind>service</kind>
+        <symbol>doWithRetry</symbol>
+        <lines>141-203</lines>
+        <reason>Already implements retry logging (retrying API request, max retries exceeded). Need to understand attempt tracking for passing to doRequest</reason>
+      </file>
+      <file>
+        <path>internal/api/client.go</path>
+        <kind>service</kind>
+        <symbol>Client struct</symbol>
+        <lines>23-33</lines>
+        <reason>Client structure has logger field. No changes needed but useful context for logging approach</reason>
+      </file>
+      <file>
+        <path>internal/api/client.go</path>
+        <kind>service</kind>
+        <symbol>FetchAll</symbol>
+        <lines>230-283</lines>
+        <reason>Already logs "parallel fetch completed/failed". Individual requests within need start/completion logs per AC7</reason>
+      </file>
+      <file>
+        <path>internal/api/responses.go</path>
+        <kind>model</kind>
+        <symbol>APIError</symbol>
+        <lines>36-58</lines>
+        <reason>Custom error type used in doRequest for HTTP errors. Provides StatusCode and Endpoint for logging</reason>
+      </file>
+      <file>
+        <path>internal/api/retry_test.go</path>
+        <kind>test</kind>
+        <symbol>newTestLogger</symbol>
+        <lines>23-25</lines>
+        <reason>Existing pattern for capturing logs in tests using bytes.Buffer with slog.NewTextHandler</reason>
+      </file>
+      <file>
+        <path>internal/api/fetchall_test.go</path>
+        <kind>test</kind>
+        <symbol>TestFetchAll_LogsSuccess</symbol>
+        <lines>182-208</lines>
+        <reason>Existing pattern for verifying log output in FetchAll tests - can extend for request-level logging</reason>
+      </file>
+    </code>
+    <dependencies>
+      <go>
+        <module>golang.org/x/sync</module>
+        <version>v0.18.0</version>
+        <purpose>errgroup for parallel fetching</purpose>
+      </go>
+      <go>
+        <module>gopkg.in/yaml.v3</module>
+        <version>v3.0.1</version>
+        <purpose>Configuration parsing</purpose>
+      </go>
+      <stdlib>
+        <package>log/slog</package>
+        <purpose>Structured logging (ADR-004)</purpose>
+      </stdlib>
+      <stdlib>
+        <package>net/http</package>
+        <purpose>HTTP client and request handling</purpose>
+      </stdlib>
+      <stdlib>
+        <package>time</package>
+        <purpose>Duration tracking with time.Now() and time.Since()</purpose>
+      </stdlib>
+      <stdlib>
+        <package>context</package>
+        <purpose>Request cancellation and timeout propagation</purpose>
+      </stdlib>
+      <stdlib>
+        <package>net/http/httptest</package>
+        <purpose>Mock server for testing</purpose>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Use slog for all logging (ADR-004). Log levels: Debug for request start, Info for success, Warn for failure.</constraint>
+    <constraint type="pattern">Duration tracking pattern: start := time.Now() then time.Since(start).Milliseconds() for duration_ms attribute.</constraint>
+    <constraint type="pattern">Error handling: Return errors explicitly, wrap with context (ADR-003).</constraint>
+    <constraint type="coding">All I/O functions must accept context.Context as first parameter.</constraint>
+    <constraint type="coding">Use http.NewRequestWithContext for request creation.</constraint>
+    <constraint type="testing">Tests must use httptest.NewServer for mock servers.</constraint>
+    <constraint type="testing">Use custom slog handler with bytes.Buffer to capture and verify log output.</constraint>
+    <constraint type="architecture">No external HTTP frameworks - use net/http stdlib (ADR-001).</constraint>
+    <constraint type="architecture">Minimal external dependencies (ADR-005).</constraint>
+    <constraint type="existing">Retry logging already implemented in doWithRetry - do not duplicate. This story adds request-level lifecycle logging in doRequest.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>doRequest</name>
+      <kind>internal method</kind>
+      <signature>func (c *Client) doRequest(ctx context.Context, url string, target any) error</signature>
+      <path>internal/api/client.go:64</path>
+    </interface>
+    <interface>
+      <name>doWithRetry</name>
+      <kind>internal method</kind>
+      <signature>func (c *Client) doWithRetry(ctx context.Context, fn func() error) error</signature>
+      <path>internal/api/client.go:141</path>
+    </interface>
+    <interface>
+      <name>slog.Logger</name>
+      <kind>stdlib interface</kind>
+      <signature>Debug(msg string, args ...any), Info(msg string, args ...any), Warn(msg string, args ...any), Error(msg string, args ...any)</signature>
+      <path>stdlib: log/slog</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use Go stdlib testing package with table-driven tests. Tests are co-located in *_test.go files. Use httptest.NewServer for HTTP mocking. Capture log output using bytes.Buffer with slog.NewTextHandler at Debug level. Verify log messages contain expected strings and attributes using strings.Contains.</standards>
+    <locations>
+      <location>internal/api/*_test.go</location>
+      <location>internal/api/client_test.go (existing request tests)</location>
+      <location>internal/api/retry_test.go (existing retry log tests)</location>
+      <location>internal/api/fetchall_test.go (existing FetchAll log tests)</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1">Test doRequest emits debug log "starting API request" with url and method=GET before response</idea>
+      <idea acRef="AC2">Test doRequest emits info log "API request completed" with url, status=200, duration_ms > 0 on success</idea>
+      <idea acRef="AC3">Test doRequest emits warn log "API request failed" with url, status=500, duration_ms on HTTP error</idea>
+      <idea acRef="AC3">Test doRequest emits warn log with status=0 on network error (timeout/connection refused)</idea>
+      <idea acRef="AC6">Test log order: "starting API request" appears before "API request completed" in captured logs</idea>
+      <idea acRef="AC7">Test FetchAll produces distinct start/completion logs for both oracle and protocol URLs</idea>
+      <idea acRef="AC7">Test log entries are distinguishable by URL attribute when concurrent</idea>
+    </ideas>
+  </tests>
+</story-context>
