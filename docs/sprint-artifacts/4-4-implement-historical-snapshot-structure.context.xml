@@ -1,0 +1,237 @@
+<story-context id="4-4-implement-historical-snapshot-structure" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>4</storyId>
+    <title>Implement Historical Snapshot Structure</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-4-implement-historical-snapshot-structure.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>historical snapshots stored with required fields</iWant>
+    <soThat>I can track TVS trends over time</soThat>
+    <tasks>
+      <task id="1" name="Implement CreateSnapshot function">
+        <subtask id="1.1">Create internal/storage/history.go with package declaration and imports</subtask>
+        <subtask id="1.2">Add func CreateSnapshot(result *aggregator.AggregationResult) aggregator.Snapshot</subtask>
+        <subtask id="1.3">Set Timestamp directly from result.Timestamp</subtask>
+        <subtask id="1.4">Format Date using time.Unix(result.Timestamp, 0).UTC().Format("2006-01-02")</subtask>
+        <subtask id="1.5">Set TVS from result.TotalTVS</subtask>
+        <subtask id="1.6">Build TVSByChain map by iterating result.ChainBreakdown and extracting chain -> TVS</subtask>
+        <subtask id="1.7">Set ProtocolCount from result.TotalProtocols</subtask>
+        <subtask id="1.8">Set ChainCount as len(result.ActiveChains)</subtask>
+        <subtask id="1.9">Add doc comment explaining the function's purpose and field mapping</subtask>
+      </task>
+      <task id="2" name="Handle empty/nil inputs gracefully">
+        <subtask id="2.1">Initialize TVSByChain as make(map[string]float64) before population</subtask>
+        <subtask id="2.2">Handle nil result.ChainBreakdown slice by leaving map empty</subtask>
+        <subtask id="2.3">Handle nil result.ActiveChains by setting ChainCount to 0</subtask>
+      </task>
+      <task id="3" name="Write unit tests for CreateSnapshot">
+        <subtask id="3.1">Create internal/storage/history_test.go</subtask>
+        <subtask id="3.2">Test: valid AggregationResult produces Snapshot with all fields populated correctly</subtask>
+        <subtask id="3.3">Test: empty ChainBreakdown produces empty map (not nil)</subtask>
+        <subtask id="3.4">Test: timestamp 1700000000 produces date "2023-11-14" (UTC)</subtask>
+        <subtask id="3.5">Test: timestamp formatting for different dates (edge cases: year boundary, leap year)</subtask>
+        <subtask id="3.6">Test: TVSByChain populated correctly from ChainBreakdown</subtask>
+      </task>
+      <task id="4" name="Verification">
+        <subtask id="4.1">Run go build ./... and verify success</subtask>
+        <subtask id="4.2">Run go test ./internal/storage/... and verify all pass</subtask>
+        <subtask id="4.3">Run make lint and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1">
+      <given>current extraction results</given>
+      <when>CreateSnapshot(result *AggregationResult) is called</when>
+      <then>a Snapshot struct is created and returned (uses existing aggregator.Snapshot type)</then>
+    </criterion>
+    <criterion id="AC-2">
+      <given>an AggregationResult with valid fields</given>
+      <when>CreateSnapshot is called</when>
+      <then>the returned Snapshot contains:
+        - Timestamp: matches result.Timestamp exactly
+        - Date: formatted as YYYY-MM-DD (ISO 8601 date portion)
+        - TVS: matches result.TotalTVS
+        - TVSByChain: map populated from result.ChainBreakdown (chain -> TVS)
+        - ProtocolCount: matches result.TotalProtocols
+        - ChainCount: equals len(result.ActiveChains)</then>
+    </criterion>
+    <criterion id="AC-3">
+      <given>an AggregationResult with empty ChainBreakdown</given>
+      <when>CreateSnapshot is called</when>
+      <then>TVSByChain is an empty map (not nil) to ensure valid JSON output</then>
+    </criterion>
+    <criterion id="AC-4">
+      <given>timestamp 1700000000</given>
+      <when>CreateSnapshot formats the date</when>
+      <then>Date field equals "2023-11-14" (UTC conversion)</then>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic 4 Technical Specification</title>
+        <section>AC-4.4: Historical Snapshot Structure</section>
+        <snippet>CreateSnapshot(result) creates Snapshot from AggregationResult. Timestamp matches result.Timestamp. Date formatted as YYYY-MM-DD. TVS, TVSByChain, ProtocolCount, ChainCount match result.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-4-state-history-management.md</path>
+        <title>Epic 4: State and History Management</title>
+        <section>Story 4.4: Implement Historical Snapshot Structure</section>
+        <snippet>Create Snapshot struct with Timestamp, Date, TVS, TVSByChain, ProtocolCount, ChainCount. Use time.Unix(ts, 0).Format("2006-01-02") for date formatting.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>Output Models</section>
+        <snippet>FullOutput contains Historical []Snapshot field. State struct tracks OracleName, LastUpdated, LastUpdatedISO, LastProtocolCount, LastTVS.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests in *_test.go co-located. Table-driven tests for multiple inputs/outputs. Test fixtures in testdata/ directory.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR30-FR31</section>
+        <snippet>FR30: Maintain historical snapshots over time. FR31: Store timestamp, date, TVS, TVSByChain, counts per snapshot.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>internal/aggregator/models.go</path>
+        <kind>types</kind>
+        <symbol>Snapshot, AggregationResult, ChainBreakdown</symbol>
+        <lines>40-72</lines>
+        <reason>Snapshot struct to be returned by CreateSnapshot; AggregationResult is input type; ChainBreakdown provides chain TVS data</reason>
+      </file>
+      <file>
+        <path>internal/storage/state.go</path>
+        <kind>service</kind>
+        <symbol>StateManager, State</symbol>
+        <lines>1-136</lines>
+        <reason>Existing storage package where history.go will be added; established patterns for file operations and logging</reason>
+      </file>
+      <file>
+        <path>internal/storage/writer.go</path>
+        <kind>utility</kind>
+        <symbol>WriteAtomic</symbol>
+        <lines>1-69</lines>
+        <reason>Atomic write utility available for future history persistence; reference for error handling patterns</reason>
+      </file>
+      <file>
+        <path>internal/storage/state_test.go</path>
+        <kind>tests</kind>
+        <symbol>newTestLogger, TestStateManager_*, table-driven tests</symbol>
+        <lines>1-389</lines>
+        <reason>Established test patterns to follow: table-driven tests, newTestLogger helper, temp directories, JSON payload verification</reason>
+      </file>
+    </code>
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <goVersion>1.24.0</goVersion>
+        <packages>
+          <package name="golang.org/x/sync" version="v0.18.0" />
+          <package name="gopkg.in/yaml.v3" version="v3.0.1" />
+        </packages>
+        <stdlib>
+          <package>time</package>
+          <package>encoding/json</package>
+          <package>testing</package>
+        </stdlib>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="package-location">New file: internal/storage/history.go</constraint>
+    <constraint type="type-reuse">MUST use existing aggregator.Snapshot type from internal/aggregator/models.go - do NOT duplicate</constraint>
+    <constraint type="import">Import "github.com/switchboard-xyz/defillama-extract/internal/aggregator"</constraint>
+    <constraint type="stdlib-only">Use Go stdlib only (time for date formatting)</constraint>
+    <constraint type="pattern">Pure function - no side effects, deterministic output for given input</constraint>
+    <constraint type="logging">No slog logging needed for this story (pure function)</constraint>
+    <constraint type="nil-safety">TVSByChain must never be nil - initialize with make(map[string]float64)</constraint>
+    <constraint type="date-format">Use time.Unix(ts, 0).UTC().Format("2006-01-02") for ISO 8601 date</constraint>
+    <constraint type="adr-003">Follow ADR-003: explicit error returns over exceptions</constraint>
+    <constraint type="testing">Follow Go table-driven tests pattern per testing-strategy.md</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>CreateSnapshot</name>
+      <kind>function</kind>
+      <signature>func CreateSnapshot(result *aggregator.AggregationResult) aggregator.Snapshot</signature>
+      <path>internal/storage/history.go</path>
+    </interface>
+    <interface>
+      <name>aggregator.Snapshot</name>
+      <kind>struct</kind>
+      <signature>type Snapshot struct {
+    Timestamp     int64              `json:"timestamp"`
+    Date          string             `json:"date"`
+    TVS           float64            `json:"tvs"`
+    TVSByChain    map[string]float64 `json:"tvs_by_chain"`
+    ProtocolCount int                `json:"protocol_count"`
+    ChainCount    int                `json:"chain_count"`
+}</signature>
+      <path>internal/aggregator/models.go:41-48</path>
+    </interface>
+    <interface>
+      <name>aggregator.AggregationResult</name>
+      <kind>struct</kind>
+      <signature>type AggregationResult struct {
+    TotalTVS          float64
+    TotalProtocols    int
+    ActiveChains      []string
+    Categories        []string
+    ChainBreakdown    []ChainBreakdown
+    CategoryBreakdown []CategoryBreakdown
+    Protocols         []AggregatedProtocol
+    LargestProtocol   *LargestProtocol
+    ChangeMetrics     ChangeMetrics
+    Timestamp         int64
+}</signature>
+      <path>internal/aggregator/models.go:60-72</path>
+    </interface>
+    <interface>
+      <name>aggregator.ChainBreakdown</name>
+      <kind>struct</kind>
+      <signature>type ChainBreakdown struct {
+    Chain         string  `json:"chain"`
+    TVS           float64 `json:"tvs"`
+    Percentage    float64 `json:"percentage"`
+    ProtocolCount int     `json:"protocol_count"`
+}</signature>
+      <path>internal/aggregator/models.go:24-30</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Follow Go table-driven tests pattern with *_test.go files co-located with source. Use t.TempDir() for isolation. Use bytes.Buffer with slog.NewJSONHandler for log verification when needed. Test both success and edge cases. Verify nil inputs produce valid outputs.</standards>
+    <locations>
+      <location>internal/storage/history_test.go</location>
+      <location>internal/storage/*_test.go</location>
+    </locations>
+    <ideas>
+      <idea acId="AC-1,AC-2">TestCreateSnapshot_ValidInput: Verify all fields correctly mapped from AggregationResult to Snapshot</idea>
+      <idea acId="AC-3">TestCreateSnapshot_EmptyChainBreakdown: Empty ChainBreakdown produces empty map not nil</idea>
+      <idea acId="AC-4">TestCreateSnapshot_TimestampFormatting: 1700000000 produces "2023-11-14"</idea>
+      <idea acId="AC-4">TestCreateSnapshot_DateEdgeCases: Year boundary (Dec 31/Jan 1), leap year (Feb 29), timezone consistency</idea>
+      <idea acId="AC-2">TestCreateSnapshot_TVSByChainPopulation: Chain names and TVS values correctly extracted from ChainBreakdown</idea>
+      <idea acId="AC-2">TestCreateSnapshot_NilActiveChains: Nil ActiveChains produces ChainCount of 0</idea>
+      <idea acId="AC-2">TestCreateSnapshot_NilChainBreakdown: Nil ChainBreakdown produces empty TVSByChain map</idea>
+    </ideas>
+  </tests>
+</story-context>

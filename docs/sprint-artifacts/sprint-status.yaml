@@ -68,8 +68,8 @@ development_status:
   epic-4: contexted
   4-1-implement-state-file-structure-and-loading: done
   4-2-implement-state-comparison-for-skip-logic: done
-  4-3-implement-atomic-state-file-updates: backlog
-  4-4-implement-historical-snapshot-structure: backlog
+  4-3-implement-atomic-state-file-updates: done
+  4-4-implement-historical-snapshot-structure: ready-for-dev
   4-5-implement-history-loading-from-output-file: backlog
   4-6-implement-snapshot-deduplication: backlog
   4-7-implement-history-retention-keep-all: backlog
