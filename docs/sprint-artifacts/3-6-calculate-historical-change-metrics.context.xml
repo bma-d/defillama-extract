@@ -1,0 +1,237 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>6</storyId>
+    <title>Calculate Historical Change Metrics</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-6-calculate-historical-change-metrics.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>24h, 7d, and 30d TVS change percentages calculated</iWant>
+    <soThat>I can show growth trends over time</soThat>
+    <tasks>
+      <task id="1" ac="1,6,7,8">Define Snapshot struct with Timestamp, Date, TVS, TVSByChain, ProtocolCount, ChainCount fields in internal/aggregator/models.go</task>
+      <task id="1.1" parent="1" ac="1,6,7,8">Add Snapshot struct with JSON tags for all fields in internal/aggregator/models.go</task>
+      <task id="1.2" parent="1" ac="1,6,7,8">Ensure TVSByChain map field tagged json:"tvs_by_chain" and counts tagged protocol_count and chain_count</task>
+      <task id="2" ac="1,4,5">Define ChangeMetrics struct with pointer fields Change24h, Change7d, Change30d (*float64), ProtocolCountChange7d, ProtocolCountChange30d (*int) in internal/aggregator/models.go</task>
+      <task id="2.1" parent="2" ac="1,4,5">Add ChangeMetrics struct with json tags using omitempty for pointer fields</task>
+      <task id="2.2" parent="2" ac="1,4,5">Document pointer semantics (nil = no data) in struct comment</task>
+      <task id="3" ac="6,7">Add time constants Hours24, Days7, Days30, SnapshotTolerance to internal/aggregator/metrics.go</task>
+      <task id="4" ac="6,7,8">Implement FindSnapshotAtTime(snapshots []Snapshot, targetTime int64, tolerance int64) *Snapshot helper function</task>
+      <task id="4.1" parent="4" ac="6,7,8">Handle empty history safely (return nil)</task>
+      <task id="4.2" parent="4" ac="6,7,8">Return closest snapshot within tolerance using abs diff comparison</task>
+      <task id="5" ac="2,3,9">Implement CalculatePercentageChange(oldValue, newValue float64) float64 helper with division-by-zero protection</task>
+      <task id="5.1" parent="5" ac="2,3,9">Return 0 when oldValue is 0 to avoid division by zero</task>
+      <task id="5.2" parent="5" ac="2,3,9">Round percentage to 2 decimal places</task>
+      <task id="6" ac="1,2,3,4,5,10">Implement CalculateChangeMetrics(currentTVS float64, currentProtocolCount int, history []Snapshot) ChangeMetrics</task>
+      <task id="6.1" parent="6" ac="1,2,3,4,5,10">Use time.Now().Unix() as current timestamp baseline</task>
+      <task id="6.2" parent="6" ac="1,2,3,4,5,10">Lookup snapshots for 24h, 7d, 30d using FindSnapshotAtTime with SnapshotTolerance</task>
+      <task id="6.3" parent="6" ac="1,2,3,4,5,10">Set Change24h/7d/30d only when matching snapshot found; leave nil otherwise</task>
+      <task id="6.4" parent="6" ac="5">Compute ProtocolCountChange7d and ProtocolCountChange30d when snapshots present</task>
+      <task id="7" ac="1-10">Write comprehensive unit tests in internal/aggregator/metrics_test.go</task>
+      <task id="7.1" parent="7" ac="2,3,9">Test CalculatePercentageChange: positive, negative, zero-old cases</task>
+      <task id="7.2" parent="7" ac="6,7,8,10">Test FindSnapshotAtTime: exact match, within tolerance, outside tolerance, empty history</task>
+      <task id="7.3" parent="7" ac="1,2,3,4,5,10">Test CalculateChangeMetrics: full history, partial history (24h only), empty history</task>
+      <task id="7.4" parent="7" ac="5">Test protocol count change calculations for 7d/30d</task>
+      <task id="7.5" parent="7" ac="2">Add JSON serialization test to confirm omitempty for nil pointers</task>
+      <task id="8" ac="all">Verification: go build ./..., go test ./internal/aggregator/..., make lint</task>
+      <task id="8.1" parent="8" ac="all">Run go build ./...</task>
+      <task id="8.2" parent="8" ac="all">Run go test ./internal/aggregator/...</task>
+      <task id="8.3" parent="8" ac="all">Run make lint</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Given current TVS and historical snapshots When CalculateChangeMetrics is called Then a ChangeMetrics struct is returned with Change24h, Change7d, Change30d fields</criterion>
+    <criterion id="2">Given current TVS = $1.1B and TVS 24h ago = $1.0B When calculating 24h change Then Change24h = 10.0 (10% increase)</criterion>
+    <criterion id="3">Given current TVS = $900M and TVS 7d ago = $1.0B When calculating 7d change Then Change7d = -10.0 (10% decrease)</criterion>
+    <criterion id="4">Given no historical data available for a time period When calculating that period's change Then the change value is nil (pointer type) indicating no data</criterion>
+    <criterion id="5">Given history with protocol counts When calculating growth Then ProtocolCountChange7d and ProtocolCountChange30d are calculated (FR22)</criterion>
+    <criterion id="6">Given historical snapshot at exactly target time (24h/7d/30d ago) When searching Then that exact snapshot is used; if not exact use closest within 2-hour tolerance</criterion>
+    <criterion id="7">Given historical snapshot within 2-hour tolerance of target time When searching Then the closest snapshot within tolerance is used</criterion>
+    <criterion id="8">Given no historical snapshot within 2-hour tolerance When searching Then nil is returned for that time period</criterion>
+    <criterion id="9">Given previous TVS value of 0 When calculating percentage change Then return 0 (avoid division by zero)</criterion>
+    <criterion id="10">Given an empty history slice When calculating change metrics Then all change fields are nil (no panic)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics/epic-3-data-processing-pipeline.md</path>
+        <title>Epic 3: Data Processing Pipeline</title>
+        <section>Story 3.6: Calculate Historical Change Metrics</section>
+        <snippet>Acceptance criteria for 24h/7d/30d TVS change calculations, pointer types for optional values, formula ((current - previous) / previous) * 100, handle division by zero.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Aggregation and Metrics (FR19-FR22)</section>
+        <snippet>FR19: 24-hour TVS change percentage. FR20: 7-day TVS change percentage. FR21: 30-day TVS change percentage. FR22: Protocol count growth over 7-day and 30-day periods.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Table-driven tests, unit tests co-located as *_test.go, coverage requirements for aggregation logic (business-critical), error handling paths must be tested.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/implementation-patterns.md</path>
+        <title>Implementation Patterns</title>
+        <section>Dependency Injection, Context Propagation</section>
+        <snippet>Use constructor functions not global state, all I/O functions accept context.Context as first parameter, parallel fetching with errgroup.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>internal/aggregator/</section>
+        <snippet>metrics.go contains derived metric calculations, metrics_test.go contains corresponding tests, models.go holds data structures.</snippet>
+      </doc>
+      <doc>
+        <path>docs-from-user/seed-doc/7-custom-aggregation-logic-go-implementation.md</path>
+        <title>Custom Aggregation Logic Reference</title>
+        <section>7.1 Metric Calculations (#L20-L56)</section>
+        <snippet>Reference implementation of CalculatePercentageChange, FindSnapshotAtTime, time constants (Hours24, Days7, Days30, SnapshotTolerance), CalculateMetrics with historical snapshot lookup. Anchor: #L20-L56 for tolerance and formula.</snippet>
+      </doc>
+      <doc>
+        <path>docs-from-user/seed-doc/6-incremental-update-strategy.md</path>
+        <title>Incremental Update Strategy</title>
+        <section>6.3 History Manager Implementation</section>
+        <snippet>Snapshot struct with Timestamp, Date, TVS, TVSByChain, ProtocolCount, ChainCount fields. History sorted newest-first.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>internal/aggregator/models.go</path>
+        <kind>models</kind>
+        <symbol>AggregatedProtocol, LargestProtocol, ChainBreakdown, CategoryBreakdown</symbol>
+        <lines>1-39</lines>
+        <reason>Existing model structs to extend with Snapshot and ChangeMetrics. Follow same struct patterns with JSON tags.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/metrics.go</path>
+        <kind>service</kind>
+        <symbol>CalculateChainBreakdown, CalculateCategoryBreakdown, RankProtocols, GetLargestProtocol</symbol>
+        <lines>1-157</lines>
+        <reason>Existing metrics functions demonstrating patterns: empty input handling, sort.Slice usage, pointer returns for optional values. Add new functions here.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/metrics_test.go</path>
+        <kind>test</kind>
+        <symbol>TestCalculateChainBreakdown, TestCalculateCategoryBreakdown, TestRankProtocols, TestGetLargestProtocol, almostEqual</symbol>
+        <lines>1-354</lines>
+        <reason>Existing test patterns: table-driven tests, almostEqual helper for float comparison, JSON serialization tests. Follow same patterns for new tests.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <goVersion>1.24.0</goVersion>
+        <packages>
+          <package name="golang.org/x/sync" version="v0.18.0">errgroup for parallel operations</package>
+          <package name="gopkg.in/yaml.v3" version="v3.0.1">YAML config parsing</package>
+        </packages>
+        <stdlib>
+          <package>sort</package>
+          <package>math</package>
+          <package>time</package>
+          <package>encoding/json</package>
+          <package>testing</package>
+        </stdlib>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface>
+      <name>CalculateChainBreakdown</name>
+      <kind>function</kind>
+      <signature>func CalculateChainBreakdown(protocols []AggregatedProtocol) []ChainBreakdown</signature>
+      <path>internal/aggregator/metrics.go:6</path>
+    </interface>
+    <interface>
+      <name>CalculateCategoryBreakdown</name>
+      <kind>function</kind>
+      <signature>func CalculateCategoryBreakdown(protocols []AggregatedProtocol) []CategoryBreakdown</signature>
+      <path>internal/aggregator/metrics.go:58</path>
+    </interface>
+    <interface>
+      <name>RankProtocols</name>
+      <kind>function</kind>
+      <signature>func RankProtocols(protocols []AggregatedProtocol) []AggregatedProtocol</signature>
+      <path>internal/aggregator/metrics.go:110</path>
+    </interface>
+    <interface>
+      <name>GetLargestProtocol</name>
+      <kind>function</kind>
+      <signature>func GetLargestProtocol(protocols []AggregatedProtocol) *LargestProtocol</signature>
+      <path>internal/aggregator/metrics.go:133</path>
+    </interface>
+    <interface>
+      <name>Snapshot (new)</name>
+      <kind>struct</kind>
+      <signature>type Snapshot struct { Timestamp int64; Date string; TVS float64; TVSByChain map[string]float64; ProtocolCount int; ChainCount int }</signature>
+      <path>internal/aggregator/models.go (to be added)</path>
+    </interface>
+    <interface>
+      <name>ChangeMetrics (new)</name>
+      <kind>struct</kind>
+      <signature>type ChangeMetrics struct { Change24h *float64; Change7d *float64; Change30d *float64; ProtocolCountChange7d *int; ProtocolCountChange30d *int }</signature>
+      <path>internal/aggregator/models.go (to be added)</path>
+    </interface>
+    <interface>
+      <name>FindSnapshotAtTime (new)</name>
+      <kind>function</kind>
+      <signature>func FindSnapshotAtTime(snapshots []Snapshot, targetTime int64, tolerance int64) *Snapshot</signature>
+      <path>internal/aggregator/metrics.go (to be added)</path>
+    </interface>
+    <interface>
+      <name>CalculatePercentageChange (new)</name>
+      <kind>function</kind>
+      <signature>func CalculatePercentageChange(oldValue, newValue float64) float64</signature>
+      <path>internal/aggregator/metrics.go (to be added)</path>
+    </interface>
+    <interface>
+      <name>CalculateChangeMetrics (new)</name>
+      <kind>function</kind>
+      <signature>func CalculateChangeMetrics(currentTVS float64, currentProtocolCount int, history []Snapshot) ChangeMetrics</signature>
+      <path>internal/aggregator/metrics.go (to be added)</path>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint type="pattern">Use pointer types (*float64, *int) for optional change values to distinguish "no data" (nil) from "zero change" (0)</constraint>
+    <constraint type="pattern">Follow existing metrics.go patterns: empty input handling returns empty/nil, sort.Slice for ordering, copy-before-modify</constraint>
+    <constraint type="pattern">Table-driven tests with comprehensive edge cases following metrics_test.go patterns</constraint>
+    <constraint type="architecture">All new code in internal/aggregator package - models.go for structs, metrics.go for functions</constraint>
+    <constraint type="testing">Must test: positive change, negative change, division by zero, exact time match, within tolerance, outside tolerance, empty history</constraint>
+    <constraint type="tolerance">2-hour tolerance (7200 seconds) for finding historical snapshots per seed documentation</constraint>
+    <constraint type="formula">Percentage change formula: ((newValue - oldValue) / oldValue) * 100, rounded to 2 decimal places</constraint>
+    <constraint type="verification">Build, test, and lint must pass: go build ./..., go test ./internal/aggregator/..., make lint</constraint>
+  </constraints>
+
+  <tests>
+    <standards>Go table-driven tests co-located as *_test.go files. Use testing.T with t.Run for subtests. Use almostEqual helper for float comparisons (tolerance 1e-6). High coverage for business-critical aggregation logic. Test all error paths and edge cases.</standards>
+    <locations>
+      <location>internal/aggregator/metrics_test.go</location>
+    </locations>
+    <ideas>
+      <idea ac="2,3">TestCalculatePercentageChange: positive 10% increase (1000->1100), negative 10% decrease (1000->900), zero old value returns 0, rounding verification</idea>
+      <idea ac="6">TestFindSnapshotAtTime_ExactMatch: snapshot at exactly targetTime is returned</idea>
+      <idea ac="7">TestFindSnapshotAtTime_WithinTolerance: snapshot 1 hour off from target within 2-hour tolerance is returned</idea>
+      <idea ac="8">TestFindSnapshotAtTime_OutsideTolerance: snapshot 3 hours off returns nil</idea>
+      <idea ac="8">TestFindSnapshotAtTime_EmptyHistory: nil snapshots returns nil</idea>
+      <idea ac="1,4">TestCalculateChangeMetrics_FullHistory: all three time periods have data, all change fields populated</idea>
+      <idea ac="4">TestCalculateChangeMetrics_PartialHistory: only 24h snapshot exists, 7d and 30d are nil</idea>
+      <idea ac="10">TestCalculateChangeMetrics_EmptyHistory: all change fields are nil</idea>
+      <idea ac="5">TestCalculateChangeMetrics_ProtocolCountChange: verify 7d and 30d protocol count changes calculated correctly</idea>
+      <idea ac="9">TestCalculateChangeMetrics_ZeroPreviousTVS: when old TVS is 0, change is 0 (not divide by zero error)</idea>
+      <idea ac="1">TestChangeMetrics_JSONSerialization: verify omitempty works correctly for nil pointers</idea>
+    </ideas>
+  </tests>
+</story-context>

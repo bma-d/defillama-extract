@@ -60,7 +60,7 @@ development_status:
   3-3-calculate-total-tvs-and-chain-breakdown: done
   3-4-calculate-category-breakdown: done
   3-5-rank-protocols-and-identify-largest: done
-  3-6-calculate-historical-change-metrics: backlog
+  3-6-calculate-historical-change-metrics: ready-for-dev
   3-7-build-complete-aggregation-pipeline: backlog
   epic-3-retrospective: optional
 
