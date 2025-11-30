@@ -1,0 +1,238 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1</storyId>
+    <title>Initialize Go Module and Project Structure</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-1-initialize-go-module-and-project-structure.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a properly initialized Go module with the standard project layout</iWant>
+    <soThat>I have a clean foundation to build the extraction service</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <name>Initialize Go module</name>
+        <subtasks>
+          <subtask id="1.1">Run `go mod init github.com/switchboard-xyz/defillama-extract`</subtask>
+          <subtask id="1.2">Verify `go.mod` contains correct module path and Go version (1.21+)</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2">
+        <name>Create directory structure</name>
+        <subtasks>
+          <subtask id="2.1">Create `cmd/extractor/` directory</subtask>
+          <subtask id="2.2">Create `internal/config/` directory</subtask>
+          <subtask id="2.3">Create `internal/models/` directory</subtask>
+          <subtask id="2.4">Create `internal/api/` directory</subtask>
+          <subtask id="2.5">Create `internal/aggregator/` directory</subtask>
+          <subtask id="2.6">Create `internal/storage/` directory</subtask>
+          <subtask id="2.7">Create `configs/` directory</subtask>
+          <subtask id="2.8">Create `testdata/` directory</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="3">
+        <name>Create minimal entry point</name>
+        <subtasks>
+          <subtask id="3.1">Create `cmd/extractor/main.go` with minimal `main()` function</subtask>
+          <subtask id="3.2">Verify it compiles: `go build ./cmd/extractor`</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="4">
+        <name>Create Makefile with build targets</name>
+        <subtasks>
+          <subtask id="4.1">Add `build` target that outputs to `bin/extractor`</subtask>
+          <subtask id="4.2">Add `test` target that runs `go test ./...`</subtask>
+          <subtask id="4.3">Add `lint` target that runs `golangci-lint run`</subtask>
+          <subtask id="4.4">Add `clean` target to remove build artifacts</subtask>
+          <subtask id="4.5">Add `all` target as default (lint, test, build)</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="5">
+        <name>Create .gitignore file</name>
+        <note>Existing .gitignore exists but needs updates for bin/ and vendor/</note>
+        <subtasks>
+          <subtask id="5.1">Add `data/` exclusion (already present)</subtask>
+          <subtask id="5.2">Add `bin/` exclusion (MISSING - must add)</subtask>
+          <subtask id="5.3">Add `*.exe` exclusion (already present)</subtask>
+          <subtask id="5.4">Add `vendor/` exclusion (MISSING - must add)</subtask>
+          <subtask id="5.5">Add `.DS_Store` exclusion (already present)</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="6">
+        <name>Create .golangci.yml configuration</name>
+        <subtasks>
+          <subtask id="6.1">Configure standard linters (gofmt, govet, errcheck, staticcheck)</subtask>
+          <subtask id="6.2">Set appropriate timeouts and exclusions</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="7">
+        <name>Final verification</name>
+        <subtasks>
+          <subtask id="7.1">Run `go build ./...` and verify success</subtask>
+          <subtask id="7.2">Run `make build` and verify binary created</subtask>
+          <subtask id="7.3">Run `make test` and verify passes</subtask>
+          <subtask id="7.4">Run `make lint` and verify passes (warnings OK)</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">
+      <given>a new project directory</given>
+      <when>`go mod init github.com/switchboard-xyz/defillama-extract` is run</when>
+      <then>`go.mod` file is created with the correct module path</then>
+    </ac>
+    <ac id="2">
+      <given>an initialized Go module</given>
+      <when>the standard directory structure is created</when>
+      <then>the following directories exist: cmd/extractor/, internal/config/, internal/models/, internal/api/, internal/aggregator/, internal/storage/, configs/, testdata/</then>
+    </ac>
+    <ac id="3">
+      <given>the directory structure exists</given>
+      <when>a minimal `cmd/extractor/main.go` is created</when>
+      <then>it compiles successfully with `go build ./...`</then>
+    </ac>
+    <ac id="4">
+      <given>the project is initialized</given>
+      <when>`Makefile` is created</when>
+      <then>`make build` creates binary at bin/extractor, `make test` runs tests, `make lint` runs golangci-lint</then>
+    </ac>
+    <ac id="5">
+      <given>the project is initialized</given>
+      <when>`.gitignore` is created/updated</when>
+      <then>it excludes: data/, bin/, *.exe, vendor/, .DS_Store</then>
+    </ac>
+    <ac id="6">
+      <given>the project is initialized</given>
+      <when>`.golangci.yml` is created</when>
+      <then>it configures standard linters for Go projects</then>
+    </ac>
+    <ac id="7">
+      <given>all files are created</given>
+      <when>`go build ./...` is executed</when>
+      <then>build succeeds with zero errors and zero warnings</then>
+    </ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>Complete directory layout</section>
+        <snippet>Standard Go project layout with cmd/, internal/, configs/, testdata/ directories. Entry point at cmd/extractor/main.go.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation</title>
+        <section>Detailed Design - Directory Structure</section>
+        <snippet>Defines internal packages: config, models, api, aggregator, storage. Go 1.21+ required for slog. Single external dependency: gopkg.in/yaml.v3.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 1.1 Definition</section>
+        <snippet>Story 1.1 initializes Go module with standard layout, Makefile targets, .gitignore, and .golangci.yml. Prerequisites: None (first story).</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>CLI Operation</section>
+        <snippet>CLI tool operates in run-once mode (--once) and daemon mode. YAML config + env var overrides. Structured logging with slog.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-001, ADR-004, ADR-005</section>
+        <snippet>ADR-001: Use stdlib (flag) over frameworks. ADR-004: Structured logging with slog (Go 1.21+). ADR-005: Minimal deps - only yaml.v3.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/consistency-rules.md</path>
+        <title>Consistency Rules</title>
+        <section>Naming Conventions, Code Organization</section>
+        <snippet>Packages: lowercase single word. Files: lowercase_underscores. One primary type per file. Tests co-located.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization, Fixtures</section>
+        <snippet>Unit tests co-located as *_test.go. Test fixtures in testdata/. Table-driven tests for coverage.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/development-environment.md</path>
+        <title>Development Environment</title>
+        <section>Prerequisites, Setup Commands</section>
+        <snippet>Requires Go 1.24+, golangci-lint, Make. Setup: go mod download, make test, make build, make lint.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <item>
+        <path>.gitignore</path>
+        <kind>config</kind>
+        <symbol>gitignore</symbol>
+        <lines>1-37</lines>
+        <reason>Existing .gitignore needs updates: missing bin/ and vendor/ exclusions required by AC5</reason>
+      </item>
+      <note>Greenfield project - no Go source files, go.mod, Makefile, or .golangci.yml exist yet. This story creates the foundational structure.</note>
+    </code>
+    <dependencies>
+      <go>
+        <note>No go.mod exists yet - this story creates it</note>
+        <planned>
+          <dep name="gopkg.in/yaml.v3" version="latest" purpose="YAML config parsing (added in Story 1.2)" />
+        </planned>
+      </go>
+      <tools>
+        <tool name="golangci-lint" purpose="Static analysis and linting" config=".golangci.yml" />
+        <tool name="make" purpose="Build automation" config="Makefile" />
+      </tools>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-001">Use Go stdlib (flag) for CLI parsing - no Cobra/Viper frameworks</constraint>
+    <constraint source="ADR-004">Minimum Go 1.21 required for log/slog package</constraint>
+    <constraint source="ADR-005">Minimal external dependencies - only yaml.v3 allowed for config</constraint>
+    <constraint source="architecture/consistency-rules.md">Package names: lowercase, single word (api, storage, models)</constraint>
+    <constraint source="architecture/consistency-rules.md">Files: lowercase with underscores (client.go, client_test.go)</constraint>
+    <constraint source="architecture/project-structure.md">internal/ packages cannot be imported by external projects (Go compiler enforced)</constraint>
+    <constraint source="tech-spec-epic-1.md">Module path must be github.com/switchboard-xyz/defillama-extract</constraint>
+  </constraints>
+
+  <interfaces>
+    <note>Story 1.1 creates project scaffolding - no interfaces defined yet. Interfaces emerge in Stories 1.2-1.4.</note>
+    <planned>
+      <interface>
+        <name>config.Load</name>
+        <kind>function</kind>
+        <signature>func Load(path string) (*Config, error)</signature>
+        <path>internal/config/config.go</path>
+        <story>1.2</story>
+      </interface>
+    </planned>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Go's built-in testing framework with table-driven tests. Tests are co-located with source files (*_test.go in same directory). Test fixtures go in testdata/ directory. Coverage targets: 90%+ for internal/config package (future stories). For Story 1.1, verification is primarily build-based (go build ./..., make targets).
+    </standards>
+    <locations>
+      <location>internal/**/*_test.go</location>
+      <location>testdata/</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Verify go.mod exists and contains correct module path after initialization</idea>
+      <idea ac="2">Verify all required directories exist after structure creation</idea>
+      <idea ac="3">Build verification: go build ./cmd/extractor produces no errors</idea>
+      <idea ac="4">Makefile target verification: make build creates bin/extractor, make test succeeds, make lint runs</idea>
+      <idea ac="5">Verify .gitignore contains all required exclusions (data/, bin/, *.exe, vendor/, .DS_Store)</idea>
+      <idea ac="6">Verify .golangci.yml configures required linters (gofmt, govet, errcheck, staticcheck)</idea>
+      <idea ac="7">Full build verification: go build ./... completes with zero errors</idea>
+    </ideas>
+  </tests>
+</story-context>
