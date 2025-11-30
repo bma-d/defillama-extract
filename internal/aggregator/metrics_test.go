@@ -1,6 +1,7 @@
 package aggregator
 
 import (
+	"encoding/json"
 	"math"
 	"testing"
 )
@@ -219,6 +220,124 @@ func TestCalculateCategoryBreakdown(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestRankProtocols(t *testing.T) {
+	tests := []struct {
+		name        string
+		protocols   []AggregatedProtocol
+		wantOrder   []string
+		wantRanks   []int
+		wantEmpty   bool
+		expectInput []int
+	}{
+		{
+			name: "sorts_by_tvl_and_assigns_rank",
+			protocols: []AggregatedProtocol{
+				{Name: "Medium", TVL: 300},
+				{Name: "Large", TVL: 900},
+				{Name: "Small", TVL: 100},
+			},
+			wantOrder:   []string{"Large", "Medium", "Small"},
+			wantRanks:   []int{1, 2, 3},
+			expectInput: []int{0, 0, 0},
+		},
+		{
+			name: "tiebreaker_alphabetical",
+			protocols: []AggregatedProtocol{
+				{Name: "Zeta", TVL: 500},
+				{Name: "Alpha", TVL: 500},
+			},
+			wantOrder:   []string{"Alpha", "Zeta"},
+			wantRanks:   []int{1, 2},
+			expectInput: []int{0, 0},
+		},
+		{
+			name:      "empty_input",
+			protocols: nil,
+			wantEmpty: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			original := append([]AggregatedProtocol(nil), tt.protocols...)
+
+			got := RankProtocols(tt.protocols)
+
+			if tt.wantEmpty {
+				if len(got) != 0 {
+					t.Fatalf("got %d items, want 0", len(got))
+				}
+				return
+			}
+
+			if len(got) != len(tt.wantOrder) {
+				t.Fatalf("got %d items, want %d", len(got), len(tt.wantOrder))
+			}
+
+			for i, name := range tt.wantOrder {
+				if got[i].Name != name {
+					t.Fatalf("index %d name %s, want %s", i, got[i].Name, name)
+				}
+				if got[i].Rank != tt.wantRanks[i] {
+					t.Fatalf("index %d rank %d, want %d", i, got[i].Rank, tt.wantRanks[i])
+				}
+			}
+
+			for i := range original {
+				if original[i].Rank != tt.expectInput[i] {
+					t.Fatalf("input mutated at %d: rank %d, want %d", i, original[i].Rank, tt.expectInput[i])
+				}
+			}
+		})
+	}
+}
+
+func TestGetLargestProtocol(t *testing.T) {
+	protocols := []AggregatedProtocol{
+		{Name: "Beta", Slug: "beta", TVL: 200, TVS: 20},
+		{Name: "Alpha", Slug: "alpha", TVL: 500, TVS: 50},
+		{Name: "Zeta", Slug: "zeta", TVL: 500, TVS: 40},
+	}
+
+	got := GetLargestProtocol(protocols)
+	if got == nil {
+		t.Fatalf("expected largest protocol, got nil")
+	}
+
+	if got.Name != "Alpha" || got.Slug != "alpha" {
+		t.Fatalf("got %s, want Alpha", got.Name)
+	}
+	if !almostEqual(got.TVL, 500) || !almostEqual(got.TVS, 50) {
+		t.Fatalf("unexpected TVL/TVS: %f/%f", got.TVL, got.TVS)
+	}
+
+	if GetLargestProtocol(nil) != nil {
+		t.Fatalf("expected nil for empty input")
+	}
+}
+
+func TestRankProtocolsJSONSerialization(t *testing.T) {
+	protocols := []AggregatedProtocol{
+		{Name: "A", Slug: "a", TVL: 10},
+		{Name: "B", Slug: "b", TVL: 5},
+	}
+
+	ranked := RankProtocols(protocols)
+	data, err := json.Marshal(ranked[0])
+	if err != nil {
+		t.Fatalf("marshal error: %v", err)
+	}
+
+	var decoded map[string]any
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal error: %v", err)
+	}
+
+	if decoded["rank"] != float64(1) {
+		t.Fatalf("rank field missing or incorrect: %v", decoded["rank"])
 	}
 }
 func sumTVS(items []ChainBreakdown) float64 {

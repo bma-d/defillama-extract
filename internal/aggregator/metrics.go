@@ -104,3 +104,53 @@ func CalculateCategoryBreakdown(protocols []AggregatedProtocol) []CategoryBreakd
 
 	return result
 }
+
+// RankProtocols sorts protocols by TVL descending, breaking ties alphabetically by Name, and assigns Rank starting at 1.
+// Returns a new slice without mutating the input.
+func RankProtocols(protocols []AggregatedProtocol) []AggregatedProtocol {
+	if len(protocols) == 0 {
+		return []AggregatedProtocol{}
+	}
+
+	ranked := make([]AggregatedProtocol, len(protocols))
+	copy(ranked, protocols)
+
+	sort.Slice(ranked, func(i, j int) bool {
+		if ranked[i].TVL != ranked[j].TVL {
+			return ranked[i].TVL > ranked[j].TVL
+		}
+		return ranked[i].Name < ranked[j].Name
+	})
+
+	for i := range ranked {
+		ranked[i].Rank = i + 1
+	}
+
+	return ranked
+}
+
+// GetLargestProtocol returns the protocol with the highest TVL as a LargestProtocol pointer. Nil when input is empty.
+func GetLargestProtocol(protocols []AggregatedProtocol) *LargestProtocol {
+	if len(protocols) == 0 {
+		return nil
+	}
+
+	best := protocols[0]
+	for i := 1; i < len(protocols); i++ {
+		candidate := protocols[i]
+		if candidate.TVL > best.TVL {
+			best = candidate
+			continue
+		}
+		if candidate.TVL == best.TVL && candidate.Name < best.Name {
+			best = candidate
+		}
+	}
+
+	return &LargestProtocol{
+		Name: best.Name,
+		Slug: best.Slug,
+		TVL:  best.TVL,
+		TVS:  best.TVS,
+	}
+}

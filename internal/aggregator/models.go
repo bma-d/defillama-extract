@@ -10,6 +10,15 @@ type AggregatedProtocol struct {
 	Chains     []string           `json:"chains"`
 	TVS        float64            `json:"tvs"`
 	TVSByChain map[string]float64 `json:"tvs_by_chain"`
+	Rank       int                `json:"rank"`
+}
+
+// LargestProtocol represents the top protocol by TVL.
+type LargestProtocol struct {
+	Name string  `json:"name"`
+	Slug string  `json:"slug"`
+	TVL  float64 `json:"tvl"`
+	TVS  float64 `json:"tvs"`
 }
 
 // ChainBreakdown represents TVS metrics for a single blockchain.

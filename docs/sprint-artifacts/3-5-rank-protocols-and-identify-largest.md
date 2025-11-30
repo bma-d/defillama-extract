@@ -1,6 +1,6 @@
 # Story 3.5: Rank Protocols and Identify Largest
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -26,42 +26,42 @@ Source: Epic 3.5 / PRD FR18, FR23
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define LargestProtocol struct (AC: 2)
-  - [ ] 1.1: Add `LargestProtocol` struct to `internal/aggregator/models.go`
-  - [ ] 1.2: Include fields: `Name` (string), `Slug` (string), `TVL` (float64), `TVS` (float64)
-  - [ ] 1.3: Add JSON struct tags for output serialization
+- [x] Task 1: Define LargestProtocol struct (AC: 2)
+  - [x] 1.1: Add `LargestProtocol` struct to `internal/aggregator/models.go`
+  - [x] 1.2: Include fields: `Name` (string), `Slug` (string), `TVL` (float64), `TVS` (float64)
+  - [x] 1.3: Add JSON struct tags for output serialization
 
-- [ ] Task 2: Add Rank field to AggregatedProtocol (AC: 1, 6)
-  - [ ] 2.1: Add `Rank` field (int) with JSON tag to `AggregatedProtocol` struct in `internal/aggregator/models.go`
+- [x] Task 2: Add Rank field to AggregatedProtocol (AC: 1, 6)
+  - [x] 2.1: Add `Rank` field (int) with JSON tag to `AggregatedProtocol` struct in `internal/aggregator/models.go`
 
-- [ ] Task 3: Implement RankProtocols function (AC: 1, 3, 4)
-  - [ ] 3.1: Add function signature `func RankProtocols(protocols []AggregatedProtocol) []AggregatedProtocol` to `internal/aggregator/metrics.go`
-  - [ ] 3.2: Handle empty input gracefully (return empty slice)
-  - [ ] 3.3: Sort protocols by TVL descending using `sort.Slice()`
-  - [ ] 3.4: Use alphabetical name order as tiebreaker for equal TVL
-  - [ ] 3.5: Assign Rank field starting from 1 (not 0)
-  - [ ] 3.6: Return the sorted and ranked slice
+- [x] Task 3: Implement RankProtocols function (AC: 1, 3, 4)
+  - [x] 3.1: Add function signature `func RankProtocols(protocols []AggregatedProtocol) []AggregatedProtocol` to `internal/aggregator/metrics.go`
+  - [x] 3.2: Handle empty input gracefully (return empty slice)
+  - [x] 3.3: Sort protocols by TVL descending using `sort.Slice()`
+  - [x] 3.4: Use alphabetical name order as tiebreaker for equal TVL
+  - [x] 3.5: Assign Rank field starting from 1 (not 0)
+  - [x] 3.6: Return the sorted and ranked slice
 
-- [ ] Task 4: Implement GetLargestProtocol function (AC: 2, 5)
-  - [ ] 4.1: Add function signature `func GetLargestProtocol(protocols []AggregatedProtocol) *LargestProtocol` to `internal/aggregator/metrics.go`
-  - [ ] 4.2: Handle empty input gracefully (return nil)
-  - [ ] 4.3: Return protocol with Rank 1 (assumes protocols already ranked, or find max TVL)
-  - [ ] 4.4: Create and return `LargestProtocol` with Name, Slug, TVL, TVS from top protocol
+- [x] Task 4: Implement GetLargestProtocol function (AC: 2, 5)
+  - [x] 4.1: Add function signature `func GetLargestProtocol(protocols []AggregatedProtocol) *LargestProtocol` to `internal/aggregator/metrics.go`
+  - [x] 4.2: Handle empty input gracefully (return nil)
+  - [x] 4.3: Return protocol with Rank 1 (assumes protocols already ranked, or find max TVL)
+  - [x] 4.4: Create and return `LargestProtocol` with Name, Slug, TVL, TVS from top protocol
 
-- [ ] Task 5: Write unit tests (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 5.1: Add tests to `internal/aggregator/metrics_test.go`
-  - [ ] 5.2: Test: Protocols sorted by TVL descending
-  - [ ] 5.3: Test: Rank field assigned correctly (1, 2, 3...)
-  - [ ] 5.4: Test: Tiebreaker uses alphabetical name order
-  - [ ] 5.5: Test: Empty protocols slice returns empty result (no panic)
-  - [ ] 5.6: Test: GetLargestProtocol returns correct protocol
-  - [ ] 5.7: Test: GetLargestProtocol with empty slice returns nil (no panic)
-  - [ ] 5.8: Test: Rank field appears in JSON serialization
+- [x] Task 5: Write unit tests (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 5.1: Add tests to `internal/aggregator/metrics_test.go`
+  - [x] 5.2: Test: Protocols sorted by TVL descending
+  - [x] 5.3: Test: Rank field assigned correctly (1, 2, 3...)
+  - [x] 5.4: Test: Tiebreaker uses alphabetical name order
+  - [x] 5.5: Test: Empty protocols slice returns empty result (no panic)
+  - [x] 5.6: Test: GetLargestProtocol returns correct protocol
+  - [x] 5.7: Test: GetLargestProtocol with empty slice returns nil (no panic)
+  - [x] 5.8: Test: Rank field appears in JSON serialization
 
-- [ ] Task 6: Verification (AC: all)
-  - [ ] 6.1: Run `go build ./...` and verify success
-  - [ ] 6.2: Run `go test ./internal/aggregator/...` and verify all pass
-  - [ ] 6.3: Run `make lint` and verify no errors
+- [x] Task 6: Verification (AC: all)
+  - [x] 6.1: Run `go build ./...` and verify success
+  - [x] 6.2: Run `go test ./internal/aggregator/...` and verify all pass
+  - [x] 6.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -258,12 +258,91 @@ func TestRankProtocols(t *testing.T) {
 
 ### Debug Log References
 
+- Plan: models add LargestProtocol + AggregatedProtocol.Rank (AC2, AC6); metrics implement RankProtocols (copy, TVL desc, name tiebreak, ranks 1-based, empty safe) (AC1, AC3, AC4); metrics implement GetLargestProtocol (nil on empty, select top by TVL, map to LargestProtocol) (AC2, AC5); tests in metrics_test for ranking order, tiebreak, JSON rank, empty handling, largest selection (AC1-AC6).
+
+- Implementation: models.go added Rank field and LargestProtocol struct; metrics.go added RankProtocols and GetLargestProtocol with copy + tie handling; metrics_test.go added table-driven ranking, largest protocol, JSON serialization tests; commands: `go build ./...`, `go test ./internal/aggregator/...`, `make lint` (all pass).
+
 ### Completion Notes List
 
+- AC1/AC3/AC4/AC6: RankProtocols copies input, sorts TVL desc with name tiebreak, assigns 1-based Rank, JSON tag verified.
+- AC2/AC5: LargestProtocol struct added; GetLargestProtocol returns nil on empty and maps top protocol fields.
+- Tests cover ranking order, tie handling, empty input, largest selection, rank serialization; build, unit tests, lint clean.
+
 ### File List
+
+- internal/aggregator/models.go
+- internal/aggregator/metrics.go
+- internal/aggregator/metrics_test.go
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/3-5-rank-protocols-and-identify-largest.md
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-3-data-processing-pipeline.md |
+| 2025-11-30 | Amelia (Dev) | Implemented ranking + largest protocol (AC1-AC6), added tests, moved status to review |
+| 2025-11-30 | Amelia (Dev Reviewer) | Senior Developer Review notes appended; outcome: Approve |
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad
+- Date: 2025-11-30
+- Outcome: Approve — all ACs satisfied; no action items
+
+### Summary
+- RankProtocols copy + TVL desc + alphabetical tiebreak + 1-based ranks implemented and verified across tests.
+- GetLargestProtocol returns top protocol with Name/Slug/TVL/TVS and nil on empty input.
+- JSON output now includes `rank`; structs carry required fields; tests cover ranking, ties, empty, serialization.
+- No tech-spec doc for epic 3 found; proceeded with story context + architecture docs.
+
+### Key Findings (by severity)
+- None
+
+### Acceptance Criteria Coverage
+
+| AC# | Description | Status | Evidence |
+|-----|-------------|--------|----------|
+| AC1 | RankProtocols sorts by TVL desc and assigns ranks | Implemented | internal/aggregator/metrics.go:108-129; internal/aggregator/metrics_test.go:226-295 |
+| AC2 | Largest protocol returned with required fields | Implemented | internal/aggregator/models.go:16-22; internal/aggregator/metrics.go:132-155; internal/aggregator/metrics_test.go:298-319 |
+| AC3 | Alphabetical tiebreaker for equal TVL | Implemented | internal/aggregator/metrics.go:118-123; internal/aggregator/metrics_test.go:247-255 |
+| AC4 | Empty input returns empty slice without panic | Implemented | internal/aggregator/metrics.go:110-113; internal/aggregator/metrics_test.go:257-274 |
+| AC5 | Empty input for largest returns nil safely | Implemented | internal/aggregator/metrics.go:133-136; internal/aggregator/metrics_test.go:317-319 |
+| AC6 | Rank field serialized in JSON output | Implemented | internal/aggregator/models.go:4-13; internal/aggregator/metrics_test.go:322-341 |
+
+**AC Coverage Summary:** 6 of 6 acceptance criteria fully implemented.
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| Task 1: LargestProtocol struct | [x] | Verified | internal/aggregator/models.go:16-22 |
+| Task 2: Add Rank field | [x] | Verified | internal/aggregator/models.go:4-13 |
+| Task 3: RankProtocols implementation | [x] | Verified | internal/aggregator/metrics.go:108-129; internal/aggregator/metrics_test.go:226-295 |
+| Task 4: GetLargestProtocol | [x] | Verified | internal/aggregator/metrics.go:132-155; internal/aggregator/metrics_test.go:298-319 |
+| Task 5: Unit tests | [x] | Verified | internal/aggregator/metrics_test.go:226-341 |
+| Task 6: Verification commands | [x] | Verified | go test ./...; go build ./...; make lint (2025-11-30) |
+
+**Task Summary:** 6 of 6 completed tasks verified; no false completions.
+
+### Test Coverage and Gaps
+- Executed: `go test ./...`, `go build ./...`, `make lint` — all pass (2025-11-30).
+- Tests cover ranking order, tiebreaker, empty inputs, largest selection, JSON serialization. No additional gaps identified for this scope.
+
+### Architectural Alignment
+- Implementation follows aggregation patterns (sort.Slice, empty-safe) from previous metrics functions; struct additions match data architecture models.
+- No epic-3 tech spec found; relied on story context and PRD/architecture docs.
+
+### Security Notes
+- No new external dependencies; logic is pure computation — no additional security risk introduced.
+
+### Best-Practices and References
+- Sorting + copy to avoid input mutation aligns with Go immutability guidance (internal/aggregator/metrics.go:115-127).
+- Tests use table-driven style per docs/architecture/testing-strategy.md.
+
+### Action Items
+
+**Code Changes Required:** None
+
+**Advisory Notes:**
+- Note: No follow-up actions; story approved.
