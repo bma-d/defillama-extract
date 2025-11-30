@@ -1,0 +1,145 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>1</storyId>
+    <title>Implement State File Structure and Loading</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-1-implement-state-file-structure-and-loading.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to load the last extraction state from a JSON file</iWant>
+    <soThat>I can determine if new data is available</soThat>
+    <tasks>
+      <task id="1" desc="Define State struct">
+        <subtask id="1.1">Add State struct to internal/storage/state.go with fields: OracleName, LastUpdated, LastUpdatedISO, LastProtocolCount, LastTVS, SnapshotCount, OldestSnapshot, NewestSnapshot</subtask>
+        <subtask id="1.2">Add JSON struct tags for all fields (snake_case)</subtask>
+        <subtask id="1.3">Add doc comment explaining struct purpose and zero-value semantics</subtask>
+      </task>
+      <task id="2" desc="Define StateManager struct">
+        <subtask id="2.1">Add StateManager struct with fields: outputDir, stateFile, outputFile, logger</subtask>
+        <subtask id="2.2">Implement NewStateManager(outputDir string, logger *slog.Logger) *StateManager constructor</subtask>
+        <subtask id="2.3">Constructor sets stateFile = outputDir + "/state.json" and outputFile = outputDir + "/switchboard-oracle-data.json"</subtask>
+      </task>
+      <task id="3" desc="Implement LoadState method">
+        <subtask id="3.1">Add func (sm *StateManager) LoadState() (*State, error) method</subtask>
+        <subtask id="3.2">Use os.ReadFile(sm.stateFile) to read file</subtask>
+        <subtask id="3.3">Handle os.ErrNotExist -> return &amp;State{}, nil (first run)</subtask>
+        <subtask id="3.4">Handle other read errors -> return nil, wrapped error</subtask>
+        <subtask id="3.5">Use json.Unmarshal() to parse JSON</subtask>
+        <subtask id="3.6">Handle JSON parse error -> log warning, return &amp;State{}, nil (graceful recovery)</subtask>
+        <subtask id="3.7">On success -> log debug with state attributes, return populated state</subtask>
+      </task>
+      <task id="4" desc="Write unit tests">
+        <subtask id="4.1">Create internal/storage/state_test.go</subtask>
+        <subtask id="4.2">Test: NewStateManager creates instance with correct paths</subtask>
+        <subtask id="4.3">Test: LoadState with valid JSON returns populated State</subtask>
+        <subtask id="4.4">Test: LoadState with missing file returns zero-value State (no error)</subtask>
+        <subtask id="4.5">Test: LoadState with corrupted JSON returns zero-value State, logs warning</subtask>
+        <subtask id="4.6">Test: LoadState with partial JSON returns zero-value State, logs warning</subtask>
+        <subtask id="4.7">Test: State struct JSON marshaling/unmarshaling round-trip</subtask>
+        <subtask id="4.8">Create testdata fixtures: valid_state.json, corrupted_state.json</subtask>
+      </task>
+      <task id="5" desc="Verification">
+        <subtask id="5.1">Run go build ./... and verify success</subtask>
+        <subtask id="5.2">Run go test ./internal/storage/... and verify all pass</subtask>
+        <subtask id="5.3">Run make lint and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given a state file exists at {outputDir}/state.json When LoadState() is called Then a *State struct is returned containing all fields populated: OracleName, LastUpdated, LastUpdatedISO, LastProtocolCount, LastTVS</criterion>
+    <criterion id="AC2">Given no state file exists When LoadState() is called Then a zero-value *State is returned (not an error) And LastUpdated = 0 indicates first run</criterion>
+    <criterion id="AC3">Given a corrupted/invalid state file (invalid JSON, partial write) When LoadState() is called Then a warning is logged with path and error details And a zero-value *State is returned (graceful recovery per FR28) And extraction proceeds as if first run</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-4.md" title="Epic Technical Specification: State &amp; History Management" section="AC-4.1: State File Structure and Loading" snippet="LoadState() reads from {outputDir}/state.json, returns *State with all fields populated on success, returns zero-value *State when file doesn't exist or corrupted." />
+      <doc path="docs/epics/epic-4-state-history-management.md" title="Epic 4: State &amp; History Management" section="Story 4.1" snippet="Implement state file structure and loading with graceful handling of missing/corrupted files." />
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="ADRs" section="ADR-002, ADR-003, ADR-004" snippet="ADR-002: Atomic writes via temp file + rename. ADR-003: Explicit error returns, wrap with context. ADR-004: Structured logging with slog." />
+      <doc path="docs/architecture/data-architecture.md" title="Data Architecture" section="Output Models" snippet="State struct definition with OracleName, LastUpdated, LastUpdatedISO, LastProtocolCount, LastTVS fields." />
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization" snippet="Unit tests co-located as *_test.go, table-driven tests, test fixtures in testdata/ directory." />
+      <doc path="docs/architecture/implementation-patterns.md" title="Implementation Patterns" section="Atomic File Writes, Context Propagation" snippet="Write to temp file then atomic rename. All I/O functions accept context.Context as first parameter." />
+      <doc path="docs/prd.md" title="PRD" section="FR25-FR29" snippet="Track last processed timestamp, compare for skip logic, recover gracefully from corrupted state, update atomically after successful extraction." />
+    </docs>
+    <code>
+      <file path="internal/storage/doc.go" kind="package-doc" symbol="storage" lines="1-2" reason="Package placeholder where state.go will be created" />
+      <file path="internal/aggregator/models.go" kind="models" symbol="Snapshot, AggregationResult" lines="41-72" reason="Snapshot struct to reference for history management; AggregationResult provides data source for state updates" />
+      <file path="internal/logging/logging.go" kind="service" symbol="Setup, SetupWithWriter, ParseLevel" lines="1-45" reason="Logging utilities to use for structured slog logging in StateManager" />
+      <file path="internal/config/config.go" kind="config" symbol="Config, OutputConfig" lines="15-43" reason="Config struct with OutputConfig containing Directory and StateFile paths" />
+      <file path="internal/logging/logging_test.go" kind="test" symbol="TestSetupJSONHandlerProducesStructuredOutput" lines="14-42" reason="Test pattern for capturing slog output with bytes.Buffer for log verification" />
+      <file path="internal/aggregator/aggregator_test.go" kind="test" symbol="TestAggregate_CompletesPipeline" lines="19-99" reason="Test patterns using table-driven tests and integration-style testing" />
+    </code>
+    <dependencies>
+      <ecosystem name="go">
+        <package name="go" version="1.24.0" />
+        <package name="golang.org/x/sync" version="v0.18.0" />
+        <package name="gopkg.in/yaml.v3" version="v3.0.1" />
+      </ecosystem>
+      <stdlib>
+        <package name="encoding/json" purpose="JSON marshaling/unmarshaling for state file" />
+        <package name="errors" purpose="errors.Is for os.ErrNotExist check" />
+        <package name="fmt" purpose="Error wrapping with context" />
+        <package name="log/slog" purpose="Structured logging" />
+        <package name="os" purpose="os.ReadFile for file I/O" />
+        <package name="path/filepath" purpose="filepath.Join for path construction" />
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-003">Use explicit error returns, wrap errors with context using fmt.Errorf and %w</constraint>
+    <constraint source="ADR-004">Use log/slog for all logging with structured key-value attributes</constraint>
+    <constraint source="tech-spec">StateManager should follow manager pattern similar to Aggregator</constraint>
+    <constraint source="tech-spec">State struct stays in implementation file (storage-specific)</constraint>
+    <constraint source="tech-spec">Go standard library only - no external dependencies for this story</constraint>
+    <constraint source="retrospective">Keep table-driven tests per aggregator package conventions</constraint>
+    <constraint source="retrospective">Handle nil/empty inputs gracefully (return zero values, not errors)</constraint>
+    <constraint source="FR28">Corrupted state file must be treated as first run (graceful recovery)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="StateManager" kind="struct" path="internal/storage/state.go">
+      <field name="outputDir" type="string" />
+      <field name="stateFile" type="string" />
+      <field name="outputFile" type="string" />
+      <field name="logger" type="*slog.Logger" />
+    </interface>
+    <interface name="NewStateManager" kind="constructor" signature="func NewStateManager(outputDir string, logger *slog.Logger) *StateManager" path="internal/storage/state.go" />
+    <interface name="LoadState" kind="method" signature="func (sm *StateManager) LoadState() (*State, error)" path="internal/storage/state.go" />
+    <interface name="State" kind="struct" path="internal/storage/state.go">
+      <field name="OracleName" type="string" json="oracle_name" />
+      <field name="LastUpdated" type="int64" json="last_updated" />
+      <field name="LastUpdatedISO" type="string" json="last_updated_iso" />
+      <field name="LastProtocolCount" type="int" json="last_protocol_count" />
+      <field name="LastTVS" type="float64" json="last_tvs" />
+      <field name="SnapshotCount" type="int" json="snapshot_count" />
+      <field name="OldestSnapshot" type="int64" json="oldest_snapshot" />
+      <field name="NewestSnapshot" type="int64" json="newest_snapshot" />
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Follow Go table-driven test patterns with clear test case names. Use t.TempDir() for temporary directories. Test all error paths including missing file, corrupted file, and read errors. Use bytes.Buffer with slog to verify log output. Co-locate tests as *_test.go files. Test fixtures go in testdata/ subdirectory.
+    </standards>
+    <locations>
+      <location>internal/storage/state_test.go</location>
+      <location>internal/storage/testdata/valid_state.json</location>
+      <location>internal/storage/testdata/corrupted_state.json</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">TestLoadState_ValidFile: Create valid state.json, call LoadState, verify all fields populated correctly</idea>
+      <idea ac="AC2">TestLoadState_MissingFile: Call LoadState on non-existent path, verify zero-value State returned with nil error</idea>
+      <idea ac="AC3">TestLoadState_CorruptedJSON: Create invalid JSON file, call LoadState, verify warning logged and zero-value State returned</idea>
+      <idea ac="AC3">TestLoadState_PartialJSON: Create truncated JSON file, verify graceful recovery</idea>
+      <idea ac="AC1">TestNewStateManager_PathConstruction: Verify stateFile and outputFile paths constructed correctly from outputDir</idea>
+      <idea ac="AC1">TestState_JSONRoundTrip: Marshal State to JSON, unmarshal back, verify equality</idea>
+    </ideas>
+  </tests>
+</story-context>
