@@ -40,7 +40,7 @@ development_status:
   1-1-initialize-go-module-and-project-structure: done
   1-2-implement-configuration-loading-from-yaml: done
   1-3-implement-environment-variable-overrides: done
-  1-4-implement-structured-logging-with-slog: backlog
+  1-4-implement-structured-logging-with-slog: ready-for-dev
   epic-1-retrospective: optional
 
   # Epic 2: API Integration (6 stories)

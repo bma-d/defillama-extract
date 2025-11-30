@@ -1,0 +1,228 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>4</storyId>
+    <title>Implement Structured Logging with slog</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-4-implement-structured-logging-with-slog.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>structured logging using Go's slog package</iWant>
+    <soThat>logs are machine-parseable and include consistent contextual information</soThat>
+    <tasks>
+      <task id="1" title="Create logging initialization function">
+        <subtasks>
+          <subtask id="1.1">Create `internal/logging/logging.go` file</subtask>
+          <subtask id="1.2">Implement `Setup(cfg config.LoggingConfig) *slog.Logger` function</subtask>
+          <subtask id="1.3">Map config level string ("debug", "info", "warn", "error") to `slog.Level` constant</subtask>
+          <subtask id="1.4">Create `slog.NewJSONHandler(os.Stdout, &amp;slog.HandlerOptions{Level: level})` when format is "json"</subtask>
+          <subtask id="1.5">Create `slog.NewTextHandler(os.Stdout, &amp;slog.HandlerOptions{Level: level})` when format is "text"</subtask>
+          <subtask id="1.6">Return the configured logger</subtask>
+        </subtasks>
+        <ac>1, 2, 4, 6</ac>
+      </task>
+      <task id="2" title="Integrate logger setup into main.go">
+        <subtasks>
+          <subtask id="2.1">Import `internal/logging` package in `cmd/extractor/main.go`</subtask>
+          <subtask id="2.2">After config loads successfully, call `logging.Setup(cfg.Logging)`</subtask>
+          <subtask id="2.3">Call `slog.SetDefault(logger)` to set as global default</subtask>
+          <subtask id="2.4">Log startup message: `slog.Info("application started", "oracle", cfg.Oracle.Name, "log_level", cfg.Logging.Level)`</subtask>
+        </subtasks>
+        <ac>6, 7</ac>
+      </task>
+      <task id="3" title="Write unit tests for logging setup">
+        <subtasks>
+          <subtask id="3.1">Create `internal/logging/logging_test.go`</subtask>
+          <subtask id="3.2">Test JSON handler produces valid JSON output with timestamp, level, msg fields</subtask>
+          <subtask id="3.3">Test text handler produces human-readable output</subtask>
+          <subtask id="3.4">Test level mapping: "debug" -> `slog.LevelDebug`, "info" -> `slog.LevelInfo`, etc.</subtask>
+          <subtask id="3.5">Test level filtering: warn level suppresses info and debug messages</subtask>
+          <subtask id="3.6">Test structured attributes appear in output (`"key": "value"` in JSON)</subtask>
+          <subtask id="3.7">Use `bytes.Buffer` as output destination to capture and verify log output</subtask>
+        </subtasks>
+        <ac>1, 2, 3, 4, 5</ac>
+      </task>
+      <task id="4" title="Update main.go to load config and initialize logging">
+        <subtasks>
+          <subtask id="4.1">Add `flag` package for `--config` flag parsing</subtask>
+          <subtask id="4.2">Parse `--config` flag with default value "configs/config.yaml"</subtask>
+          <subtask id="4.3">Call `config.Load(configPath)` and handle errors</subtask>
+          <subtask id="4.4">On config error, log to stderr and exit with code 1</subtask>
+          <subtask id="4.5">After logger initialized, replace placeholder `fmt.Println` with proper startup log</subtask>
+        </subtasks>
+        <ac>all</ac>
+      </task>
+      <task id="5" title="Verification">
+        <subtasks>
+          <subtask id="5.1">Run `go build ./...` and verify success</subtask>
+          <subtask id="5.2">Run `go test ./internal/logging/...` and verify all pass</subtask>
+          <subtask id="5.3">Run `make lint` and verify no errors</subtask>
+          <subtask id="5.4">Manual test: run binary with sample config, verify JSON log output</subtask>
+          <subtask id="5.5">Manual test: run binary with `LOG_FORMAT=text` env var, verify text output</subtask>
+        </subtasks>
+        <ac>all</ac>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given logging configuration with `format: "json"` and `level: "info"` When the logger is initialized Then a JSON handler is configured writing to stdout And log entries include: timestamp, level, message, and any additional attributes</criterion>
+    <criterion id="AC2">Given logging configuration with `format: "text"` and `level: "debug"` When the logger is initialized Then a text handler is configured for human-readable output And debug-level messages are included in output</criterion>
+    <criterion id="AC3">Given an initialized logger When code logs with `slog.Info("message", "key", "value")` Then output includes the key-value pair as structured data</criterion>
+    <criterion id="AC4">Given logging configuration When the logger is initialized Then the following log levels are supported: debug, info, warn, error</criterion>
+    <criterion id="AC5">Given logging configuration with a specific level When messages are logged below that level Then those messages are suppressed (e.g., `level: "warn"` suppresses debug and info)</criterion>
+    <criterion id="AC6">Given the logger is initialized When `slog.SetDefault(logger)` is called Then all subsequent `slog.Info()`, `slog.Debug()`, etc. calls use the configured handler</criterion>
+    <criterion id="AC7">Given configuration loading completes When logging is initialized Then a startup message is logged with oracle name and log level as structured attributes</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation</title>
+        <section>AC7-AC9 Logging Format and Levels</section>
+        <snippet>JSON handler produces valid JSON with time, level, msg fields. Text handler produces human-readable format. Log level filtering (warn suppresses info and debug).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-004: Structured Logging with slog</section>
+        <snippet>Use log/slog (stdlib) with JSON output in daemon mode. Built into Go 1.21+, structured fields enable log aggregation, text mode available for development.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/consistency-rules.md</path>
+        <title>Consistency Rules</title>
+        <section>Logging Strategy</section>
+        <snippet>Use slog with structured fields. Log levels: Debug for detailed tracing, Info for normal operations, Warn for recoverable issues, Error for failures requiring attention.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests co-located in *_test.go files. Table-driven tests for multiple inputs/outputs. Coverage requirements: high for business-critical logic.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>Directory Layout</section>
+        <snippet>Entry point at cmd/extractor/main.go. Internal packages under internal/. Config package at internal/config/.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-1-foundation.md</path>
+        <title>Epic 1: Foundation</title>
+        <section>Story 1.4: Implement Structured Logging with slog</section>
+        <snippet>Create internal/logging/logging.go or initialize in main.go. Use slog.New() with NewJSONHandler or NewTextHandler. Set as default with slog.SetDefault().</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>internal/config/config.go</path>
+        <kind>config</kind>
+        <symbol>LoggingConfig</symbol>
+        <lines>50-53</lines>
+        <reason>LoggingConfig struct with Level and Format fields is the input to logging.Setup()</reason>
+      </file>
+      <file>
+        <path>internal/config/config.go</path>
+        <kind>config</kind>
+        <symbol>Load</symbol>
+        <lines>123-146</lines>
+        <reason>Config.Load() returns *Config with validated LoggingConfig to pass to logging setup</reason>
+      </file>
+      <file>
+        <path>internal/config/config.go</path>
+        <kind>config</kind>
+        <symbol>Validate</symbol>
+        <lines>148-185</lines>
+        <reason>Validation already ensures logging.level is debug/info/warn/error and logging.format is json/text</reason>
+      </file>
+      <file>
+        <path>cmd/extractor/main.go</path>
+        <kind>entrypoint</kind>
+        <symbol>main</symbol>
+        <lines>1-7</lines>
+        <reason>Current minimal main.go to be extended with config loading and logging initialization</reason>
+      </file>
+      <file>
+        <path>internal/config/config_test.go</path>
+        <kind>test</kind>
+        <symbol>TestLoad_EnvOverrides_StringAndDuration</symbol>
+        <lines>150-183</lines>
+        <reason>Test pattern using t.Setenv() for environment variable testing - follow similar patterns for logging tests</reason>
+      </file>
+    </code>
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <version>go 1.23</version>
+        <external>
+          <package version="v3.0.1">gopkg.in/yaml.v3</package>
+        </external>
+        <stdlib>
+          <package>log/slog</package>
+          <package>os</package>
+          <package>strings</package>
+          <package>flag</package>
+          <package>log</package>
+        </stdlib>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-001">Use Go standard library over frameworks. Use flag (stdlib) for CLI parsing.</constraint>
+    <constraint source="ADR-004">Use log/slog (stdlib) for structured logging. Go 1.21+ required.</constraint>
+    <constraint source="ADR-005">Minimal external dependencies. Only gopkg.in/yaml.v3 for config parsing.</constraint>
+    <constraint source="ADR-003">Explicit error returns over exceptions. Return errors explicitly, wrap with context.</constraint>
+    <constraint source="consistency-rules">Logging levels: Debug for tracing, Info for normal ops, Warn for recoverable, Error for failures.</constraint>
+    <constraint source="project-structure">New file at internal/logging/logging.go. Tests co-located at internal/logging/logging_test.go.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>logging.Setup</name>
+      <kind>function signature</kind>
+      <signature>func Setup(cfg config.LoggingConfig) *slog.Logger</signature>
+      <path>internal/logging/logging.go (new file)</path>
+    </interface>
+    <interface>
+      <name>config.LoggingConfig</name>
+      <kind>struct</kind>
+      <signature>type LoggingConfig struct { Level string; Format string }</signature>
+      <path>internal/config/config.go:50-53</path>
+    </interface>
+    <interface>
+      <name>config.Load</name>
+      <kind>function signature</kind>
+      <signature>func Load(path string) (*Config, error)</signature>
+      <path>internal/config/config.go:123</path>
+    </interface>
+    <interface>
+      <name>slog.SetDefault</name>
+      <kind>stdlib function</kind>
+      <signature>func SetDefault(l *Logger)</signature>
+      <path>stdlib log/slog</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Per testing-strategy.md: Unit tests co-located in *_test.go files. Table-driven tests for multiple inputs/outputs. Use bytes.Buffer to capture log output for verification. Follow patterns from config_test.go which uses t.Setenv() for environment testing.</standards>
+    <locations>
+      <location>internal/logging/logging_test.go (new file)</location>
+      <location>internal/config/config_test.go (existing - reference for patterns)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1,AC7">Test JSON handler produces valid JSON with time, level, msg, and structured attributes</idea>
+      <idea ac="AC2">Test text handler produces human-readable output format</idea>
+      <idea ac="AC3">Test structured attributes appear in output using key-value pairs</idea>
+      <idea ac="AC4">Test level mapping table: debug->LevelDebug, info->LevelInfo, warn->LevelWarn, error->LevelError</idea>
+      <idea ac="AC5">Test level filtering: warn suppresses info/debug, error suppresses warn/info/debug</idea>
+      <idea ac="AC6">Test SetDefault makes configured logger the global default</idea>
+      <idea ac="AC4">Test invalid level defaults to info (edge case)</idea>
+    </ideas>
+  </tests>
+</story-context>
