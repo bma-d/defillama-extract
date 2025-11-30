@@ -1,6 +1,6 @@
 # Story 4.5: Implement History Loading from Output File
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,42 +24,42 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-4.md#AC-4.5] / [Source: do
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement LoadFromOutput function (AC: 1, 2)
-  - [ ] 1.1: Add `LoadFromOutput(outputPath string, logger *slog.Logger) ([]aggregator.Snapshot, error)` to `internal/storage/history.go`
-  - [ ] 1.2: Read file using `os.ReadFile(outputPath)`
-  - [ ] 1.3: Define minimal struct to extract only `historical` field: `type outputHistoryExtract struct { Historical []aggregator.Snapshot json:"historical" }`
-  - [ ] 1.4: Unmarshal JSON into extract struct
-  - [ ] 1.5: Sort snapshots by timestamp ascending using `sort.Slice`
-  - [ ] 1.6: Add doc comment explaining the function's purpose and graceful handling
+- [x] Task 1: Implement LoadFromOutput function (AC: 1, 2)
+  - [x] 1.1: Add `LoadFromOutput(outputPath string, logger *slog.Logger) ([]aggregator.Snapshot, error)` to `internal/storage/history.go`
+  - [x] 1.2: Read file using `os.ReadFile(outputPath)`
+  - [x] 1.3: Define minimal struct to extract only `historical` field: `type outputHistoryExtract struct { Historical []aggregator.Snapshot json:"historical" }`
+  - [x] 1.4: Unmarshal JSON into extract struct
+  - [x] 1.5: Sort snapshots by timestamp ascending using `sort.Slice`
+  - [x] 1.6: Add doc comment explaining the function's purpose and graceful handling
 
-- [ ] Task 2: Handle missing file gracefully (AC: 3)
-  - [ ] 2.1: Check for `os.IsNotExist(err)` after `os.ReadFile`
-  - [ ] 2.2: Log debug message: "no existing history found, starting fresh" with path attribute
-  - [ ] 2.3: Return empty `[]aggregator.Snapshot{}` and nil error
+- [x] Task 2: Handle missing file gracefully (AC: 3)
+  - [x] 2.1: Check for `os.IsNotExist(err)` after `os.ReadFile`
+  - [x] 2.2: Log debug message: "no existing history found, starting fresh" with path attribute
+  - [x] 2.3: Return empty `[]aggregator.Snapshot{}` and nil error
 
-- [ ] Task 3: Handle empty/missing historical field (AC: 4)
-  - [ ] 3.1: After successful unmarshal, check if `Historical` slice is nil or empty
-  - [ ] 3.2: Return empty slice (already initialized by Go) - no special handling needed
+- [x] Task 3: Handle empty/missing historical field (AC: 4)
+  - [x] 3.1: After successful unmarshal, check if `Historical` slice is nil or empty
+  - [x] 3.2: Return empty slice (already initialized by Go) - no special handling needed
 
-- [ ] Task 4: Handle corrupted file gracefully (AC: 5)
-  - [ ] 4.1: If `json.Unmarshal` returns error, log warn: "failed to load history, starting fresh" with path and error attributes
-  - [ ] 4.2: Return empty `[]aggregator.Snapshot{}` and nil error (graceful degradation)
+- [x] Task 4: Handle corrupted file gracefully (AC: 5)
+  - [x] 4.1: If `json.Unmarshal` returns error, log warn: "failed to load history, starting fresh" with path and error attributes
+  - [x] 4.2: Return empty `[]aggregator.Snapshot{}` and nil error (graceful degradation)
 
-- [ ] Task 5: Write unit tests for LoadFromOutput (AC: 1-5)
-  - [ ] 5.1: Create test fixtures in `internal/storage/testdata/` directory
-  - [ ] 5.2: Create `output_with_history.json` fixture with valid historical data (multiple snapshots, unsorted)
-  - [ ] 5.3: Create `output_no_history.json` fixture with valid JSON but no/empty historical field
-  - [ ] 5.4: Create `output_corrupted.json` fixture with invalid JSON
-  - [ ] 5.5: Test: valid output file returns sorted snapshots
-  - [ ] 5.6: Test: missing file returns empty slice, no error
-  - [ ] 5.7: Test: empty historical field returns empty slice
-  - [ ] 5.8: Test: corrupted file returns empty slice, no error, warn logged
-  - [ ] 5.9: Test: verify sort order is timestamp ascending
+- [x] Task 5: Write unit tests for LoadFromOutput (AC: 1-5)
+  - [x] 5.1: Create test fixtures in `internal/storage/testdata/` directory
+  - [x] 5.2: Create `output_with_history.json` fixture with valid historical data (multiple snapshots, unsorted)
+  - [x] 5.3: Create `output_no_history.json` fixture with valid JSON but no/empty historical field
+  - [x] 5.4: Create `output_corrupted.json` fixture with invalid JSON
+  - [x] 5.5: Test: valid output file returns sorted snapshots
+  - [x] 5.6: Test: missing file returns empty slice, no error
+  - [x] 5.7: Test: empty historical field returns empty slice
+  - [x] 5.8: Test: corrupted file returns empty slice, no error, warn logged
+  - [x] 5.9: Test: verify sort order is timestamp ascending
 
-- [ ] Task 6: Verification (AC: all)
-  - [ ] 6.1: Run `go build ./...` and verify success
-  - [ ] 6.2: Run `go test ./internal/storage/...` and verify all pass
-  - [ ] 6.3: Run `make lint` and verify no errors
+- [x] Task 6: Verification (AC: all)
+  - [x] 6.1: Run `go build ./...` and verify success
+  - [x] 6.2: Run `go test ./internal/storage/...` and verify all pass
+  - [x] 6.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -223,13 +223,83 @@ func LoadFromOutput(outputPath string, logger *slog.Logger) ([]aggregator.Snapsh
 {{agent_model_name_version}}
 
 ### Debug Log References
+- Implemented `LoadFromOutput` with partial parse + graceful degradation (AC-1..5)
+- Sorted snapshots ascending with `sort.Slice` and debug telemetry (AC-2)
 
 ### Completion Notes List
+- AC-1..5 satisfied: history loads from output, handles missing/empty/corrupted with logs, returns sorted snapshots.
+- Tests/verification: `go build ./...`, `go test ./...`, `make lint`.
 
 ### File List
+- internal/storage/history.go
+- internal/storage/history_test.go
+- internal/storage/testdata/output_with_history.json
+- internal/storage/testdata/output_no_history.json
+- internal/storage/testdata/output_corrupted.json
+- docs/sprint-artifacts/sprint-status.yaml
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-4 and tech-spec-epic-4.md |
+| 2025-11-30 | Amelia | Implemented `LoadFromOutput`, added fixtures/tests, marked story ready for review |
+| 2025-11-30 | Amelia | Senior Developer Review (AI) appended; status updated to done |
+
+## Senior Developer Review (AI)
+
+Reviewer: BMad  
+Date: 2025-11-30  
+Outcome: Approve – all ACs satisfied; no code changes required.
+
+### Summary
+- LoadFromOutput meets AC-1..AC-5 with graceful handling for missing/empty/corrupted output files and sorted history return.
+- Unit tests cover all acceptance paths; go build/test and make lint executed successfully.
+- Repository contains additional pending changes (state.go, writer.go) from other stories; ensure merge hygiene when integrating.
+
+### Key Findings
+- No blocking or medium findings for this story.
+- Low: Additional modified/untracked files outside story scope present; verify they belong to other stories before merge.
+
+### Acceptance Criteria Coverage
+| AC# | Status | Evidence |
+|-----|--------|----------|
+| AC-1 | Implemented | internal/storage/history.go:55-87; internal/storage/history_test.go:137-167 |
+| AC-2 | Implemented | internal/storage/history.go:76-79; internal/storage/history_test.go:151-153 |
+| AC-3 | Implemented | internal/storage/history.go:55-63; internal/storage/history_test.go:169-185 |
+| AC-4 | Implemented | internal/storage/history.go:72-74; internal/storage/history_test.go:188-199 |
+| AC-5 | Implemented | internal/storage/history.go:66-70; internal/storage/history_test.go:201-221; internal/storage/testdata/output_corrupted.json |
+**Coverage:** 5/5 acceptance criteria fully implemented.
+
+### Task Completion Validation
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| 1. Implement LoadFromOutput | Done | Verified | internal/storage/history.go:46-87 |
+| 2. Handle missing file | Done | Verified | internal/storage/history.go:55-63; history_test.go:169-185 |
+| 3. Handle empty/missing historical | Done | Verified | internal/storage/history.go:72-74; history_test.go:188-199 |
+| 4. Handle corrupted file | Done | Verified | internal/storage/history.go:66-70; history_test.go:201-221 |
+| 5. Write unit tests | Done | Verified | internal/storage/history_test.go:137-221; testdata/output_*.json |
+| 6. Verification (build/test/lint) | Done | Verified | `go build ./...`; `go test ./...`; `make lint` (all pass) |
+**Tasks:** 6/6 completed and verified.
+
+### Test Coverage and Gaps
+- go test ./... (pass); targeted LoadFromOutput scenarios cover AC-1..AC-5 including missing, empty, corrupted, sorting.
+- No additional gaps identified for this story.
+
+### Architectural Alignment
+- Follows ADR-004 structured logging with slog (history.go log calls).  
+- Uses partial parse per tech spec to extract only `historical`; retains graceful degradation per NFR10 (tech-spec-epic-4.md).
+
+### Security Notes
+- No secrets or external IO beyond local file read; permission/read errors degrade with warn log, no crash.
+
+### Best-Practices and References
+- Stack: Go 1.24 (go.mod); stdlib-only per ADR-005.  
+- Logging: ADR-004 structured slog; messages emitted at DEBUG/WARN for history load paths.  
+- Error handling: ADR-003 explicit errors; function returns nil error with graceful fallbacks as required by ACs.
+
+### Action Items
+**Code Changes Required:** None.
+
+**Advisory Notes:**
+- Note: Repository has additional modified/untracked files (e.g., internal/storage/state.go, internal/storage/writer.go); ensure they are scoped to their respective stories before merge.

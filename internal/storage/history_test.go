@@ -1,6 +1,9 @@
 package storage
 
 import (
+	"bytes"
+	"encoding/json"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -128,5 +131,92 @@ func TestCreateSnapshot_DateFormatting(t *testing.T) {
 				t.Fatalf("date mismatch for %s: got %s want %s", tt.name, snapshot.Date, tt.wantDate)
 			}
 		})
+	}
+}
+
+func TestLoadFromOutput_ValidFileSorted(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newTestLogger(buf)
+
+	path := filepath.Join("testdata", "output_with_history.json")
+	snapshots, err := LoadFromOutput(path, logger)
+	if err != nil {
+		t.Fatalf("LoadFromOutput returned error: %v", err)
+	}
+
+	if len(snapshots) != 3 {
+		t.Fatalf("expected 3 snapshots, got %d", len(snapshots))
+	}
+
+	if snapshots[0].Timestamp != 1700000000 || snapshots[1].Timestamp != 1700003600 || snapshots[2].Timestamp != 1700007200 {
+		t.Fatalf("snapshots not sorted ascending: %+v", snapshots)
+	}
+
+	if snapshots[0].TVS != 900000.0 || snapshots[2].TVS != 1100000.0 {
+		t.Fatalf("unexpected TVS values in snapshots: %+v", snapshots)
+	}
+
+	lines := bytes.Split(bytes.TrimSpace(buf.Bytes()), []byte("\n"))
+	var payload map[string]any
+	if err := json.Unmarshal(lines[len(lines)-1], &payload); err != nil {
+		t.Fatalf("failed to parse log payload: %v", err)
+	}
+	if lvl, ok := payload["level"].(string); !ok || lvl != "DEBUG" {
+		t.Fatalf("expected DEBUG log for history loaded, got %v", payload["level"])
+	}
+}
+
+func TestLoadFromOutput_MissingFileReturnsEmpty(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newTestLogger(buf)
+
+	path := filepath.Join(t.TempDir(), "missing.json")
+
+	snapshots, err := LoadFromOutput(path, logger)
+	if err != nil {
+		t.Fatalf("LoadFromOutput returned error: %v", err)
+	}
+	if len(snapshots) != 0 {
+		t.Fatalf("expected empty slice for missing file, got %d", len(snapshots))
+	}
+
+	if !bytes.Contains(buf.Bytes(), []byte("no existing history found")) {
+		t.Fatal("expected debug log for missing history file")
+	}
+}
+
+func TestLoadFromOutput_EmptyHistoricalReturnsEmpty(t *testing.T) {
+	logger := newTestLogger(&bytes.Buffer{})
+	path := filepath.Join("testdata", "output_no_history.json")
+
+	snapshots, err := LoadFromOutput(path, logger)
+	if err != nil {
+		t.Fatalf("LoadFromOutput returned error: %v", err)
+	}
+	if len(snapshots) != 0 {
+		t.Fatalf("expected empty slice when historical is empty, got %d", len(snapshots))
+	}
+}
+
+func TestLoadFromOutput_CorruptedReturnsEmptyAndWarns(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newTestLogger(buf)
+	path := filepath.Join("testdata", "output_corrupted.json")
+
+	snapshots, err := LoadFromOutput(path, logger)
+	if err != nil {
+		t.Fatalf("LoadFromOutput returned error: %v", err)
+	}
+	if len(snapshots) != 0 {
+		t.Fatalf("expected empty slice for corrupted file, got %d", len(snapshots))
+	}
+
+	lines := bytes.Split(bytes.TrimSpace(buf.Bytes()), []byte("\n"))
+	var payload map[string]any
+	if err := json.Unmarshal(lines[len(lines)-1], &payload); err != nil {
+		t.Fatalf("failed to parse log payload: %v", err)
+	}
+	if lvl, ok := payload["level"].(string); !ok || lvl != "WARN" {
+		t.Fatalf("expected WARN log for corrupted history, got %v", payload["level"])
 	}
 }
