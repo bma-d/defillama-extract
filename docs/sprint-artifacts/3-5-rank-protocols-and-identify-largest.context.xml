@@ -1,0 +1,182 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>5</storyId>
+    <title>Rank Protocols and Identify Largest</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-5-rank-protocols-and-identify-largest.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>protocols ranked by TVL and the largest protocol identified</iWant>
+    <soThat>I can show protocol importance and highlight top contributors</soThat>
+    <tasks>
+      <task id="1" title="Define LargestProtocol struct">
+        <subtask id="1.1">Add LargestProtocol struct to internal/aggregator/models.go</subtask>
+        <subtask id="1.2">Include fields: Name (string), Slug (string), TVL (float64), TVS (float64)</subtask>
+        <subtask id="1.3">Add JSON struct tags for output serialization</subtask>
+      </task>
+      <task id="2" title="Add Rank field to AggregatedProtocol">
+        <subtask id="2.1">Add Rank field (int) with JSON tag to AggregatedProtocol struct in internal/aggregator/models.go</subtask>
+      </task>
+      <task id="3" title="Implement RankProtocols function">
+        <subtask id="3.1">Add function signature func RankProtocols(protocols []AggregatedProtocol) []AggregatedProtocol to internal/aggregator/metrics.go</subtask>
+        <subtask id="3.2">Handle empty input gracefully (return empty slice)</subtask>
+        <subtask id="3.3">Sort protocols by TVL descending using sort.Slice()</subtask>
+        <subtask id="3.4">Use alphabetical name order as tiebreaker for equal TVL</subtask>
+        <subtask id="3.5">Assign Rank field starting from 1 (not 0)</subtask>
+        <subtask id="3.6">Return the sorted and ranked slice</subtask>
+      </task>
+      <task id="4" title="Implement GetLargestProtocol function">
+        <subtask id="4.1">Add function signature func GetLargestProtocol(protocols []AggregatedProtocol) *LargestProtocol to internal/aggregator/metrics.go</subtask>
+        <subtask id="4.2">Handle empty input gracefully (return nil)</subtask>
+        <subtask id="4.3">Return protocol with Rank 1 (assumes protocols already ranked, or find max TVL)</subtask>
+        <subtask id="4.4">Create and return LargestProtocol with Name, Slug, TVL, TVS from top protocol</subtask>
+      </task>
+      <task id="5" title="Write unit tests">
+        <subtask id="5.1">Add tests to internal/aggregator/metrics_test.go</subtask>
+        <subtask id="5.2">Test: Protocols sorted by TVL descending</subtask>
+        <subtask id="5.3">Test: Rank field assigned correctly (1, 2, 3...)</subtask>
+        <subtask id="5.4">Test: Tiebreaker uses alphabetical name order</subtask>
+        <subtask id="5.5">Test: Empty protocols slice returns empty result (no panic)</subtask>
+        <subtask id="5.6">Test: GetLargestProtocol returns correct protocol</subtask>
+        <subtask id="5.7">Test: GetLargestProtocol with empty slice returns nil (no panic)</subtask>
+        <subtask id="5.8">Test: Rank field appears in JSON serialization</subtask>
+      </task>
+      <task id="6" title="Verification">
+        <subtask id="6.1">Run go build ./... and verify success</subtask>
+        <subtask id="6.2">Run go test ./internal/aggregator/... and verify all pass</subtask>
+        <subtask id="6.3">Run make lint and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" source="Epic 3.5 / PRD FR18">
+      Given aggregated protocol data
+      When RankProtocols(protocols []AggregatedProtocol) is called
+      Then protocols are sorted by TVL descending
+      And each protocol is assigned a Rank field (1, 2, 3...)
+    </criterion>
+    <criterion id="AC2" source="Epic 3.5 / PRD FR23">
+      Given ranked protocols
+      When identifying largest protocol
+      Then protocol with rank 1 is returned
+      And LargestProtocol struct contains: Name, Slug, TVL, TVS
+    </criterion>
+    <criterion id="AC3">
+      Given two protocols with identical TVL
+      When ranking
+      Then alphabetical order by name is used as tiebreaker
+    </criterion>
+    <criterion id="AC4">
+      Given an empty protocols slice
+      When ranking
+      Then an empty slice is returned (no panic)
+    </criterion>
+    <criterion id="AC5">
+      Given an empty protocols slice
+      When identifying largest protocol
+      Then nil or zero-value LargestProtocol is returned with appropriate handling (no panic)
+    </criterion>
+    <criterion id="AC6">
+      Given ranked protocols
+      When output is serialized
+      Then Rank field appears in JSON output for each protocol
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="FR18, FR23">
+        FR18: System ranks protocols by TVL in descending order. FR23: System identifies largest protocol by TVL.
+      </doc>
+      <doc path="docs/epics/epic-3-data-processing-pipeline.md" title="Epic 3: Data Processing Pipeline" section="Story 3.5">
+        Story definition specifying RankProtocols function, LargestProtocol struct, and tiebreaker logic using alphabetical name order.
+      </doc>
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization">
+        Go table-driven tests, unit tests co-located as *_test.go, high coverage required for aggregation logic.
+      </doc>
+      <doc path="docs/architecture/fr-category-to-architecture-mapping.md" title="FR Category to Architecture Mapping" section="Aggregation and Metrics">
+        FR15-FR24 maps to internal/aggregator package, metrics.go file for aggregation functions.
+      </doc>
+      <doc path="docs/architecture/implementation-patterns.md" title="Implementation Patterns" section="All">
+        Dependency injection via constructors, context propagation, atomic file writes patterns.
+      </doc>
+    </docs>
+
+    <code>
+      <file path="internal/aggregator/models.go" kind="model" symbol="AggregatedProtocol" lines="3-13" reason="Target struct to add Rank field; currently has Name, Slug, Category, URL, TVL, Chains, TVS, TVSByChain">
+        <existing-fields>Name, Slug, Category, URL, TVL, Chains, TVS, TVSByChain</existing-fields>
+        <action>Add Rank int field with json tag</action>
+      </file>
+      <file path="internal/aggregator/models.go" kind="model" symbol="ChainBreakdown, CategoryBreakdown" lines="15-29" reason="Reference structs showing established patterns for breakdown types with TVS, Percentage, ProtocolCount fields" />
+      <file path="internal/aggregator/metrics.go" kind="service" symbol="CalculateChainBreakdown, CalculateCategoryBreakdown" lines="1-107" reason="Existing breakdown functions demonstrating sort.Slice pattern, empty input handling, percentage calculation - follow same patterns for RankProtocols">
+        <pattern>Empty input returns empty slice, uses sort.Slice for descending order, map accumulation pattern</pattern>
+      </file>
+      <file path="internal/aggregator/metrics_test.go" kind="test" symbol="TestCalculateChainBreakdown, TestCalculateCategoryBreakdown" lines="1-235" reason="Table-driven test patterns with almostEqual helper, test data setup using AggregatedProtocol - follow same structure">
+        <helper>almostEqual(a, b float64) bool - for float comparison</helper>
+        <pattern>Table-driven tests with name, input, expected fields</pattern>
+      </file>
+    </code>
+
+    <dependencies>
+      <go version="1.24.0">
+        <module name="golang.org/x/sync" version="v0.18.0" />
+        <module name="gopkg.in/yaml.v3" version="v3.0.1" />
+        <stdlib package="sort" use="sort.Slice for custom sorting" />
+        <stdlib package="encoding/json" use="JSON serialization for Rank field test" />
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="Architecture">Package location: internal/aggregator/</constraint>
+    <constraint source="Architecture">Follow established patterns from CalculateChainBreakdown and CalculateCategoryBreakdown</constraint>
+    <constraint source="Story Dev Notes">Create copy of input slice to avoid mutating original data</constraint>
+    <constraint source="Story Dev Notes">Rank starts at 1 (not 0)</constraint>
+    <constraint source="Story Dev Notes">Use pointer return (*LargestProtocol) for nil handling on empty input</constraint>
+    <constraint source="Testing Strategy">Table-driven tests required with arrange/act/assert pattern</constraint>
+    <constraint source="Testing Strategy">Must cover success cases and edge cases (empty input, tiebreaker)</constraint>
+    <constraint source="PRD">Case-sensitive exact match for oracle name (pattern established in filter.go)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="RankProtocols" kind="function" path="internal/aggregator/metrics.go">
+      <signature>func RankProtocols(protocols []AggregatedProtocol) []AggregatedProtocol</signature>
+      <description>Sorts protocols by TVL descending, uses alphabetical name as tiebreaker, assigns Rank field (1-indexed)</description>
+    </interface>
+    <interface name="GetLargestProtocol" kind="function" path="internal/aggregator/metrics.go">
+      <signature>func GetLargestProtocol(protocols []AggregatedProtocol) *LargestProtocol</signature>
+      <description>Returns pointer to LargestProtocol struct for top protocol by TVL, nil if empty input</description>
+    </interface>
+    <interface name="LargestProtocol" kind="struct" path="internal/aggregator/models.go">
+      <signature>type LargestProtocol struct { Name string; Slug string; TVL float64; TVS float64 }</signature>
+      <description>Output struct for largest protocol with JSON tags for serialization</description>
+    </interface>
+    <interface name="AggregatedProtocol.Rank" kind="field" path="internal/aggregator/models.go">
+      <signature>Rank int `json:"rank"`</signature>
+      <description>New field to add to existing AggregatedProtocol struct</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Go table-driven tests using testing.T, co-located *_test.go files, arrange/act/assert pattern. Use almostEqual helper for float64 comparisons. High coverage required for aggregation logic as it is business-critical.
+    </standards>
+    <locations>
+      <location>internal/aggregator/metrics_test.go</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1, AC3">TestRankProtocols: table-driven test with cases for TVL sorting, rank assignment, alphabetical tiebreaker</idea>
+      <idea ac="AC4">TestRankProtocols_EmptyInput: verify empty slice returns empty slice without panic</idea>
+      <idea ac="AC2">TestGetLargestProtocol: verify returns protocol with highest TVL containing Name, Slug, TVL, TVS</idea>
+      <idea ac="AC5">TestGetLargestProtocol_EmptyInput: verify nil return without panic</idea>
+      <idea ac="AC6">TestRankProtocols_JSONSerialization: encode to JSON and verify rank field appears in output</idea>
+      <idea ac="AC3">TestRankProtocols_Tiebreaker: two protocols with same TVL sorted alphabetically (Alpha before Zebra)</idea>
+    </ideas>
+  </tests>
+</story-context>
