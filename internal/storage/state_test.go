@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -145,6 +146,108 @@ func TestLoadState_PartialJSONReturnsZeroValue(t *testing.T) {
 	}
 	if *state != (State{}) {
 		t.Fatalf("expected zero-value State for partial JSON, got %+v", state)
+	}
+}
+
+func TestStateManager_ShouldProcess(t *testing.T) {
+	tmpDir := t.TempDir()
+	buf := &bytes.Buffer{}
+	logger := newTestLogger(buf)
+	sm := NewStateManager(tmpDir, logger)
+
+	tests := []struct {
+		name        string
+		currentTS   int64
+		lastUpdated int64
+		want        bool
+		wantLevel   string
+		msgContains string
+		wantAttrs   map[string]int64
+	}{
+		{
+			name:        "first run returns true",
+			currentTS:   1700000000,
+			lastUpdated: 0,
+			want:        true,
+			wantLevel:   "DEBUG",
+			msgContains: "first run, processing required",
+		},
+		{
+			name:        "new data returns true",
+			currentTS:   1700003600,
+			lastUpdated: 1700000000,
+			want:        true,
+			wantLevel:   "DEBUG",
+			msgContains: "new data available",
+			wantAttrs: map[string]int64{
+				"current_ts":    1700003600,
+				"last_ts":       1700000000,
+				"delta_seconds": 3600,
+			},
+		},
+		{
+			name:        "same timestamp returns false",
+			currentTS:   1700000000,
+			lastUpdated: 1700000000,
+			want:        false,
+			wantLevel:   "INFO",
+			msgContains: "no new data, skipping extraction",
+			wantAttrs: map[string]int64{
+				"current_ts": 1700000000,
+				"last_ts":    1700000000,
+			},
+		},
+		{
+			name:        "clock skew returns false",
+			currentTS:   1700000000,
+			lastUpdated: 1700003600,
+			want:        false,
+			wantLevel:   "WARN",
+			msgContains: "clock skew detected, API timestamp older than last processed",
+			wantAttrs: map[string]int64{
+				"current_ts": 1700000000,
+				"last_ts":    1700003600,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf.Reset()
+
+			state := &State{LastUpdated: tt.lastUpdated}
+			got := sm.ShouldProcess(tt.currentTS, state)
+			if got != tt.want {
+				t.Fatalf("ShouldProcess() = %v, want %v", got, tt.want)
+			}
+
+			lines := bytes.Split(bytes.TrimSpace(buf.Bytes()), []byte("\n"))
+			if len(lines) == 0 {
+				t.Fatal("expected log output")
+			}
+
+			var payload map[string]any
+			if err := json.Unmarshal(lines[len(lines)-1], &payload); err != nil {
+				t.Fatalf("failed to parse log payload: %v", err)
+			}
+
+			if lvl, ok := payload["level"].(string); !ok || lvl != tt.wantLevel {
+				t.Fatalf("log level = %v, want %s", payload["level"], tt.wantLevel)
+			}
+			if msg, ok := payload["msg"].(string); !ok || !strings.Contains(msg, tt.msgContains) {
+				t.Fatalf("log msg = %v, want contains %q", payload["msg"], tt.msgContains)
+			}
+
+			for k, v := range tt.wantAttrs {
+				gotVal, ok := payload[k]
+				if !ok {
+					t.Fatalf("expected attribute %s in log", k)
+				}
+				if gotNum, ok := gotVal.(float64); !ok || int64(gotNum) != v {
+					t.Fatalf("attribute %s = %v, want %d", k, gotVal, v)
+				}
+			}
+		})
 	}
 }
 

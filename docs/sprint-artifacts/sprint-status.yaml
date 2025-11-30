@@ -67,7 +67,7 @@ development_status:
   # Epic 4: State & History Management (8 stories)
   epic-4: contexted
   4-1-implement-state-file-structure-and-loading: done
-  4-2-implement-state-comparison-for-skip-logic: ready-for-dev
+  4-2-implement-state-comparison-for-skip-logic: done
   4-3-implement-atomic-state-file-updates: backlog
   4-4-implement-historical-snapshot-structure: backlog
   4-5-implement-history-loading-from-output-file: backlog

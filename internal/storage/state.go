@@ -76,3 +76,36 @@ func (sm *StateManager) LoadState() (*State, error) {
 
 	return &state, nil
 }
+
+// ShouldProcess determines whether extraction should proceed based on the API
+// timestamp compared to the last processed timestamp in state. It returns true
+// when processing is required (first run or newer data) and false when work
+// can be skipped (no new data or clock skew). All decisions are logged with
+// appropriate levels and attributes per ADR-004.
+func (sm *StateManager) ShouldProcess(currentTS int64, state *State) bool {
+	switch {
+	case state.LastUpdated == 0:
+		sm.logger.Debug("first run, processing required")
+		return true
+	case currentTS > state.LastUpdated:
+		delta := currentTS - state.LastUpdated
+		sm.logger.Debug("new data available",
+			"current_ts", currentTS,
+			"last_ts", state.LastUpdated,
+			"delta_seconds", delta,
+		)
+		return true
+	case currentTS == state.LastUpdated:
+		sm.logger.Info("no new data, skipping extraction",
+			"current_ts", currentTS,
+			"last_ts", state.LastUpdated,
+		)
+		return false
+	default:
+		sm.logger.Warn("clock skew detected, API timestamp older than last processed",
+			"current_ts", currentTS,
+			"last_ts", state.LastUpdated,
+		)
+		return false
+	}
+}
