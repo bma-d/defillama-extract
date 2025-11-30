@@ -1,0 +1,4 @@
+oracle:
+  name: Switchboard
+api: !!map
+  timeout: not-a-duration

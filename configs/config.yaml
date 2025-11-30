@@ -1,0 +1,43 @@
+# Default configuration for defillama-extract
+#
+# Copy this file and adjust values as needed. All fields have sensible defaults.
+
+oracle:
+  # Display name of this oracle instance
+  name: Switchboard
+  # Optional website and documentation links
+  website: https://switchboard.xyz
+  documentation: https://docs.switchboard.xyz
+
+api:
+  # Base URL for oracle listings
+  oracles_url: https://api.llama.fi/oracles
+  # Base URL for protocol data
+  protocols_url: https://api.llama.fi/lite/protocols2?b=2
+  # Request timeout (Go duration, e.g., 30s, 1m)
+  timeout: 30s
+  # Number of retries before failing a request
+  max_retries: 3
+  # Delay between retries (Go duration)
+  retry_delay: 1s
+
+output:
+  # Directory where output files are written
+  directory: data
+  # Filenames for various output modes
+  full_file: switchboard-oracle-data.json
+  min_file: switchboard-oracle-data.min.json
+  summary_file: switchboard-summary.json
+  state_file: state.json
+
+scheduler:
+  # Interval between extraction cycles
+  interval: 2h
+  # Whether the first run should start immediately
+  start_immediately: true
+
+logging:
+  # Log level: debug | info | warn | error
+  level: info
+  # Log format: json | text
+  format: json

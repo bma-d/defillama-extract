@@ -1,0 +1,217 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>Implement Configuration Loading from YAML</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-2-implement-configuration-loading-from-yaml.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>configuration loaded from a YAML file with sensible defaults</iWant>
+    <soThat>the service behavior can be customized without code changes</soThat>
+    <tasks>
+      <task id="1">Create Config struct with YAML tags (AC: 1)
+        <subtask id="1.1">Create `internal/config/config.go` with main Config struct</subtask>
+        <subtask id="1.2">Create `OracleConfig` struct with `name`, `website`, `documentation` fields</subtask>
+        <subtask id="1.3">Create `APIConfig` struct with `oracles_url`, `protocols_url`, `timeout`, `max_retries`, `retry_delay` fields</subtask>
+        <subtask id="1.4">Create `OutputConfig` struct with `directory`, `full_file`, `min_file`, `summary_file`, `state_file` fields</subtask>
+        <subtask id="1.5">Create `SchedulerConfig` struct with `interval`, `start_immediately` fields</subtask>
+        <subtask id="1.6">Create `LoggingConfig` struct with `level`, `format` fields</subtask>
+        <subtask id="1.7">Add appropriate `yaml` struct tags to all fields</subtask>
+      </task>
+      <task id="2">Implement Load function with defaults (AC: 1, 2, 3, 4, 5)
+        <subtask id="2.1">Implement `defaultConfig()` function returning Config with all defaults</subtask>
+        <subtask id="2.2">Implement `Load(path string) (*Config, error)` that reads YAML file</subtask>
+        <subtask id="2.3">Handle file not found error with clear message</subtask>
+        <subtask id="2.4">Handle YAML parse errors with descriptive message</subtask>
+        <subtask id="2.5">Merge YAML values over defaults (YAML overrides defaults)</subtask>
+      </task>
+      <task id="3">Implement Validate method (AC: 6, 7)
+        <subtask id="3.1">Implement `(c *Config) Validate() error` method</subtask>
+        <subtask id="3.2">Validate `oracle.name` is not empty</subtask>
+        <subtask id="3.3">Validate `api.timeout` is positive</subtask>
+        <subtask id="3.4">Validate `api.max_retries` is non-negative</subtask>
+        <subtask id="3.5">Validate `logging.level` is one of: debug, info, warn, error</subtask>
+        <subtask id="3.6">Validate `logging.format` is one of: json, text</subtask>
+        <subtask id="3.7">Validate `scheduler.interval` is positive</subtask>
+      </task>
+      <task id="4">Create default config.yaml file (AC: 1)
+        <subtask id="4.1">Create `configs/config.yaml` with documented defaults</subtask>
+        <subtask id="4.2">Include comments explaining each configuration section</subtask>
+      </task>
+      <task id="5">Add gopkg.in/yaml.v3 dependency (AC: 1)
+        <subtask id="5.1">Run `go get gopkg.in/yaml.v3`</subtask>
+        <subtask id="5.2">Verify `go.sum` is updated</subtask>
+      </task>
+      <task id="6">Write unit tests (AC: all)
+        <subtask id="6.1">Test `Load` with valid YAML file (all fields)</subtask>
+        <subtask id="6.2">Test `Load` with minimal YAML file (defaults applied)</subtask>
+        <subtask id="6.3">Test `Load` with missing file (error returned)</subtask>
+        <subtask id="6.4">Test `Load` with invalid YAML (parse error)</subtask>
+        <subtask id="6.5">Test `Validate` with valid config</subtask>
+        <subtask id="6.6">Test `Validate` rejects negative timeout</subtask>
+        <subtask id="6.7">Test `Validate` rejects empty oracle name</subtask>
+        <subtask id="6.8">Test `Validate` rejects invalid log level</subtask>
+        <subtask id="6.9">Use table-driven tests per Go idioms</subtask>
+      </task>
+      <task id="7">Verification (AC: all)
+        <subtask id="7.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="7.2">Run `go test ./internal/config/...` and verify all pass</subtask>
+        <subtask id="7.3">Run `make lint` and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given a YAML configuration file at the specified path When `config.Load(path)` is called Then configuration is loaded into a typed `Config` struct with all sections: oracle (name, website, documentation URL), api (base URLs, timeout, max_retries, retry_delay), output (directory, file names), scheduler (interval, start_immediately), logging (level, format)</criterion>
+    <criterion id="AC2">Given a YAML file with missing optional fields When configuration is loaded Then default values are applied for missing fields and the Config struct is fully populated</criterion>
+    <criterion id="AC3">Given a YAML file with all fields specified When configuration is loaded Then all YAML values override defaults</criterion>
+    <criterion id="AC4">Given no config file exists at the specified path When `config.Load(nonexistent.yaml)` is called Then an error is returned with message containing "config file not found" or "no such file"</criterion>
+    <criterion id="AC5">Given an invalid/malformed YAML file When configuration is loaded Then a parse error is returned with descriptive message</criterion>
+    <criterion id="AC6">Given a Config struct with invalid values (e.g., negative timeout, empty oracle name, invalid log level) When `config.Validate()` is called Then an error is returned describing the first validation failure</criterion>
+    <criterion id="AC7">Given a Config struct with valid values When `config.Validate()` is called Then nil is returned (no error)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Configuration</section>
+        <snippet>FR49: System loads configuration from YAML file. FR50: System applies environment variable overrides. FR51: System provides sensible defaults for all configuration values. FR52: System validates configuration on startup.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Detailed Design - Data Models and Contracts</section>
+        <snippet>Complete Config struct definitions with all nested types (OracleConfig, APIConfig, OutputConfig, SchedulerConfig, LoggingConfig), yaml tags, and default values documented.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 1.2: Implement Configuration Loading from YAML</section>
+        <snippet>Package: internal/config/config.go. Use gopkg.in/yaml.v3 for YAML parsing. Implement Load(path string) (*Config, error) function and Validate() error method.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-005: Minimal External Dependencies</section>
+        <snippet>Only external dependency is gopkg.in/yaml.v3 for config parsing. Go stdlib provides HTTP, JSON, logging, testing. Fewer deps = faster builds, smaller binary, less CVE exposure.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests co-located in *_test.go files. Table-driven tests for all test files. Config tests in internal/config/config_test.go. Test fixtures in testdata/ directory.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>Internal Packages</section>
+        <snippet>internal/config/config.go - Config loading and validation. internal/config/config_test.go - Config tests. configs/config.yaml - Default configuration template.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>internal/config/doc.go</path>
+        <kind>placeholder</kind>
+        <symbol>package config</symbol>
+        <lines>1-3</lines>
+        <reason>Placeholder file to be replaced with config.go implementation. Establishes package name.</reason>
+      </file>
+      <file>
+        <path>cmd/extractor/main.go</path>
+        <kind>entry-point</kind>
+        <symbol>main()</symbol>
+        <lines>1-7</lines>
+        <reason>Minimal entry point established in Story 1.1. Will later integrate config loading.</reason>
+      </file>
+      <file>
+        <path>go.mod</path>
+        <kind>module-definition</kind>
+        <symbol>module github.com/switchboard-xyz/defillama-extract</symbol>
+        <lines>1-3</lines>
+        <reason>Go module definition. Go 1.23 specified. Will need gopkg.in/yaml.v3 dependency added.</reason>
+      </file>
+      <file>
+        <path>Makefile</path>
+        <kind>build-config</kind>
+        <symbol>build, test, lint targets</symbol>
+        <lines>1-30</lines>
+        <reason>Build tooling with test and lint targets for verification. golangci-lint auto-installs if missing.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <goVersion>1.23</goVersion>
+        <required>
+          <dep name="gopkg.in/yaml.v3" version="latest" reason="YAML configuration parsing - ADR-005 approved dependency"/>
+        </required>
+        <stdlib>
+          <pkg name="os" reason="File reading for config file"/>
+          <pkg name="time" reason="Duration types for timeout, interval fields"/>
+          <pkg name="fmt" reason="Error formatting"/>
+          <pkg name="strings" reason="String validation (log level checking)"/>
+        </stdlib>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-001">Use Go standard library over frameworks - flag for CLI, net/http for HTTP, encoding/json for JSON</constraint>
+    <constraint source="ADR-003">Explicit error returns over exceptions - errors are values, wrap with context</constraint>
+    <constraint source="ADR-005">Minimal external dependencies - only gopkg.in/yaml.v3 for config parsing allowed</constraint>
+    <constraint source="Tech-Spec">Go 1.21+ required for log/slog support (project uses Go 1.23)</constraint>
+    <constraint source="Tech-Spec">Load function returns pointer to avoid copying, Validate is a method on Config</constraint>
+    <constraint source="Story 1.1">Package directories have doc.go placeholders - replace with actual implementation files</constraint>
+    <constraint source="Testing Strategy">Use table-driven tests per Go idioms</constraint>
+    <constraint source="Testing Strategy">Configuration loading must test all layers: defaults, YAML, env (env overrides in Story 1.3)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>config.Load</name>
+      <kind>function</kind>
+      <signature>func Load(path string) (*Config, error)</signature>
+      <path>internal/config/config.go</path>
+    </interface>
+    <interface>
+      <name>Config.Validate</name>
+      <kind>method</kind>
+      <signature>func (c *Config) Validate() error</signature>
+      <path>internal/config/config.go</path>
+    </interface>
+    <interface>
+      <name>defaultConfig</name>
+      <kind>function</kind>
+      <signature>func defaultConfig() Config</signature>
+      <path>internal/config/config.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Unit tests use Go's built-in testing package with table-driven test patterns. Tests are co-located with implementation (*_test.go in same package). Test coverage target for internal/config is 90%+. Use descriptive test names following pattern Test{Function}_{Scenario}. Error paths must be tested. No external test frameworks - use stdlib testing only.</standards>
+    <locations>
+      <location>internal/config/config_test.go</location>
+      <location>testdata/config.yaml</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1">TestLoad_ValidYAMLAllFields - Load complete config file, verify all sections populated</idea>
+      <idea acRef="AC2">TestLoad_MinimalYAML - Load YAML with only required fields, verify defaults applied</idea>
+      <idea acRef="AC3">TestLoad_YAMLOverridesDefaults - Verify explicit YAML values override defaults</idea>
+      <idea acRef="AC4">TestLoad_FileNotFound - Verify error returned for nonexistent path</idea>
+      <idea acRef="AC5">TestLoad_InvalidYAML - Verify parse error for malformed YAML</idea>
+      <idea acRef="AC6">TestValidate_NegativeTimeout - Verify validation fails for timeout &lt; 0</idea>
+      <idea acRef="AC6">TestValidate_EmptyOracleName - Verify validation fails for empty oracle name</idea>
+      <idea acRef="AC6">TestValidate_InvalidLogLevel - Verify validation fails for unknown log level</idea>
+      <idea acRef="AC6">TestValidate_InvalidLogFormat - Verify validation fails for unknown log format</idea>
+      <idea acRef="AC7">TestValidate_ValidConfig - Verify validation passes for valid config</idea>
+      <idea acRef="all">TestConfig_TableDriven - Comprehensive table-driven tests covering edge cases</idea>
+    </ideas>
+  </tests>
+</story-context>

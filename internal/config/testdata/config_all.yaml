@@ -1,0 +1,26 @@
+oracle:
+  name: CustomOracle
+  website: https://switchboard.xyz
+  documentation: https://docs.switchboard.xyz
+
+api:
+  oracles_url: https://example.com/oracles
+  protocols_url: https://example.com/protocols
+  timeout: 10s
+  max_retries: 5
+  retry_delay: 2s
+
+output:
+  directory: /tmp/data
+  full_file: full.json
+  min_file: min.json
+  summary_file: summary.json
+  state_file: state.json
+
+scheduler:
+  interval: 30m
+  start_immediately: false
+
+logging:
+  level: debug
+  format: text
