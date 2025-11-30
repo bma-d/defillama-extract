@@ -1,0 +1,112 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>4</storyId>
+    <title>Calculate Category Breakdown</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-4-calculate-category-breakdown.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to calculate TVS breakdown by protocol category</iWant>
+    <soThat>I can show which DeFi sectors use Switchboard most</soThat>
+    <tasks>
+      <task id="1" name="Define CategoryBreakdown struct">
+        <subtask id="1.1">Add CategoryBreakdown struct to internal/aggregator/models.go</subtask>
+        <subtask id="1.2">Include fields: Category (string), TVS (float64), Percentage (float64), ProtocolCount (int)</subtask>
+        <subtask id="1.3">Add JSON struct tags for output serialization</subtask>
+      </task>
+      <task id="2" name="Implement CalculateCategoryBreakdown function">
+        <subtask id="2.1">Add function signature func CalculateCategoryBreakdown(protocols []AggregatedProtocol) []CategoryBreakdown to internal/aggregator/metrics.go</subtask>
+        <subtask id="2.2">Iterate over protocols and aggregate TVS by category</subtask>
+        <subtask id="2.3">Handle empty/missing category as "Uncategorized"</subtask>
+        <subtask id="2.4">Track protocol count per category</subtask>
+        <subtask id="2.5">Calculate total TVS across all categories</subtask>
+        <subtask id="2.6">Calculate percentage for each category as (categoryTVS / totalTVS) * 100</subtask>
+        <subtask id="2.7">Handle zero total TVS gracefully (return percentages as 0)</subtask>
+        <subtask id="2.8">Sort results by TVS descending using sort.Slice()</subtask>
+      </task>
+      <task id="3" name="Write unit tests">
+        <subtask id="3.1">Add tests to internal/aggregator/metrics_test.go</subtask>
+        <subtask id="3.2">Test: CategoryBreakdown returned with correct fields populated</subtask>
+        <subtask id="3.3">Test: TVS sums correctly across multiple protocols in same category</subtask>
+        <subtask id="3.4">Test: Percentages calculate correctly (verify 60/30/10 split example)</subtask>
+        <subtask id="3.5">Test: Results sorted by TVS descending</subtask>
+        <subtask id="3.6">Test: Zero total TVS returns empty slice or zero percentages (no panic)</subtask>
+        <subtask id="3.7">Test: Empty protocols slice returns empty result</subtask>
+        <subtask id="3.8">Test: Protocol count reflects number of protocols per category</subtask>
+        <subtask id="3.9">Test: Empty/missing category grouped as "Uncategorized"</subtask>
+      </task>
+      <task id="4" name="Verification">
+        <subtask id="4.1">Run go build ./... and verify success</subtask>
+        <subtask id="4.2">Run go test ./internal/aggregator/... and verify all pass</subtask>
+        <subtask id="4.3">Run make lint and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given aggregated protocol data When CalculateCategoryBreakdown(protocols []AggregatedProtocol) is called Then a CategoryBreakdown slice is returned with each unique category represented, including TVS sum for that category, Percentage of total TVS, and ProtocolCount in that category</criterion>
+    <criterion id="AC2">Given protocols in categories: Lending (3 protocols, $600M), CDP (2 protocols, $300M), Dexes (1 protocol, $100M) When calculating breakdown Then Lending percentage = 60%, count = 3 And CDP percentage = 30%, count = 2 And Dexes percentage = 10%, count = 1</criterion>
+    <criterion id="AC3">Given category breakdown results When sorting Then categories are ordered by TVS descending (highest first)</criterion>
+    <criterion id="AC4">Given a protocol with empty or missing category field When calculating breakdown Then the protocol is grouped under "Uncategorized"</criterion>
+    <criterion id="AC5">Given zero total TVS (no protocols or all protocols have zero TVS) When calculating breakdown Then percentages are set to 0 (no division by zero panic)</criterion>
+    <criterion id="AC6">Given all protocols When extracting categories Then unique categories list is correctly derived (FR24)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="FR17, FR24" snippet="FR17: System calculates TVS breakdown by protocol category with percentage of total. FR24: System extracts unique categories across all filtered protocols." />
+      <doc path="docs/epics/epic-3-data-processing-pipeline.md" title="Epic 3: Data Processing Pipeline" section="Story 3.4: Calculate Category Breakdown" snippet="Defines acceptance criteria for CategoryBreakdown slice with unique categories, TVS sum, Percentage, and ProtocolCount. Categories sorted by TVS descending." />
+      <doc path="docs/architecture/fr-category-to-architecture-mapping.md" title="FR Category to Architecture Mapping" section="Aggregation &amp; Metrics (FR15-FR24)" snippet="Maps FR17, FR24 to internal/aggregator package with aggregator.go and metrics.go as key files." />
+      <doc path="docs/architecture/data-architecture.md" title="Data Architecture" section="Output Models" snippet="Defines Protocol struct with Category field and AggregatedProtocol struct used for aggregation calculations." />
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization" snippet="Table-driven tests for all test files. Unit tests co-located in *_test.go. Aggregation logic requires high coverage (business-critical)." />
+    </docs>
+    <code>
+      <file path="internal/aggregator/models.go" kind="models" symbol="AggregatedProtocol, ChainBreakdown" lines="1-21" reason="AggregatedProtocol contains Category field to group by. ChainBreakdown struct is template for new CategoryBreakdown struct - same fields with Category instead of Chain." />
+      <file path="internal/aggregator/metrics.go" kind="metrics" symbol="CalculateChainBreakdown" lines="6-55" reason="Exact implementation pattern to follow for CalculateCategoryBreakdown - aggregates by key, calculates percentages, sorts by TVS descending." />
+      <file path="internal/aggregator/metrics_test.go" kind="test" symbol="TestCalculateChainBreakdown, almostEqual, sumTVS" lines="1-124" reason="Test pattern to follow - table-driven tests with AggregatedProtocol mock data, helper functions for float comparison." />
+      <file path="internal/aggregator/extractor.go" kind="extractor" symbol="ExtractProtocolData" lines="10-45" reason="Creates AggregatedProtocol instances with Category field populated from source protocols. Shows how protocols flow into the aggregation pipeline." />
+    </code>
+    <dependencies>
+      <dependency ecosystem="go" package="sort" version="stdlib" reason="Required for sort.Slice() to order results by TVS descending - already imported in metrics.go" />
+      <dependency ecosystem="go" package="math" version="stdlib" reason="Used in tests for almostEqual float comparison helper - already imported in metrics_test.go" />
+      <dependency ecosystem="go" package="testing" version="stdlib" reason="Standard Go testing package - already imported in metrics_test.go" />
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow CalculateChainBreakdown pattern exactly - aggregate by key, calculate percentages, sort by TVS descending</constraint>
+    <constraint type="handling">Handle empty/missing category as "Uncategorized" string literal</constraint>
+    <constraint type="safety">Avoid division by zero - check totalTVS > 0 before calculating percentages</constraint>
+    <constraint type="return">Return empty slice for empty input or zero total TVS cases</constraint>
+    <constraint type="sorting">Use sort.Slice with TVS > TVS comparison for descending order</constraint>
+    <constraint type="testing">Table-driven tests required with multiple test cases covering all acceptance criteria</constraint>
+    <constraint type="location">All code goes in internal/aggregator package - models.go for struct, metrics.go for function, metrics_test.go for tests</constraint>
+  </constraints>
+  <interfaces>
+    <interface name="CalculateCategoryBreakdown" kind="function" signature="func CalculateCategoryBreakdown(protocols []AggregatedProtocol) []CategoryBreakdown" path="internal/aggregator/metrics.go" />
+    <interface name="CategoryBreakdown" kind="struct" signature="type CategoryBreakdown struct { Category string; TVS float64; Percentage float64; ProtocolCount int }" path="internal/aggregator/models.go" />
+    <interface name="AggregatedProtocol" kind="struct" signature="type AggregatedProtocol struct { Name, Slug, Category, URL string; TVL, TVS float64; Chains []string; TVSByChain map[string]float64 }" path="internal/aggregator/models.go" />
+  </interfaces>
+  <tests>
+    <standards>Table-driven tests using Go's testing package. Tests co-located in *_test.go files. Use t.Run() for subtests with descriptive names. Follow arrange/act/assert pattern. Use almostEqual() helper for float comparisons with 1e-6 tolerance. Aggregation logic requires high coverage as business-critical.</standards>
+    <locations>
+      <location path="internal/aggregator/metrics_test.go" description="Primary test file for CalculateCategoryBreakdown tests" />
+    </locations>
+    <ideas>
+      <idea ac="AC1" test="CategoryBreakdown returned with correct fields populated - verify Category, TVS, Percentage, ProtocolCount fields" />
+      <idea ac="AC2" test="Percentage calculation validation - Lending 60% (3 protocols, $600M), CDP 30% (2 protocols, $300M), Dexes 10% (1 protocol, $100M)" />
+      <idea ac="AC3" test="Results sorted by TVS descending - verify first element has highest TVS" />
+      <idea ac="AC4" test="Empty/missing category grouped as Uncategorized - protocol with category='' maps to 'Uncategorized'" />
+      <idea ac="AC5" test="Zero total TVS handling - empty slice returned or percentages set to 0, no panic" />
+      <idea ac="AC6" test="Unique categories derived - 3 protocols in 2 categories produces 2 CategoryBreakdown entries" />
+      <idea ac="edge" test="Empty protocols slice returns empty result" />
+      <idea ac="edge" test="Single protocol single category returns 100% percentage" />
+      <idea ac="edge" test="Multiple protocols same category aggregates TVS correctly" />
+    </ideas>
+  </tests>
+</story-context>

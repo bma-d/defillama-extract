@@ -58,7 +58,7 @@ development_status:
   3-1-implement-protocol-filtering-by-oracle-name: done
   3-2-extract-protocol-metadata-and-tvs-data: done
   3-3-calculate-total-tvs-and-chain-breakdown: done
-  3-4-calculate-category-breakdown: backlog
+  3-4-calculate-category-breakdown: ready-for-dev
   3-5-rank-protocols-and-identify-largest: backlog
   3-6-calculate-historical-change-metrics: backlog
   3-7-build-complete-aggregation-pipeline: backlog
