@@ -1,0 +1,282 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>7</storyId>
+    <title>Build Complete Aggregation Pipeline</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-7-build-complete-aggregation-pipeline.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a single function that orchestrates all data processing</iWant>
+    <soThat>I have a clean interface for the extraction pipeline</soThat>
+    <tasks>
+      <task id="1">Define AggregationResult struct (AC: 1, 2)
+        <subtask id="1.1">Add AggregationResult struct to internal/aggregator/models.go</subtask>
+        <subtask id="1.2">Include fields: TotalTVS (float64), TotalProtocols (int), ActiveChains ([]string), Categories ([]string)</subtask>
+        <subtask id="1.3">Include fields: ChainBreakdown ([]ChainBreakdown), CategoryBreakdown ([]CategoryBreakdown)</subtask>
+        <subtask id="1.4">Include fields: Protocols ([]AggregatedProtocol), LargestProtocol (*LargestProtocol)</subtask>
+        <subtask id="1.5">Include fields: ChangeMetrics (ChangeMetrics), Timestamp (int64)</subtask>
+        <subtask id="1.6">Add JSON struct tags for all fields</subtask>
+      </task>
+      <task id="2">Define Aggregator struct (AC: 3)
+        <subtask id="2.1">Add Aggregator struct to internal/aggregator/aggregator.go</subtask>
+        <subtask id="2.2">Include field: oracleName (string)</subtask>
+        <subtask id="2.3">Implement NewAggregator(oracleName string) *Aggregator constructor</subtask>
+      </task>
+      <task id="3">Implement helper functions (AC: 2, 4)
+        <subtask id="3.1">Add extractUniqueCategories(protocols []AggregatedProtocol) []string</subtask>
+        <subtask id="3.2">Add extractActiveChains(breakdown []ChainBreakdown) []string</subtask>
+        <subtask id="3.3">Add calculateTotalTVS(protocols []AggregatedProtocol) float64</subtask>
+      </task>
+      <task id="4">Implement Aggregate method (AC: 1, 2, 4, 5, 6, 7)
+        <subtask id="4.1">Add method func (a *Aggregator) Aggregate(ctx context.Context, oracleResp *api.OracleAPIResponse, protocols []api.Protocol, history []Snapshot) *AggregationResult</subtask>
+        <subtask id="4.2">Call FilterByOracle to filter protocols by oracle name</subtask>
+        <subtask id="4.3">Call ExtractProtocolData to enrich protocols with TVS data and get timestamp</subtask>
+        <subtask id="4.4">Call CalculateChainBreakdown to compute chain metrics</subtask>
+        <subtask id="4.5">Call CalculateCategoryBreakdown to compute category metrics</subtask>
+        <subtask id="4.6">Call RankProtocols to sort and rank protocols</subtask>
+        <subtask id="4.7">Call GetLargestProtocol to identify top protocol</subtask>
+        <subtask id="4.8">Call CalculateChangeMetrics with totalTVS, protocolCount, and history</subtask>
+        <subtask id="4.9">Extract unique categories and active chains</subtask>
+        <subtask id="4.10">Populate and return AggregationResult with all computed values</subtask>
+        <subtask id="4.11">Handle nil/empty inputs gracefully (return zero-valued result)</subtask>
+      </task>
+      <task id="5">Write unit tests (AC: 1-7)
+        <subtask id="5.1">Add tests to internal/aggregator/aggregator_test.go</subtask>
+        <subtask id="5.2">Test: NewAggregator creates instance with correct oracle name</subtask>
+        <subtask id="5.3">Test: Aggregate with valid data returns complete AggregationResult</subtask>
+        <subtask id="5.4">Test: Aggregate with empty protocols returns zero values</subtask>
+        <subtask id="5.5">Test: Aggregate with nil oracle response returns zero values</subtask>
+        <subtask id="5.6">Test: Aggregate orchestrates all sub-functions correctly</subtask>
+        <subtask id="5.7">Test: TotalTVS equals sum of all protocol TVS values</subtask>
+        <subtask id="5.8">Test: TotalProtocols equals count of filtered protocols</subtask>
+        <subtask id="5.9">Test: ActiveChains extracted from chain breakdown</subtask>
+        <subtask id="5.10">Test: Categories extracted and sorted alphabetically</subtask>
+        <subtask id="5.11">Test: Protocols are ranked correctly</subtask>
+        <subtask id="5.12">Test: LargestProtocol identifies top TVL protocol</subtask>
+        <subtask id="5.13">Test: ChangeMetrics computed from history</subtask>
+        <subtask id="5.14">Test: Timestamp extracted from oracle response</subtask>
+      </task>
+      <task id="6">Verification (AC: all)
+        <subtask id="6.1">Run go build ./... and verify success</subtask>
+        <subtask id="6.2">Run go test ./internal/aggregator/... and verify all pass</subtask>
+        <subtask id="6.3">Run make lint and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given raw API responses (oracle and protocols) When Aggregate(ctx, oracleResp, protocols, history, oracleName) is called Then a complete AggregationResult is returned containing all aggregated data</criterion>
+    <criterion id="AC2">Given valid API data When aggregation completes Then AggregationResult contains: TotalTVS, TotalProtocols, ActiveChains, Categories, ChainBreakdown (sorted by TVS descending), CategoryBreakdown (sorted by TVS descending), Protocols (sorted by TVL descending), LargestProtocol, ChangeMetrics (24h/7d/30d with nil for unavailable), Timestamp</criterion>
+    <criterion id="AC3">Given Aggregator struct When NewAggregator(oracleName string) is called Then a configured Aggregator instance is returned ready for use</criterion>
+    <criterion id="AC4">Given empty protocols slice from filtering When aggregation runs Then result contains zero values/empty slices, no panic</criterion>
+    <criterion id="AC5">Given nil or empty oracle response When aggregation runs Then result contains zero values/empty slices, no panic</criterion>
+    <criterion id="AC6">Given historical snapshots When aggregation runs Then change metrics are calculated using CalculateChangeMetrics from Story 3.6</criterion>
+    <criterion id="AC7">Given valid aggregation result When all FRs 9-24 are checked Then result satisfies all functional requirements</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Aggregation and Metrics (FR15-FR24)</section>
+        <snippet>System calculates total TVS, chain/category breakdowns with percentages, ranks protocols by TVL, calculates 24h/7d/30d changes, identifies largest protocol, extracts unique categories.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-3-data-processing-pipeline.md</path>
+        <title>Epic 3: Data Processing Pipeline</title>
+        <section>Story 3.7: Build Complete Aggregation Pipeline</section>
+        <snippet>Orchestrates filter -> extract -> chain breakdown -> category breakdown -> rank -> metrics. Returns complete AggregationResult satisfying FR9-FR24.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>Output Models</section>
+        <snippet>Defines FullOutput struct containing version, oracle info, metadata, summary, metrics, breakdown, protocols, and historical snapshots.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/fr-category-to-architecture-mapping.md</path>
+        <title>FR Category to Architecture Mapping</title>
+        <section>Full mapping table</section>
+        <snippet>Aggregation and Metrics (FR15-FR24) maps to internal/aggregator package with aggregator.go and metrics.go as key files.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/implementation-patterns.md</path>
+        <title>Implementation Patterns</title>
+        <section>Dependency Injection, Context Propagation</section>
+        <snippet>Use constructor functions (not global state). All I/O functions accept context.Context as first parameter. Use errgroup for concurrent operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests co-located in *_test.go files. Table-driven tests for all test files. Aggregation logic requires high coverage (business-critical).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>internal/aggregator/models.go</path>
+        <kind>model</kind>
+        <symbol>AggregatedProtocol, LargestProtocol, ChainBreakdown, CategoryBreakdown, Snapshot, ChangeMetrics</symbol>
+        <lines>1-59</lines>
+        <reason>Existing model structs to extend with AggregationResult; defines all output types used by the aggregation pipeline</reason>
+      </file>
+      <file>
+        <path>internal/aggregator/filter.go</path>
+        <kind>service</kind>
+        <symbol>FilterByOracle</symbol>
+        <lines>7-20</lines>
+        <reason>Filters protocols by oracle name - first step in the aggregation pipeline (FR9-FR10)</reason>
+      </file>
+      <file>
+        <path>internal/aggregator/extractor.go</path>
+        <kind>service</kind>
+        <symbol>ExtractProtocolData, ExtractLatestTimestamp</symbol>
+        <lines>10-45, 48-66</lines>
+        <reason>Enriches filtered protocols with TVS data and extracts timestamp (FR11-FR14)</reason>
+      </file>
+      <file>
+        <path>internal/aggregator/metrics.go</path>
+        <kind>service</kind>
+        <symbol>CalculateChainBreakdown, CalculateCategoryBreakdown, RankProtocols, GetLargestProtocol, CalculateChangeMetrics, CalculatePercentageChange, FindSnapshotAtTime</symbol>
+        <lines>17-67, 69-118, 120-142, 144-168, 170-178, 180-202, 204-234</lines>
+        <reason>All metrics calculation functions to orchestrate (FR15-FR24); includes time constants Hours24, Days7, Days30, SnapshotTolerance</reason>
+      </file>
+      <file>
+        <path>internal/aggregator/metrics_test.go</path>
+        <kind>test</kind>
+        <symbol>TestCalculateChainBreakdown, TestCalculateCategoryBreakdown, TestRankProtocols, TestGetLargestProtocol, TestCalculateChangeMetrics</symbol>
+        <lines>1-551</lines>
+        <reason>Test patterns to follow: table-driven tests, helper functions (almostEqual, assertFloatPtr, assertIntPtr), JSON serialization tests</reason>
+      </file>
+      <file>
+        <path>internal/api/responses.go</path>
+        <kind>model</kind>
+        <symbol>OracleAPIResponse, Protocol, FetchResult, APIError</symbol>
+        <lines>9-14, 16-27, 29-33</lines>
+        <reason>API response types consumed by the aggregation pipeline; Aggregate method accepts *OracleAPIResponse and []Protocol</reason>
+      </file>
+    </code>
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <version>go1.24.0</version>
+        <deps>
+          <dep name="golang.org/x/sync" version="v0.18.0">errgroup for parallel operations</dep>
+          <dep name="gopkg.in/yaml.v3" version="v3.0.1">YAML config parsing</dep>
+        </deps>
+        <stdlib>
+          <pkg>context</pkg>
+          <pkg>sort</pkg>
+          <pkg>time</pkg>
+          <pkg>math</pkg>
+          <pkg>encoding/json</pkg>
+          <pkg>testing</pkg>
+        </stdlib>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Orchestrator pattern - Aggregator coordinates all sub-components, does not duplicate logic</constraint>
+    <constraint type="pattern">Dependency injection via constructor functions, not global state</constraint>
+    <constraint type="pattern">Context propagation - accept context.Context for future cancellation support</constraint>
+    <constraint type="pattern">Immutability - RankProtocols copies slice before sorting; maintain this pattern</constraint>
+    <constraint type="pattern">Copy-before-sort pattern when returning sorted results</constraint>
+    <constraint type="safety">Nil safety - handle nil oracle response and empty protocol slices gracefully, no panics</constraint>
+    <constraint type="output">Sorted output - chains and categories returned alphabetically sorted</constraint>
+    <constraint type="output">JSON serialization - all structs must serialize correctly with proper JSON struct tags</constraint>
+    <constraint type="testing">Table-driven tests required, arrange/act/assert pattern, must cover success and edge cases</constraint>
+    <constraint type="testing">High test coverage required for aggregation logic (business-critical)</constraint>
+    <constraint type="build">Must pass: go build ./..., go test ./internal/aggregator/..., make lint</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>FilterByOracle</name>
+      <kind>function</kind>
+      <signature>func FilterByOracle(protocols []api.Protocol, oracleName string) []api.Protocol</signature>
+      <path>internal/aggregator/filter.go</path>
+    </interface>
+    <interface>
+      <name>ExtractProtocolData</name>
+      <kind>function</kind>
+      <signature>func ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResponse, oracleName string) ([]AggregatedProtocol, int64)</signature>
+      <path>internal/aggregator/extractor.go</path>
+    </interface>
+    <interface>
+      <name>ExtractLatestTimestamp</name>
+      <kind>function</kind>
+      <signature>func ExtractLatestTimestamp(oracleResp *api.OracleAPIResponse) int64</signature>
+      <path>internal/aggregator/extractor.go</path>
+    </interface>
+    <interface>
+      <name>CalculateChainBreakdown</name>
+      <kind>function</kind>
+      <signature>func CalculateChainBreakdown(protocols []AggregatedProtocol) []ChainBreakdown</signature>
+      <path>internal/aggregator/metrics.go</path>
+    </interface>
+    <interface>
+      <name>CalculateCategoryBreakdown</name>
+      <kind>function</kind>
+      <signature>func CalculateCategoryBreakdown(protocols []AggregatedProtocol) []CategoryBreakdown</signature>
+      <path>internal/aggregator/metrics.go</path>
+    </interface>
+    <interface>
+      <name>RankProtocols</name>
+      <kind>function</kind>
+      <signature>func RankProtocols(protocols []AggregatedProtocol) []AggregatedProtocol</signature>
+      <path>internal/aggregator/metrics.go</path>
+    </interface>
+    <interface>
+      <name>GetLargestProtocol</name>
+      <kind>function</kind>
+      <signature>func GetLargestProtocol(protocols []AggregatedProtocol) *LargestProtocol</signature>
+      <path>internal/aggregator/metrics.go</path>
+    </interface>
+    <interface>
+      <name>CalculateChangeMetrics</name>
+      <kind>function</kind>
+      <signature>func CalculateChangeMetrics(currentTVS float64, currentProtocolCount int, history []Snapshot) ChangeMetrics</signature>
+      <path>internal/aggregator/metrics.go</path>
+    </interface>
+    <interface>
+      <name>OracleAPIResponse</name>
+      <kind>struct</kind>
+      <signature>type OracleAPIResponse struct { Oracles map[string][]string; Chart map[string]map[string]map[string]float64; OraclesTVS map[string]map[string]map[string]float64; ChainsByOracle map[string][]string }</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+    <interface>
+      <name>Protocol</name>
+      <kind>struct</kind>
+      <signature>type Protocol struct { ID, Name, Slug, Category, Oracle, URL string; TVL float64; Chains, Oracles []string }</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Go table-driven tests using subtests (t.Run). Follow arrange/act/assert pattern. Tests co-located in *_test.go files. Use helper functions for common assertions (almostEqual for float comparison with 1e-6 tolerance, assertFloatPtr, assertIntPtr). JSON serialization tests verify proper encoding/decoding and omitempty behavior. High coverage required for business-critical aggregation logic.</standards>
+    <locations>
+      <location>internal/aggregator/*_test.go</location>
+      <location>internal/api/*_test.go</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test Aggregate returns complete AggregationResult with all fields populated from valid API data</idea>
+      <idea ac="AC2">Test all AggregationResult fields have correct values: TotalTVS equals sum of protocol TVS, TotalProtocols equals count, breakdowns sorted by TVS descending, protocols sorted by TVL descending</idea>
+      <idea ac="AC3">Test NewAggregator(oracleName) returns Aggregator with correct oracleName field</idea>
+      <idea ac="AC4">Test Aggregate with empty protocols slice returns zero-valued AggregationResult without panic</idea>
+      <idea ac="AC5">Test Aggregate with nil OracleAPIResponse returns zero-valued AggregationResult without panic</idea>
+      <idea ac="AC6">Test Aggregate with historical snapshots computes correct ChangeMetrics values</idea>
+      <idea ac="AC7">Test AggregationResult JSON serialization produces valid JSON with all expected fields</idea>
+      <idea ac="AC2">Test ActiveChains extracted from ChainBreakdown and sorted alphabetically</idea>
+      <idea ac="AC2">Test Categories extracted uniquely and sorted alphabetically</idea>
+      <idea ac="AC2">Test LargestProtocol correctly identifies highest TVL protocol</idea>
+      <idea ac="AC2">Test Timestamp extracted from oracle response chart data</idea>
+    </ideas>
+  </tests>
+</story-context>
