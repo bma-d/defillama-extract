@@ -1,0 +1,274 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>4</storyId>
+    <title>Implement Retry Logic with Exponential Backoff</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-4-implement-retry-logic-with-exponential-backoff.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>automatic retries with exponential backoff for transient API failures</iWant>
+    <soThat>temporary DefiLlama API issues don't cause extraction failures and the system recovers gracefully from rate limits and server errors</soThat>
+    <tasks>
+      <task id="1" ac="1,6,9">Implement isRetryable helper function
+        <subtask id="1.1">Add `isRetryable(statusCode int, err error) bool` function to `internal/api/client.go`</subtask>
+        <subtask id="1.2">Return `true` for: timeout errors, HTTP 429, 500, 502, 503, 504</subtask>
+        <subtask id="1.3">Return `false` for: HTTP 400, 401, 403, 404 and other 4xx</subtask>
+        <subtask id="1.4">Return `true` for network errors (connection refused, DNS failure)</subtask>
+      </task>
+      <task id="2" ac="2,3">Implement calculateBackoff helper
+        <subtask id="2.1">Add `calculateBackoff(attempt int, baseDelay time.Duration) time.Duration` function</subtask>
+        <subtask id="2.2">Calculate exponential delay: `baseDelay * (1 &lt;&lt; attempt)` (1s, 2s, 4s)</subtask>
+        <subtask id="2.3">Apply jitter: `delay * (0.75 + rand.Float64()*0.5)` for +/-25% variation</subtask>
+        <subtask id="2.4">Use `math/rand` for jitter calculation</subtask>
+      </task>
+      <task id="3" ac="1,2,3,4,5,7,8">Implement doWithRetry wrapper method
+        <subtask id="3.1">Add `doWithRetry(ctx context.Context, fn func() error) error` method to `Client`</subtask>
+        <subtask id="3.2">Loop up to `c.maxRetries + 1` attempts (initial + retries)</subtask>
+        <subtask id="3.3">On success, return nil immediately</subtask>
+        <subtask id="3.4">On non-retryable error, return error immediately without retry</subtask>
+        <subtask id="3.5">On retryable error, log at WARN with `url`, `attempt`, `max_attempts`, `backoff_ms`</subtask>
+        <subtask id="3.6">Sleep with backoff, checking context cancellation before and after sleep</subtask>
+        <subtask id="3.7">On max retries exhausted, log at ERROR with `url`, `total_attempts`, `final_error`</subtask>
+        <subtask id="3.8">Return the final error with wrapped context</subtask>
+      </task>
+      <task id="4" ac="1,6">Enhance doRequest to capture status code for retry decisions
+        <subtask id="4.1">Create `APIError` struct with `StatusCode`, `Endpoint`, `Message`, `Err` fields</subtask>
+        <subtask id="4.2">Update `doRequest` to return `*APIError` for non-2xx responses</subtask>
+        <subtask id="4.3">Add `IsRetryable() bool` method to `APIError`</subtask>
+      </task>
+      <task id="5" ac="1,7">Integrate retry logic into FetchOracles and FetchProtocols
+        <subtask id="5.1">Wrap `doRequest` call with `doWithRetry` in `FetchOracles`</subtask>
+        <subtask id="5.2">Wrap `doRequest` call with `doWithRetry` in `FetchProtocols`</subtask>
+        <subtask id="5.3">Ensure proper error propagation</subtask>
+      </task>
+      <task id="6" ac="1,6,9">Write unit tests for isRetryable
+        <subtask id="6.1">Test returns true for status codes: 429, 500, 502, 503, 504</subtask>
+        <subtask id="6.2">Test returns false for status codes: 400, 401, 403, 404</subtask>
+        <subtask id="6.3">Test returns true for timeout errors</subtask>
+        <subtask id="6.4">Test returns false for JSON decode errors</subtask>
+      </task>
+      <task id="7" ac="2,3">Write unit tests for calculateBackoff
+        <subtask id="7.1">Test exponential progression: 1s base -> 1s, 2s, 4s for attempts 0, 1, 2</subtask>
+        <subtask id="7.2">Test jitter is applied (result differs from exact exponential)</subtask>
+        <subtask id="7.3">Test jitter bounds are within +/-25% of base exponential value</subtask>
+      </task>
+      <task id="8" ac="1,4,5,6,7,8">Write integration tests for doWithRetry with mock server
+        <subtask id="8.1">Test retryable error (429) retries up to max then fails</subtask>
+        <subtask id="8.2">Test non-retryable error (404) returns immediately without retry</subtask>
+        <subtask id="8.3">Test success on attempt 3 after 2 failures returns success</subtask>
+        <subtask id="8.4">Test context cancellation exits retry loop</subtask>
+        <subtask id="8.5">Test retry logs are emitted at WARN level (capture log output)</subtask>
+        <subtask id="8.6">Test final failure logs at ERROR level</subtask>
+      </task>
+      <task id="9" ac="all">Verification
+        <subtask id="9.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="9.2">Run `go test ./internal/api/...` and verify all pass including new retry tests</subtask>
+        <subtask id="9.3">Run `make lint` and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given API configuration with `max_retries: 3` and `retry_delay: 1s` When a request fails with a retryable error (timeout, 429, 5xx) Then the request is retried up to 3 times</criterion>
+    <criterion id="AC2">Given a retryable failure When retries are attempted Then delays between retries follow exponential backoff: 1s, 2s, 4s (delay * 2^attempt)</criterion>
+    <criterion id="AC3">Given exponential backoff delays When calculating sleep duration Then jitter of +/-25% is added to prevent thundering herd: `delay * (0.75 + rand*0.5)`</criterion>
+    <criterion id="AC4">Given a request that fails with 429 (rate limit) or 5xx (500, 502, 503, 504) When retries are attempted Then each retry is logged at WARN level with: `url`, `attempt`, `max_attempts`, `backoff_ms`</criterion>
+    <criterion id="AC5">Given max retries exhausted When the final attempt fails Then failure is logged at ERROR level with: `url`, `total_attempts`, `final_error`</criterion>
+    <criterion id="AC6">Given a request that fails with 4xx (except 429) such as 400, 401, 403, 404 When the error is detected Then no retry is attempted (client error, not transient) and error is returned immediately</criterion>
+    <criterion id="AC7">Given a request that fails on attempt 1 and 2 but succeeds on attempt 3 When the response is received Then the successful response is returned and info log indicates success after retries</criterion>
+    <criterion id="AC8">Given a context with cancellation When the context is cancelled during retry sleep or request Then the retry loop exits immediately returning `context.Canceled`</criterion>
+    <criterion id="AC9">Given a network timeout (request exceeds http.Client.Timeout) When the timeout occurs Then it is treated as retryable error</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>API Integration (FR5, FR7, FR8)</section>
+        <snippet>FR5: System retries failed API requests with exponential backoff and jitter. FR7: System handles API errors gracefully (429, 5xx) with retry. FR8: System detects non-retryable errors (4xx client errors).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>AC-2.4 Retry Logic</section>
+        <snippet>Backoff follows exponential pattern: delay * 2^attempt. Jitter of +/-25% applied. Retries for: timeout, 429, 500-504. No retry for: 400, 401, 403, 404. Each retry logged at WARN, final failure at ERROR.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Reliability/Availability - Retryable Conditions</section>
+        <snippet>Retryable: HTTP 429, 500, 502, 503, 504, network timeouts, connection refused. Non-Retryable: HTTP 400, 401, 403, 404, JSON decode errors.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-2-api-integration.md</path>
+        <title>Epic 2: API Integration</title>
+        <section>Story 2.4 Definition</section>
+        <snippet>Implement doWithRetry(ctx, fn) helper. Retryable: timeout, 429, 500-504. Non-retryable: 400, 401, 403, 404. Use time.Sleep with jitter formula.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/implementation-patterns.md</path>
+        <title>Implementation Patterns</title>
+        <section>Context Propagation</section>
+        <snippet>All I/O functions accept context.Context as first parameter. Use http.NewRequestWithContext for cancellation support.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Mock Server Tests</section>
+        <snippet>HTTP retry logic tested with httptest mock server. Test fixtures in testdata/ directory. Error handling paths must be tested.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>internal/api/client.go</path>
+        <kind>service</kind>
+        <symbol>Client struct</symbol>
+        <lines>18-26</lines>
+        <reason>Main struct to modify - already has maxRetries and retryDelay fields. doRequest method at lines 56-79 needs enhancement to return APIError with status code.</reason>
+      </file>
+      <file>
+        <path>internal/api/client.go</path>
+        <kind>helper</kind>
+        <symbol>doRequest</symbol>
+        <lines>56-79</lines>
+        <reason>Current implementation returns fmt.Errorf for non-2xx status. Must be enhanced to return *APIError with status code for retry decision.</reason>
+      </file>
+      <file>
+        <path>internal/api/client.go</path>
+        <kind>method</kind>
+        <symbol>FetchOracles</symbol>
+        <lines>82-89</lines>
+        <reason>Must wrap doRequest call with doWithRetry. Currently calls doRequest directly without retry.</reason>
+      </file>
+      <file>
+        <path>internal/api/client.go</path>
+        <kind>method</kind>
+        <symbol>FetchProtocols</symbol>
+        <lines>92-99</lines>
+        <reason>Must wrap doRequest call with doWithRetry. Currently calls doRequest directly without retry.</reason>
+      </file>
+      <file>
+        <path>internal/api/responses.go</path>
+        <kind>types</kind>
+        <symbol>OracleAPIResponse, Protocol</symbol>
+        <lines>1-23</lines>
+        <reason>Location for new APIError type definition with StatusCode, Endpoint, Message, Err fields and IsRetryable() method.</reason>
+      </file>
+      <file>
+        <path>internal/api/client_test.go</path>
+        <kind>test</kind>
+        <symbol>test functions</symbol>
+        <lines>1-150</lines>
+        <reason>Existing test patterns using httptest.NewServer. New retry tests should follow same patterns. Tests for timeout, context cancellation, non-2xx status already exist.</reason>
+      </file>
+      <file>
+        <path>internal/config/config.go</path>
+        <kind>config</kind>
+        <symbol>APIConfig struct</symbol>
+        <lines>29-35</lines>
+        <reason>Contains MaxRetries and RetryDelay fields already available in Client. Default values: MaxRetries=3, RetryDelay=1s.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <goVersion>1.23</goVersion>
+        <require>gopkg.in/yaml.v3 v3.0.1</require>
+      </go>
+      <stdlib>
+        <package use="HTTP client">net/http</package>
+        <package use="Context for cancellation">context</package>
+        <package use="JSON decoding">encoding/json</package>
+        <package use="Duration and sleep">time</package>
+        <package use="Structured logging">log/slog</package>
+        <package use="Jitter calculation">math/rand</package>
+        <package use="Error wrapping and As/Is">errors</package>
+        <package use="Error formatting">fmt</package>
+        <package use="URL error type detection">net/url</package>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-001">stdlib only - no external HTTP or retry libraries</constraint>
+    <constraint source="ADR-003">Explicit error returns, no panics</constraint>
+    <constraint source="ADR-004">Structured logging with slog package</constraint>
+    <constraint source="tech-spec">All retry logic in internal/api/client.go</constraint>
+    <constraint source="tech-spec">APIError type can be added to internal/api/responses.go</constraint>
+    <constraint source="tech-spec">New test file: internal/api/retry_test.go for retry-specific tests</constraint>
+    <constraint source="story-2.3-learnings">Use existing doRequest helper which handles User-Agent, timeout, JSON decode</constraint>
+    <constraint source="story-2.3-learnings">Test patterns established: httptest.NewServer, testdata/ fixtures</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>doWithRetry</name>
+      <kind>method</kind>
+      <signature>func (c *Client) doWithRetry(ctx context.Context, operation string, fn func() error) error</signature>
+      <path>internal/api/client.go</path>
+    </interface>
+    <interface>
+      <name>isRetryable</name>
+      <kind>function</kind>
+      <signature>func isRetryable(err error) bool</signature>
+      <path>internal/api/client.go</path>
+    </interface>
+    <interface>
+      <name>calculateBackoff</name>
+      <kind>method</kind>
+      <signature>func (c *Client) calculateBackoff(attempt int, baseDelay time.Duration) time.Duration</signature>
+      <path>internal/api/client.go</path>
+    </interface>
+    <interface>
+      <name>APIError</name>
+      <kind>struct</kind>
+      <signature>type APIError struct { Endpoint string; StatusCode int; Message string; Err error }</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+    <interface>
+      <name>APIError.Error</name>
+      <kind>method</kind>
+      <signature>func (e *APIError) Error() string</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+    <interface>
+      <name>APIError.Unwrap</name>
+      <kind>method</kind>
+      <signature>func (e *APIError) Unwrap() error</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+    <interface>
+      <name>APIError.IsRetryable</name>
+      <kind>method</kind>
+      <signature>func (e *APIError) IsRetryable() bool</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Testing follows Go conventions with table-driven tests and httptest mock servers. All test files are co-located with source (*_test.go). Error handling paths and retry logic must have comprehensive coverage. Tests use testdata/ directory for fixtures. Existing patterns in client_test.go should be followed for new retry tests.</standards>
+    <locations>
+      <location>internal/api/*_test.go</location>
+      <location>internal/api/retry_test.go (new file for retry-specific tests)</location>
+      <location>testdata/ (test fixtures)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1,AC6">TestIsRetryable_StatusCodes: Table-driven test with 429,500-504 returning true; 400,401,403,404 returning false</idea>
+      <idea ac="AC9">TestIsRetryable_TimeoutError: Verify context.DeadlineExceeded and url.Error with Timeout()=true return true</idea>
+      <idea ac="AC6">TestIsRetryable_JSONDecodeError: Verify JSON syntax errors return false (not retryable)</idea>
+      <idea ac="AC2">TestCalculateBackoff_ExponentialProgression: Verify 1s base produces ~1s, ~2s, ~4s for attempts 0,1,2</idea>
+      <idea ac="AC3">TestCalculateBackoff_JitterBounds: Verify output is within [0.75*exp, 1.25*exp] range</idea>
+      <idea ac="AC1,AC4">TestDoWithRetry_RetryableError_RetriesUpToMax: Mock server returns 429, verify 4 total attempts (initial + 3 retries)</idea>
+      <idea ac="AC6">TestDoWithRetry_NonRetryableError_ImmediateReturn: Mock server returns 404, verify single attempt only</idea>
+      <idea ac="AC7">TestDoWithRetry_SuccessAfterRetries: Mock server fails twice then succeeds, verify success returned</idea>
+      <idea ac="AC8">TestDoWithRetry_ContextCancellation: Cancel context during retry sleep, verify immediate return with context.Canceled</idea>
+      <idea ac="AC4,AC5">TestDoWithRetry_LogOutput: Capture slog output, verify WARN on retry, ERROR on exhaustion</idea>
+    </ideas>
+  </tests>
+</story-context>
