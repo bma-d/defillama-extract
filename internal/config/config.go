@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -49,6 +50,41 @@ type SchedulerConfig struct {
 type LoggingConfig struct {
 	Level  string `yaml:"level"`
 	Format string `yaml:"format"`
+}
+
+// applyEnvOverrides applies environment variable overrides to the provided config in place.
+func applyEnvOverrides(cfg *Config) {
+	if v := os.Getenv("ORACLE_NAME"); v != "" {
+		cfg.Oracle.Name = v
+	}
+
+	if v := os.Getenv("OUTPUT_DIR"); v != "" {
+		cfg.Output.Directory = v
+	}
+
+	if v := os.Getenv("LOG_LEVEL"); v != "" {
+		cfg.Logging.Level = v
+	}
+
+	if v := os.Getenv("LOG_FORMAT"); v != "" {
+		cfg.Logging.Format = v
+	}
+
+	if v := os.Getenv("API_TIMEOUT"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			cfg.API.Timeout = d
+		} else {
+			log.Printf("warning: invalid API_TIMEOUT %q, using YAML/default value", v)
+		}
+	}
+
+	if v := os.Getenv("SCHEDULER_INTERVAL"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			cfg.Scheduler.Interval = d
+		} else {
+			log.Printf("warning: invalid SCHEDULER_INTERVAL %q, using YAML/default value", v)
+		}
+	}
 }
 
 // defaultConfig returns configuration populated with documented defaults.
@@ -99,6 +135,8 @@ func Load(path string) (*Config, error) {
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("failed to parse config: %w", err)
 	}
+
+	applyEnvOverrides(&cfg)
 
 	if err := cfg.Validate(); err != nil {
 		return nil, err

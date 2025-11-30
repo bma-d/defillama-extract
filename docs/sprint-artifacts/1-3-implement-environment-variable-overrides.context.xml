@@ -1,0 +1,141 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>3</storyId>
+    <title>Implement Environment Variable Overrides</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-3-implement-environment-variable-overrides.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>operator</asA>
+    <iWant>environment variables to override YAML configuration</iWant>
+    <soThat>I can customize behavior in different environments without modifying files</soThat>
+    <tasks>
+      <task id="1" title="Implement applyEnvOverrides function" acs="1,2,3,4,5,6,7,9">
+        <subtask id="1.1">Create `applyEnvOverrides(cfg *Config)` function in `internal/config/config.go`</subtask>
+        <subtask id="1.2">Read `ORACLE_NAME` with `os.Getenv()` and override `cfg.Oracle.Name` if set</subtask>
+        <subtask id="1.3">Read `OUTPUT_DIR` with `os.Getenv()` and override `cfg.Output.Directory` if set</subtask>
+        <subtask id="1.4">Read `LOG_LEVEL` with `os.Getenv()` and override `cfg.Logging.Level` if set</subtask>
+        <subtask id="1.5">Read `LOG_FORMAT` with `os.Getenv()` and override `cfg.Logging.Format` if set</subtask>
+        <subtask id="1.6">Read `API_TIMEOUT` with `os.Getenv()` and parse with `time.ParseDuration()`, override if valid</subtask>
+        <subtask id="1.7">Read `SCHEDULER_INTERVAL` with `os.Getenv()` and parse with `time.ParseDuration()`, override if valid</subtask>
+      </task>
+      <task id="2" title="Handle invalid duration parsing" acs="8">
+        <subtask id="2.1">If `time.ParseDuration()` fails for `API_TIMEOUT`, log warning at debug level (slog not yet initialized, use stderr)</subtask>
+        <subtask id="2.2">If `time.ParseDuration()` fails for `SCHEDULER_INTERVAL`, log warning at debug level</subtask>
+        <subtask id="2.3">On parse failure, retain YAML/default value (do not override)</subtask>
+      </task>
+      <task id="3" title="Integrate into Load function" acs="7,9">
+        <subtask id="3.1">Call `applyEnvOverrides(cfg)` after YAML loading but before validation in `Load()`</subtask>
+        <subtask id="3.2">Ensure env vars have highest priority (applied last before validation)</subtask>
+      </task>
+      <task id="4" title="Write unit tests" acs="all">
+        <subtask id="4.1">Test `ORACLE_NAME` override works</subtask>
+        <subtask id="4.2">Test `OUTPUT_DIR` override works</subtask>
+        <subtask id="4.3">Test `LOG_LEVEL` override works</subtask>
+        <subtask id="4.4">Test `LOG_FORMAT` override works</subtask>
+        <subtask id="4.5">Test `API_TIMEOUT` override parses duration correctly</subtask>
+        <subtask id="4.6">Test `SCHEDULER_INTERVAL` override parses duration correctly</subtask>
+        <subtask id="4.7">Test env var takes precedence over YAML value</subtask>
+        <subtask id="4.8">Test invalid `API_TIMEOUT` retains YAML/default value</subtask>
+        <subtask id="4.9">Test invalid `SCHEDULER_INTERVAL` retains YAML/default value</subtask>
+        <subtask id="4.10">Test unset env vars don't affect config</subtask>
+        <subtask id="4.11">Use `t.Setenv()` for test isolation (Go 1.17+)</subtask>
+        <subtask id="4.12">Use table-driven tests per Go idioms</subtask>
+      </task>
+      <task id="5" title="Verification" acs="all">
+        <subtask id="5.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="5.2">Run `go test ./internal/config/...` and verify all pass</subtask>
+        <subtask id="5.3">Run `make lint` and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Given a loaded YAML configuration When environment variable `ORACLE_NAME` is set Then `config.Oracle.Name` is overridden to the env var value</ac>
+    <ac id="2">Given a loaded YAML configuration When environment variable `OUTPUT_DIR` is set Then `config.Output.Directory` is overridden to the env var value</ac>
+    <ac id="3">Given a loaded YAML configuration When environment variable `LOG_LEVEL` is set to a valid level (debug, info, warn, error) Then `config.Logging.Level` is overridden to the env var value</ac>
+    <ac id="4">Given a loaded YAML configuration When environment variable `LOG_FORMAT` is set to a valid format (json, text) Then `config.Logging.Format` is overridden to the env var value</ac>
+    <ac id="5">Given a loaded YAML configuration When environment variable `API_TIMEOUT` is set to a valid duration (e.g., "45s") Then `config.API.Timeout` is overridden to the parsed duration value</ac>
+    <ac id="6">Given a loaded YAML configuration When environment variable `SCHEDULER_INTERVAL` is set to a valid duration (e.g., "1h30m") Then `config.Scheduler.Interval` is overridden to the parsed duration value</ac>
+    <ac id="7">Given environment variables that take precedence When both YAML value and env var are set for the same field Then the env var value wins (highest priority)</ac>
+    <ac id="8">Given an invalid environment variable value (e.g., `API_TIMEOUT=invalid`) When configuration is loaded Then a warning is logged and the YAML/default value is used instead</ac>
+    <ac id="9">Given an environment variable is not set When configuration is loaded Then the YAML/default value is used and no override occurs</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="Configuration" snippet="FR50: System applies environment variable overrides to configuration. Layered configuration: Built-in defaults -> YAML configuration file -> Environment variable overrides."/>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-1.md" title="Epic 1 Technical Specification" section="Environment Variable Mapping" snippet="Env var to config field mapping: ORACLE_NAME -> oracle.name, OUTPUT_DIR -> output.directory, LOG_LEVEL -> logging.level, LOG_FORMAT -> logging.format, API_TIMEOUT -> api.timeout, SCHEDULER_INTERVAL -> scheduler.interval."/>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-1.md" title="Epic 1 Technical Specification" section="Config Loading Flow" snippet="Built-in Defaults -> YAML File Values -> Env Var Overrides -> Validation. Env vars applied after YAML merge, before validation per AC5 and AC6."/>
+      <doc path="docs/epics/epic-1-foundation.md" title="Epic 1 Foundation" section="Story 1.3" snippet="Story acceptance criteria for env overrides including ORACLE_NAME, OUTPUT_DIR, LOG_LEVEL, LOG_FORMAT, API_TIMEOUT, SCHEDULER_INTERVAL. Invalid env values log warning and use YAML/default."/>
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Coverage Requirements" snippet="Configuration loading: Test all layers (defaults, YAML, env). Table-driven tests required for all test files."/>
+      <doc path="docs/architecture/consistency-rules.md" title="Consistency Rules" section="Error Handling" snippet="Error wrapping with context using fmt.Errorf with %w. Logging strategy uses slog with structured fields."/>
+    </docs>
+    <code>
+      <file path="internal/config/config.go" kind="package" symbol="Config, Load, Validate, defaultConfig" lines="1-147" reason="Core config package - Load() function needs to call applyEnvOverrides() after YAML parsing but before Validate(). Contains Config struct with all fields to override."/>
+      <file path="internal/config/config_test.go" kind="test" symbol="TestLoad_*, TestValidate_*" lines="1-155" reason="Existing test file with table-driven tests pattern. Extend with env override tests using t.Setenv()."/>
+      <file path="internal/config/testdata/config_all.yaml" kind="fixture" symbol="test fixture" reason="Test fixture with all config fields populated - use to verify env vars override YAML values."/>
+      <file path="internal/config/testdata/config_minimal.yaml" kind="fixture" symbol="test fixture" reason="Test fixture with minimal config - use to verify env vars override default values."/>
+    </code>
+    <dependencies>
+      <go version="1.23">
+        <dependency name="gopkg.in/yaml.v3" version="v3.0.1" purpose="YAML configuration parsing"/>
+        <stdlib package="os" purpose="os.Getenv() for reading environment variables"/>
+        <stdlib package="time" purpose="time.ParseDuration() for parsing duration env vars"/>
+        <stdlib package="log" purpose="log.Printf() for stderr warning when slog not initialized"/>
+        <stdlib package="testing" purpose="t.Setenv() for test isolation in Go 1.17+"/>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-005">Minimal external dependencies - use stdlib for env var reading (os.Getenv)</constraint>
+    <constraint source="ADR-004">Structured logging with slog - but slog not initialized during config load, use stderr for parse warnings</constraint>
+    <constraint source="tech-spec">Env overrides applied after YAML merge, before validation - highest priority layer</constraint>
+    <constraint source="story-1.2">Config package already established with Load(), Validate(), defaultConfig() - extend existing code</constraint>
+    <constraint source="testing-strategy">Table-driven tests required per Go idioms</constraint>
+    <constraint source="story-ac8">Invalid duration env vars must log warning and retain YAML/default - do NOT fail startup</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="applyEnvOverrides" kind="function" signature="func applyEnvOverrides(cfg *Config)" path="internal/config/config.go">
+      <description>New unexported function to apply environment variable overrides to config struct. Called from Load() after YAML parsing, before Validate().</description>
+    </interface>
+    <interface name="Load" kind="function" signature="func Load(path string) (*Config, error)" path="internal/config/config.go">
+      <description>Existing public function - modify to call applyEnvOverrides(&amp;cfg) after yaml.Unmarshal but before cfg.Validate().</description>
+    </interface>
+    <interface name="os.Getenv" kind="stdlib" signature="func Getenv(key string) string" path="os">
+      <description>Standard library function to read environment variables. Returns empty string if not set.</description>
+    </interface>
+    <interface name="time.ParseDuration" kind="stdlib" signature="func ParseDuration(s string) (Duration, error)" path="time">
+      <description>Standard library function to parse duration strings like "45s", "2h30m". Returns error for invalid format.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Follow Go testing idioms with table-driven tests. Use t.Setenv() (Go 1.17+) for environment variable isolation - automatically restores original value after test. Tests co-located in config_test.go. Error paths must be tested (invalid duration values).
+    </standards>
+    <locations>
+      <location>internal/config/config_test.go</location>
+      <location>internal/config/testdata/</location>
+    </locations>
+    <ideas>
+      <idea ac="1">TestEnvOverride_OracleName: Set ORACLE_NAME, verify cfg.Oracle.Name matches</idea>
+      <idea ac="2">TestEnvOverride_OutputDir: Set OUTPUT_DIR, verify cfg.Output.Directory matches</idea>
+      <idea ac="3">TestEnvOverride_LogLevel: Set LOG_LEVEL to each valid value, verify override</idea>
+      <idea ac="4">TestEnvOverride_LogFormat: Set LOG_FORMAT to json/text, verify override</idea>
+      <idea ac="5">TestEnvOverride_APITimeout: Set API_TIMEOUT="45s", verify parsed duration</idea>
+      <idea ac="6">TestEnvOverride_SchedulerInterval: Set SCHEDULER_INTERVAL="1h30m", verify parsed</idea>
+      <idea ac="7">TestEnvOverride_Precedence: Use config_all.yaml with different YAML values, set env vars, verify env wins</idea>
+      <idea ac="8">TestEnvOverride_InvalidAPITimeout: Set API_TIMEOUT="invalid", verify YAML/default retained, warning logged</idea>
+      <idea ac="8">TestEnvOverride_InvalidSchedulerInterval: Set SCHEDULER_INTERVAL="bad", verify YAML/default retained</idea>
+      <idea ac="9">TestEnvOverride_UnsetNoEffect: Ensure unset env vars don't modify config values</idea>
+      <idea ac="all">TestApplyEnvOverrides_TableDriven: Comprehensive table-driven test covering all env vars</idea>
+    </ideas>
+  </tests>
+</story-context>

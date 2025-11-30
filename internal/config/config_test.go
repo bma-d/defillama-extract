@@ -1,6 +1,8 @@
 package config
 
 import (
+	"bytes"
+	"log"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -142,6 +144,108 @@ func TestValidate_ValidConfig(t *testing.T) {
 	cfg := defaultConfig()
 	if err := cfg.Validate(); err != nil {
 		t.Fatalf("Validate returned error for valid config: %v", err)
+	}
+}
+
+func TestLoad_EnvOverrides_StringAndDuration(t *testing.T) {
+	path := filepath.Join("testdata", "config_minimal.yaml")
+
+	t.Setenv("ORACLE_NAME", "EnvOracle")
+	t.Setenv("OUTPUT_DIR", "/env/out")
+	t.Setenv("LOG_LEVEL", "debug")
+	t.Setenv("LOG_FORMAT", "text")
+	t.Setenv("API_TIMEOUT", "45s")
+	t.Setenv("SCHEDULER_INTERVAL", "1h30m")
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+
+	if cfg.Oracle.Name != "EnvOracle" {
+		t.Errorf("Oracle.Name = %q, want %q", cfg.Oracle.Name, "EnvOracle")
+	}
+	if cfg.Output.Directory != "/env/out" {
+		t.Errorf("Output.Directory = %q, want %q", cfg.Output.Directory, "/env/out")
+	}
+	if cfg.Logging.Level != "debug" {
+		t.Errorf("Logging.Level = %q, want %q", cfg.Logging.Level, "debug")
+	}
+	if cfg.Logging.Format != "text" {
+		t.Errorf("Logging.Format = %q, want %q", cfg.Logging.Format, "text")
+	}
+	if cfg.API.Timeout != 45*time.Second {
+		t.Errorf("API.Timeout = %s, want %s", cfg.API.Timeout, 45*time.Second)
+	}
+	if cfg.Scheduler.Interval != time.Hour+30*time.Minute {
+		t.Errorf("Scheduler.Interval = %s, want %s", cfg.Scheduler.Interval, time.Hour+30*time.Minute)
+	}
+}
+
+func TestLoad_EnvOverrides_PrecedenceOverYAML(t *testing.T) {
+	path := filepath.Join("testdata", "config_all.yaml")
+
+	t.Setenv("ORACLE_NAME", "EnvWins")
+	t.Setenv("OUTPUT_DIR", "/env/dir")
+	t.Setenv("LOG_LEVEL", "warn")
+	t.Setenv("LOG_FORMAT", "json")
+	t.Setenv("API_TIMEOUT", "99s")
+	t.Setenv("SCHEDULER_INTERVAL", "15m")
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+
+	if cfg.Oracle.Name != "EnvWins" {
+		t.Errorf("Oracle.Name = %q, want env override %q", cfg.Oracle.Name, "EnvWins")
+	}
+	if cfg.Output.Directory != "/env/dir" {
+		t.Errorf("Output.Directory = %q, want env override %q", cfg.Output.Directory, "/env/dir")
+	}
+	if cfg.Logging.Level != "warn" {
+		t.Errorf("Logging.Level = %q, want env override %q", cfg.Logging.Level, "warn")
+	}
+	if cfg.Logging.Format != "json" {
+		t.Errorf("Logging.Format = %q, want env override %q", cfg.Logging.Format, "json")
+	}
+	if cfg.API.Timeout != 99*time.Second {
+		t.Errorf("API.Timeout = %s, want env override %s", cfg.API.Timeout, 99*time.Second)
+	}
+	if cfg.Scheduler.Interval != 15*time.Minute {
+		t.Errorf("Scheduler.Interval = %s, want env override %s", cfg.Scheduler.Interval, 15*time.Minute)
+	}
+}
+
+func TestLoad_InvalidDurationEnvVars_LogAndFallback(t *testing.T) {
+	path := filepath.Join("testdata", "config_all.yaml")
+
+	buf := &bytes.Buffer{}
+	origWriter := log.Writer()
+	log.SetOutput(buf)
+	t.Cleanup(func() { log.SetOutput(origWriter) })
+
+	t.Setenv("API_TIMEOUT", "notaduration")
+	t.Setenv("SCHEDULER_INTERVAL", "bad")
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+
+	if cfg.API.Timeout != 10*time.Second { // YAML value should remain
+		t.Errorf("API.Timeout = %s, want YAML value %s", cfg.API.Timeout, 10*time.Second)
+	}
+	if cfg.Scheduler.Interval != 30*time.Minute {
+		t.Errorf("Scheduler.Interval = %s, want YAML value %s", cfg.Scheduler.Interval, 30*time.Minute)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "invalid API_TIMEOUT") {
+		t.Errorf("log output missing API_TIMEOUT warning: %q", out)
+	}
+	if !strings.Contains(out, "invalid SCHEDULER_INTERVAL") {
+		t.Errorf("log output missing SCHEDULER_INTERVAL warning: %q", out)
 	}
 }
 
