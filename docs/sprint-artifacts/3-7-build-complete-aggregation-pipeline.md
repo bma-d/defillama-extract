@@ -1,6 +1,6 @@
 # Story 3.7: Build Complete Aggregation Pipeline
 
-Status: drafted
+Status: done
 
 ## Story
 
@@ -38,57 +38,57 @@ Source: Epic 3.7 / PRD FR9-FR24, fr-category-to-architecture-mapping.md
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define AggregationResult struct (AC: 1, 2)
-  - [ ] 1.1: Add `AggregationResult` struct to `internal/aggregator/models.go`
-  - [ ] 1.2: Include fields: `TotalTVS` (float64), `TotalProtocols` (int), `ActiveChains` ([]string), `Categories` ([]string)
-  - [ ] 1.3: Include fields: `ChainBreakdown` ([]ChainBreakdown), `CategoryBreakdown` ([]CategoryBreakdown)
-  - [ ] 1.4: Include fields: `Protocols` ([]AggregatedProtocol), `LargestProtocol` (*LargestProtocol)
-  - [ ] 1.5: Include fields: `ChangeMetrics` (ChangeMetrics), `Timestamp` (int64)
-  - [ ] 1.6: Add JSON struct tags for all fields
+- [x] Task 1: Define AggregationResult struct (AC: 1, 2)
+  - [x] 1.1: Add `AggregationResult` struct to `internal/aggregator/models.go`
+  - [x] 1.2: Include fields: `TotalTVS` (float64), `TotalProtocols` (int), `ActiveChains` ([]string), `Categories` ([]string)
+  - [x] 1.3: Include fields: `ChainBreakdown` ([]ChainBreakdown), `CategoryBreakdown` ([]CategoryBreakdown)
+  - [x] 1.4: Include fields: `Protocols` ([]AggregatedProtocol), `LargestProtocol` (*LargestProtocol)
+  - [x] 1.5: Include fields: `ChangeMetrics` (ChangeMetrics), `Timestamp` (int64)
+  - [x] 1.6: Add JSON struct tags for all fields
 
-- [ ] Task 2: Define Aggregator struct (AC: 3)
-  - [ ] 2.1: Add `Aggregator` struct to `internal/aggregator/aggregator.go`
-  - [ ] 2.2: Include field: `oracleName` (string)
-  - [ ] 2.3: Implement `NewAggregator(oracleName string) *Aggregator` constructor
+- [x] Task 2: Define Aggregator struct (AC: 3)
+  - [x] 2.1: Add `Aggregator` struct to `internal/aggregator/aggregator.go`
+  - [x] 2.2: Include field: `oracleName` (string)
+  - [x] 2.3: Implement `NewAggregator(oracleName string) *Aggregator` constructor
 
-- [ ] Task 3: Implement helper functions (AC: 2, 4)
-  - [ ] 3.1: Add `extractUniqueCategories(protocols []AggregatedProtocol) []string` to extract and sort unique categories
-  - [ ] 3.2: Add `extractActiveChains(breakdown []ChainBreakdown) []string` to extract chain names from breakdown
-  - [ ] 3.3: Add `calculateTotalTVS(protocols []AggregatedProtocol) float64` to sum all protocol TVS values
+- [x] Task 3: Implement helper functions (AC: 2, 4)
+  - [x] 3.1: Add `extractUniqueCategories(protocols []AggregatedProtocol) []string` to extract and sort unique categories
+  - [x] 3.2: Add `extractActiveChains(breakdown []ChainBreakdown) []string` to extract chain names from breakdown
+  - [x] 3.3: Add `calculateTotalTVS(protocols []AggregatedProtocol) float64` to sum all protocol TVS values
 
-- [ ] Task 4: Implement Aggregate method (AC: 1, 2, 4, 5, 6, 7)
-  - [ ] 4.1: Add method `func (a *Aggregator) Aggregate(ctx context.Context, oracleResp *api.OracleAPIResponse, protocols []api.Protocol, history []Snapshot) *AggregationResult`
-  - [ ] 4.2: Call `FilterByOracle` to filter protocols by oracle name
-  - [ ] 4.3: Call `ExtractProtocolData` to enrich protocols with TVS data and get timestamp
-  - [ ] 4.4: Call `CalculateChainBreakdown` to compute chain metrics
-  - [ ] 4.5: Call `CalculateCategoryBreakdown` to compute category metrics
-  - [ ] 4.6: Call `RankProtocols` to sort and rank protocols
-  - [ ] 4.7: Call `GetLargestProtocol` to identify top protocol
-  - [ ] 4.8: Call `CalculateChangeMetrics` with totalTVS, protocolCount, and history
-  - [ ] 4.9: Extract unique categories and active chains
-  - [ ] 4.10: Populate and return `AggregationResult` with all computed values
-  - [ ] 4.11: Handle nil/empty inputs gracefully (return zero-valued result)
+- [x] Task 4: Implement Aggregate method (AC: 1, 2, 4, 5, 6, 7)
+  - [x] 4.1: Add method `func (a *Aggregator) Aggregate(ctx context.Context, oracleResp *api.OracleAPIResponse, protocols []api.Protocol, history []Snapshot) *AggregationResult`
+  - [x] 4.2: Call `FilterByOracle` to filter protocols by oracle name
+  - [x] 4.3: Call `ExtractProtocolData` to enrich protocols with TVS data and get timestamp
+  - [x] 4.4: Call `CalculateChainBreakdown` to compute chain metrics
+  - [x] 4.5: Call `CalculateCategoryBreakdown` to compute category metrics
+  - [x] 4.6: Call `RankProtocols` to sort and rank protocols
+  - [x] 4.7: Call `GetLargestProtocol` to identify top protocol
+  - [x] 4.8: Call `CalculateChangeMetrics` with totalTVS, protocolCount, and history
+  - [x] 4.9: Extract unique categories and active chains
+  - [x] 4.10: Populate and return `AggregationResult` with all computed values
+  - [x] 4.11: Handle nil/empty inputs gracefully (return zero-valued result)
 
-- [ ] Task 5: Write unit tests (AC: 1-7)
-  - [ ] 5.1: Add tests to `internal/aggregator/aggregator_test.go`
-  - [ ] 5.2: Test: NewAggregator creates instance with correct oracle name
-  - [ ] 5.3: Test: Aggregate with valid data returns complete AggregationResult
-  - [ ] 5.4: Test: Aggregate with empty protocols returns zero values
-  - [ ] 5.5: Test: Aggregate with nil oracle response returns zero values
-  - [ ] 5.6: Test: Aggregate orchestrates all sub-functions correctly
-  - [ ] 5.7: Test: TotalTVS equals sum of all protocol TVS values
-  - [ ] 5.8: Test: TotalProtocols equals count of filtered protocols
-  - [ ] 5.9: Test: ActiveChains extracted from chain breakdown
-  - [ ] 5.10: Test: Categories extracted and sorted alphabetically
-  - [ ] 5.11: Test: Protocols are ranked correctly
-  - [ ] 5.12: Test: LargestProtocol identifies top TVL protocol
-  - [ ] 5.13: Test: ChangeMetrics computed from history
-  - [ ] 5.14: Test: Timestamp extracted from oracle response
+- [x] Task 5: Write unit tests (AC: 1-7)
+  - [x] 5.1: Add tests to `internal/aggregator/aggregator_test.go`
+  - [x] 5.2: Test: NewAggregator creates instance with correct oracle name
+  - [x] 5.3: Test: Aggregate with valid data returns complete AggregationResult
+  - [x] 5.4: Test: Aggregate with empty protocols returns zero values
+  - [x] 5.5: Test: Aggregate with nil oracle response returns zero values
+  - [x] 5.6: Test: Aggregate orchestrates all sub-functions correctly
+  - [x] 5.7: Test: TotalTVS equals sum of all protocol TVS values
+  - [x] 5.8: Test: TotalProtocols equals count of filtered protocols
+  - [x] 5.9: Test: ActiveChains extracted from chain breakdown
+  - [x] 5.10: Test: Categories extracted and sorted alphabetically
+  - [x] 5.11: Test: Protocols are ranked correctly
+  - [x] 5.12: Test: LargestProtocol identifies top TVL protocol
+  - [x] 5.13: Test: ChangeMetrics computed from history
+  - [x] 5.14: Test: Timestamp extracted from oracle response
 
-- [ ] Task 6: Verification (AC: all)
-  - [ ] 6.1: Run `go build ./...` and verify success
-  - [ ] 6.2: Run `go test ./internal/aggregator/...` and verify all pass
-  - [ ] 6.3: Run `make lint` and verify no errors
+- [x] Task 6: Verification (AC: all)
+  - [x] 6.1: Run `go build ./...` and verify success
+  - [x] 6.2: Run `go test ./internal/aggregator/...` and verify all pass
+  - [x] 6.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -305,12 +305,75 @@ func extractUniqueCategories(protocols []AggregatedProtocol) []string {
 
 ### Debug Log References
 
+- Plan AC1-AC7: add AggregationResult model, orchestrator, helpers; validate via unit tests and build/lint.
+
 ### Completion Notes List
 
+- Implemented AggregationResult and Aggregator pipeline (filter → extract → breakdowns → ranking → metrics) with nil-safe helpers; verified with go build ./..., go test ./internal/aggregator/..., make lint.
+
 ### File List
+
+- internal/aggregator/aggregator.go
+- internal/aggregator/aggregator_test.go
+- internal/aggregator/models.go
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/3-7-build-complete-aggregation-pipeline.md
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-3-data-processing-pipeline.md |
+| 2025-11-30 | Amelia (Dev Agent) | Added AggregationResult, Aggregator orchestration, helpers, tests; marked story ready for review |
+| 2025-11-30 | Amelia (Dev Agent) | Senior Developer Review (AI): approved, added review notes |
+
+## Senior Developer Review (AI)
+
+Reviewer: BMad  
+Date: 2025-11-30  
+Outcome: Approve (all ACs implemented, no issues found)
+
+### Summary
+- AC1-AC7 all implemented; orchestration covers FR9-FR24; nil/empty inputs handled.
+- Tests+lint pass: `go build ./...`, `go test ./...`, `make lint`.
+
+### Key Findings
+- None. No defects observed.
+
+### Acceptance Criteria Coverage
+| AC | Status | Evidence |
+|----|--------|----------|
+| AC1 | Implemented | internal/aggregator/aggregator.go:20-50; internal/aggregator/aggregator_test.go:19-129 |
+| AC2 | Implemented | internal/aggregator/aggregator.go:34-49; internal/aggregator/metrics.go:13-89; internal/aggregator/aggregator_test.go:80-118 |
+| AC3 | Implemented | internal/aggregator/aggregator.go:15-18; internal/aggregator/aggregator_test.go:12-17 |
+| AC4 | Implemented | internal/aggregator/aggregator.go:22-50,61-95; internal/aggregator/aggregator_test.go:131-152 |
+| AC5 | Implemented | internal/aggregator/extractor.go:9-79; internal/aggregator/aggregator_test.go:131-152 |
+| AC6 | Implemented | internal/aggregator/aggregator.go:35; internal/aggregator/metrics.go:103-181; internal/aggregator/aggregator_test.go:67-124 |
+| AC7 | Implemented | internal/aggregator/aggregator.go:26-37; internal/aggregator/filter.go:5-19; internal/aggregator/extractor.go:9-45; internal/aggregator/metrics.go:13-118 |
+
+### Task Completion Validation
+| Task | Status | Evidence |
+|------|--------|----------|
+| Task 1 (AggregationResult model) | Verified | internal/aggregator/models.go:60-71 |
+| Task 2 (Aggregator struct/ctor) | Verified | internal/aggregator/aggregator.go:10-18 |
+| Task 3 (helpers) | Verified | internal/aggregator/aggregator.go:53-95 |
+| Task 4 (Aggregate method) | Verified | internal/aggregator/aggregator.go:20-50 |
+| Task 5 (tests) | Verified | internal/aggregator/aggregator_test.go:1-153 |
+| Task 6 (build/test/lint) | Verified | commands: go build ./..., go test ./..., make lint (2025-11-30) |
+
+### Test Coverage and Gaps
+- Tests cover orchestrator happy path, nil/empty inputs, totals, breakdowns, ranking, change metrics, timestamp.
+- No gaps detected for AC scope.
+
+### Architectural Alignment
+- Orchestrator pattern preserved; reuse of existing Filter/Extract/Metrics modules (internal/aggregator/*.go).
+- Output lists sorted per architecture guidance; JSON tags present.
+
+### Security Notes
+- No new I/O or external calls; no secrets touched.
+
+### Best-Practices and References
+- Go 1.24; follows table-driven testing patterns from internal/aggregator/metrics_test.go.
+
+### Action Items
+- None required. Code approved.

@@ -56,3 +56,17 @@ type ChangeMetrics struct {
 	ProtocolCountChange7d  *int     `json:"protocol_count_change_7d,omitempty"`
 	ProtocolCountChange30d *int     `json:"protocol_count_change_30d,omitempty"`
 }
+
+// AggregationResult contains the complete output of the aggregation pipeline.
+type AggregationResult struct {
+	TotalTVS          float64              `json:"total_tvs"`
+	TotalProtocols    int                  `json:"total_protocols"`
+	ActiveChains      []string             `json:"active_chains"`
+	Categories        []string             `json:"categories"`
+	ChainBreakdown    []ChainBreakdown     `json:"chain_breakdown"`
+	CategoryBreakdown []CategoryBreakdown  `json:"category_breakdown"`
+	Protocols         []AggregatedProtocol `json:"protocols"`
+	LargestProtocol   *LargestProtocol     `json:"largest_protocol,omitempty"`
+	ChangeMetrics     ChangeMetrics        `json:"change_metrics"`
+	Timestamp         int64                `json:"timestamp"`
+}
