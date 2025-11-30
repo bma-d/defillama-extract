@@ -1,0 +1,298 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2.5</storyId>
+    <title>Implement Parallel Fetching with errgroup</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-5-implement-parallel-fetching-with-errgroup.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>oracle and protocol data fetched concurrently using errgroup</iWant>
+    <soThat>total fetch time is minimized to approximately the duration of the slowest request rather than the sum of both</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <title>Add golang.org/x/sync dependency</title>
+        <subtasks>
+          <subtask id="1.1">Run `go get golang.org/x/sync` to add errgroup package</subtask>
+          <subtask id="1.2">Verify `go.mod` includes `golang.org/x/sync` dependency</subtask>
+          <subtask id="1.3">Run `go mod tidy` to clean up dependencies</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="3">
+        <title>Define FetchResult struct</title>
+        <subtasks>
+          <subtask id="2.1">Add `FetchResult` struct to `internal/api/responses.go`</subtask>
+          <subtask id="2.2">Ensure struct fields are exported for external package access</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="1,2,3,4,5,6,7">
+        <title>Implement FetchAll method</title>
+        <subtasks>
+          <subtask id="3.1">Add `FetchAll(ctx context.Context) (*FetchResult, error)` method to `Client` in `internal/api/client.go`</subtask>
+          <subtask id="3.2">Create errgroup with context: `g, ctx := errgroup.WithContext(ctx)`</subtask>
+          <subtask id="3.3">Launch oracle fetch in goroutine via `g.Go()`</subtask>
+          <subtask id="3.4">Launch protocol fetch in goroutine via `g.Go()`</subtask>
+          <subtask id="3.5">Wait for both with `g.Wait()`</subtask>
+          <subtask id="3.6">On success, return `&amp;FetchResult{OracleResponse: oracleResp, Protocols: protocols}`</subtask>
+          <subtask id="3.7">On error, return `nil, err` (errgroup returns first error)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="2,8">
+        <title>Add timing and logging</title>
+        <subtasks>
+          <subtask id="4.1">Track start time before launching goroutines</subtask>
+          <subtask id="4.2">Track individual fetch durations within each goroutine</subtask>
+          <subtask id="4.3">On success, log at INFO: "parallel fetch completed" with oracle_duration_ms, protocol_duration_ms, total_duration_ms</subtask>
+          <subtask id="4.4">On failure, log at ERROR: "parallel fetch failed" with error, total_duration_ms</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="2,3,8">
+        <title>Write unit tests for FetchAll success path</title>
+        <subtasks>
+          <subtask id="5.1">Create test in `internal/api/client_test.go` or new `internal/api/fetchall_test.go`</subtask>
+          <subtask id="5.2">Mock server returns both endpoints successfully</subtask>
+          <subtask id="5.3">Verify both `OracleResponse` and `Protocols` are populated</subtask>
+          <subtask id="5.4">Verify no error returned</subtask>
+          <subtask id="5.5">(Optional) Verify parallel timing is faster than sequential</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="4,5,6">
+        <title>Write unit tests for partial failure</title>
+        <subtasks>
+          <subtask id="6.1">Test oracle fails (500), protocol succeeds - error returned</subtask>
+          <subtask id="6.2">Test protocol fails (500), oracle succeeds - error returned</subtask>
+          <subtask id="6.3">Test both fail - first error returned</subtask>
+          <subtask id="6.4">Verify error message identifies which endpoint failed</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="7">
+        <title>Write unit test for context cancellation</title>
+        <subtasks>
+          <subtask id="7.1">Create cancellable context with short timeout</subtask>
+          <subtask id="7.2">Mock server adds delay longer than timeout</subtask>
+          <subtask id="7.3">Verify `FetchAll` returns context error</subtask>
+          <subtask id="7.4">Verify both requests are cancelled (no hung goroutines)</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="2">
+        <title>Write parallel performance test</title>
+        <subtasks>
+          <subtask id="8.1">Mock server with 100ms delay on each endpoint</subtask>
+          <subtask id="8.2">Measure FetchAll duration</subtask>
+          <subtask id="8.3">Assert total time &lt; 150ms (parallel) not &gt; 180ms (sequential would be 200ms+)</subtask>
+        </subtasks>
+      </task>
+      <task id="9" ac="all">
+        <title>Verification</title>
+        <subtasks>
+          <subtask id="9.1">Run `go build ./...` and verify success</subtask>
+          <subtask id="9.2">Run `go test ./internal/api/...` and verify all pass including new FetchAll tests</subtask>
+          <subtask id="9.3">Run `make lint` and verify no errors</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given a need to fetch both oracle and protocol data When `FetchAll(ctx context.Context)` is called Then both API requests are initiated concurrently using `golang.org/x/sync/errgroup`</criterion>
+    <criterion id="AC2">Given both requests execute concurrently When measuring total fetch time Then duration approximates `max(oracle_time, protocol_time)` rather than `oracle_time + protocol_time`</criterion>
+    <criterion id="AC3">Given both requests succeed When `FetchAll` returns Then a `*FetchResult` struct is returned containing both `OracleResponse *OracleAPIResponse` and `Protocols []Protocol` with nil error</criterion>
+    <criterion id="AC4">Given the oracle request fails but protocol succeeds When `FetchAll` returns Then an error is returned describing the oracle failure And the protocol request's context is cancelled (if still in progress)</criterion>
+    <criterion id="AC5">Given the protocol request fails but oracle succeeds When `FetchAll` returns Then an error is returned describing the protocol failure And the oracle request's context is cancelled (if still in progress)</criterion>
+    <criterion id="AC6">Given both requests fail When `FetchAll` returns Then the first error encountered is returned (errgroup behavior)</criterion>
+    <criterion id="AC7">Given the parent context is cancelled during fetch When cancellation propagates Then both in-flight requests are cancelled And the function returns `context.Canceled` or `context.DeadlineExceeded` error</criterion>
+    <criterion id="AC8">Given parallel fetch completes successfully When logging occurs Then an info log is emitted with total duration: "parallel fetch completed" with `oracle_duration_ms`, `protocol_duration_ms`, `total_duration_ms`</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: API Integration</title>
+        <section>AC-2.5: Parallel Fetching</section>
+        <snippet>FetchAll(ctx) fetches oracle and protocol endpoints concurrently. Total duration approximates max(oracle_time, protocol_time). If one request fails, context is cancelled for the other.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: API Integration</title>
+        <section>Data Models and Contracts - FetchResult</section>
+        <snippet>FetchResult struct contains OracleResponse *OracleAPIResponse and Protocols []Protocol as combined response structure.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: API Integration</title>
+        <section>Workflows and Sequencing - Parallel Fetch Flow</section>
+        <snippet>Uses errgroup.WithContext(ctx) to launch concurrent goroutines for FetchOracles and FetchProtocols, then g.Wait() returns combined result or first error.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/implementation-patterns.md</path>
+        <title>Implementation Patterns</title>
+        <section>Parallel Fetching</section>
+        <snippet>Use errgroup for concurrent API calls with pattern: g, ctx := errgroup.WithContext(ctx), then g.Go() for each fetch, and g.Wait() for completion.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-2-api-integration.md</path>
+        <title>Epic 2: API Integration</title>
+        <section>Story 2.5: Implement Parallel Fetching with errgroup</section>
+        <snippet>Parallel fetch using golang.org/x/sync/errgroup. Total fetch time is approximately max(oracle_time, protocol_time). Context cancellation propagates to both requests.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Mock Server Tests</section>
+        <snippet>Test HTTP client with httptest. Test fixtures in testdata/ directory. Coverage requirements: error handling paths must be tested, HTTP retry logic tested with mock server.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR3</section>
+        <snippet>System fetches both endpoints in parallel to minimize total fetch time.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>internal/api/client.go</path>
+        <kind>api-client</kind>
+        <symbol>Client</symbol>
+        <lines>1-227</lines>
+        <reason>Main file to modify - add FetchAll method to existing Client struct. Contains FetchOracles, FetchProtocols, doWithRetry, and doRequest that will be called by FetchAll.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/client.go</path>
+        <kind>method</kind>
+        <symbol>FetchOracles</symbol>
+        <lines>205-214</lines>
+        <reason>Existing method that will be called by FetchAll in oracle goroutine - uses doWithRetry wrapper for retry logic.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/client.go</path>
+        <kind>method</kind>
+        <symbol>FetchProtocols</symbol>
+        <lines>217-226</lines>
+        <reason>Existing method that will be called by FetchAll in protocol goroutine - uses doWithRetry wrapper for retry logic.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/responses.go</path>
+        <kind>types</kind>
+        <symbol>OracleAPIResponse, Protocol, APIError</symbol>
+        <lines>1-53</lines>
+        <reason>File to add FetchResult struct. Contains existing OracleAPIResponse and Protocol types that FetchResult will reference.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/endpoints.go</path>
+        <kind>constants</kind>
+        <symbol>OraclesEndpoint, ProtocolsEndpoint</symbol>
+        <lines>1-8</lines>
+        <reason>API endpoint constants used by fetchers - no changes needed but reference for understanding URL patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/client_test.go</path>
+        <kind>test</kind>
+        <symbol>TestNewClient, Test patterns</symbol>
+        <reason>Existing test file with mock server patterns to follow for FetchAll tests.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/retry_test.go</path>
+        <kind>test</kind>
+        <symbol>Retry test patterns</symbol>
+        <reason>Existing retry tests showing mock server patterns with failure scenarios.</reason>
+      </artifact>
+      <artifact>
+        <path>go.mod</path>
+        <kind>module</kind>
+        <symbol>module dependencies</symbol>
+        <lines>1-6</lines>
+        <reason>Need to add golang.org/x/sync dependency for errgroup package.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="go">
+        <existing>
+          <package name="gopkg.in/yaml.v3" version="v3.0.1" />
+        </existing>
+        <toAdd>
+          <package name="golang.org/x/sync" version="latest" note="For errgroup - official Go extended library per ADR-005" />
+        </toAdd>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">ADR-001: Use Go standard library over frameworks - errgroup is allowed exception per tech-spec</constraint>
+    <constraint type="architecture">ADR-003: Explicit error returns over exceptions - return (nil, error) on failure</constraint>
+    <constraint type="architecture">ADR-004: Structured logging with slog - use c.logger.Info/Error with structured attributes</constraint>
+    <constraint type="architecture">ADR-005: Minimal external dependencies - golang.org/x/sync is only new dependency, part of official Go extended libs</constraint>
+    <constraint type="pattern">Context propagation: All I/O functions accept context.Context as first parameter</constraint>
+    <constraint type="pattern">errgroup.WithContext(ctx) ensures context cancellation propagates to goroutines</constraint>
+    <constraint type="pattern">First error from errgroup.Wait() is returned, subsequent errors discarded</constraint>
+    <constraint type="logging">Log success at INFO with oracle_duration_ms, protocol_duration_ms, total_duration_ms</constraint>
+    <constraint type="logging">Log failure at ERROR with error and total_duration_ms</constraint>
+    <constraint type="testing">Use httptest.NewServer with handler functions for mock server tests</constraint>
+    <constraint type="testing">Cover success, partial failure, both fail, and context cancellation paths</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>FetchAll</name>
+      <kind>method</kind>
+      <signature>func (c *Client) FetchAll(ctx context.Context) (*FetchResult, error)</signature>
+      <path>internal/api/client.go</path>
+      <note>New method to implement - parallel fetch of both endpoints</note>
+    </interface>
+    <interface>
+      <name>FetchResult</name>
+      <kind>struct</kind>
+      <signature>type FetchResult struct { OracleResponse *OracleAPIResponse; Protocols []Protocol }</signature>
+      <path>internal/api/responses.go</path>
+      <note>New struct to add - combined response from parallel fetch</note>
+    </interface>
+    <interface>
+      <name>FetchOracles</name>
+      <kind>method</kind>
+      <signature>func (c *Client) FetchOracles(ctx context.Context) (*OracleAPIResponse, error)</signature>
+      <path>internal/api/client.go</path>
+      <note>Existing method - call from oracle goroutine in FetchAll</note>
+    </interface>
+    <interface>
+      <name>FetchProtocols</name>
+      <kind>method</kind>
+      <signature>func (c *Client) FetchProtocols(ctx context.Context) ([]Protocol, error)</signature>
+      <path>internal/api/client.go</path>
+      <note>Existing method - call from protocol goroutine in FetchAll</note>
+    </interface>
+    <interface>
+      <name>errgroup.Group</name>
+      <kind>external-type</kind>
+      <signature>g, ctx := errgroup.WithContext(ctx); g.Go(func() error); err := g.Wait()</signature>
+      <path>golang.org/x/sync/errgroup</path>
+      <note>External package for goroutine coordination with error handling</note>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Go testing package with table-driven tests. Mock server tests with httptest.NewServer for HTTP client testing. Test fixtures in testdata/ directory. All public methods tested, error handling paths covered. 90%+ line coverage target for client.go.
+    </standards>
+    <locations>
+      <location>internal/api/client_test.go</location>
+      <location>internal/api/fetchall_test.go (optional new file)</location>
+      <location>internal/api/retry_test.go (reference for patterns)</location>
+      <location>testdata/oracle_response.json</location>
+      <location>testdata/protocol_response.json</location>
+    </locations>
+    <ideas>
+      <idea ac="2,3">TestFetchAll_BothSucceed - mock server returns valid JSON for both endpoints, verify FetchResult populated with both responses</idea>
+      <idea ac="2">TestFetchAll_ParallelTiming - mock server with 100ms delays, verify total time &lt; 150ms (proves parallelism)</idea>
+      <idea ac="4">TestFetchAll_OracleFails - oracle returns 500, protocol succeeds, verify error returned with oracle failure</idea>
+      <idea ac="5">TestFetchAll_ProtocolFails - protocol returns 500, oracle succeeds, verify error returned with protocol failure</idea>
+      <idea ac="6">TestFetchAll_BothFail - both return 500, verify first error returned (errgroup behavior)</idea>
+      <idea ac="7">TestFetchAll_ContextCancelled - use context.WithTimeout with short timeout, mock server delays, verify context error returned</idea>
+      <idea ac="8">TestFetchAll_LogsSuccess - verify INFO log emitted with duration attributes on success (capture log output)</idea>
+      <idea ac="8">TestFetchAll_LogsFailure - verify ERROR log emitted with error and duration on failure</idea>
+    </ideas>
+  </tests>
+</story-context>
