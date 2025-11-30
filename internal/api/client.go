@@ -19,6 +19,10 @@ import (
 
 const userAgentValue = "defillama-extract/1.0"
 
+type contextKey string
+
+const attemptContextKey contextKey = "api_attempt"
+
 // Client wraps http.Client with configuration needed for DefiLlama requests.
 type Client struct {
 	httpClient   *http.Client
@@ -61,7 +65,21 @@ func NewClient(cfg *config.APIConfig, logger *slog.Logger) *Client {
 }
 
 // doRequest performs a GET request with User-Agent injection and JSON decoding.
+func attemptFromContext(ctx context.Context) int {
+	attempt, ok := ctx.Value(attemptContextKey).(int)
+	if !ok || attempt < 1 {
+		return 1
+	}
+
+	return attempt
+}
+
+// doRequest performs a GET request with User-Agent injection and JSON decoding.
 func (c *Client) doRequest(ctx context.Context, url string, target any) error {
+	start := time.Now()
+	attempt := attemptFromContext(ctx)
+	method := http.MethodGet
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
@@ -69,8 +87,20 @@ func (c *Client) doRequest(ctx context.Context, url string, target any) error {
 
 	req.Header.Set("User-Agent", c.userAgent)
 
+	c.logger.Debug("starting API request",
+		"url", url,
+		"method", method,
+	)
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		duration := time.Since(start)
+		c.logger.Warn("API request failed",
+			"url", url,
+			"attempt", attempt,
+			"duration_ms", duration.Milliseconds(),
+			"error", err,
+		)
 		return &APIError{
 			Endpoint:   url,
 			StatusCode: 0,
@@ -80,14 +110,30 @@ func (c *Client) doRequest(ctx context.Context, url string, target any) error {
 	}
 	defer resp.Body.Close()
 
+	duration := time.Since(start)
+
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		err := fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		c.logger.Warn("API request failed",
+			"url", url,
+			"status", resp.StatusCode,
+			"attempt", attempt,
+			"duration_ms", duration.Milliseconds(),
+			"error", err,
+		)
 		return &APIError{
 			Endpoint:   url,
 			StatusCode: resp.StatusCode,
-			Message:    fmt.Sprintf("unexpected status: %d", resp.StatusCode),
-			Err:        fmt.Errorf("unexpected status: %d", resp.StatusCode),
+			Message:    err.Error(),
+			Err:        err,
 		}
 	}
+
+	c.logger.Info("API request completed",
+		"url", url,
+		"status", resp.StatusCode,
+		"duration_ms", duration.Milliseconds(),
+	)
 
 	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
 		return fmt.Errorf("decode response: %w", err)
@@ -138,7 +184,7 @@ func (c *Client) calculateBackoff(attempt int, baseDelay time.Duration) time.Dur
 	return time.Duration(float64(exponential) * jitterMultiplier)
 }
 
-func (c *Client) doWithRetry(ctx context.Context, fn func() error) error {
+func (c *Client) doWithRetry(ctx context.Context, fn func(context.Context) error) error {
 	maxAttempts := c.maxRetries + 1
 	var lastErr error
 	var lastEndpoint string
@@ -148,7 +194,8 @@ func (c *Client) doWithRetry(ctx context.Context, fn func() error) error {
 			return ctxErr
 		}
 
-		err := fn()
+		attemptCtx := context.WithValue(ctx, attemptContextKey, attempt+1)
+		err := fn(attemptCtx)
 		if err == nil {
 			if attempt > 0 {
 				c.logger.Info("request succeeded after retries",
@@ -205,7 +252,7 @@ func (c *Client) doWithRetry(ctx context.Context, fn func() error) error {
 // FetchOracles retrieves oracle TVS data from DefiLlama /oracles endpoint.
 func (c *Client) FetchOracles(ctx context.Context) (*OracleAPIResponse, error) {
 	var response OracleAPIResponse
-	if err := c.doWithRetry(ctx, func() error {
+	if err := c.doWithRetry(ctx, func(ctx context.Context) error {
 		return c.doRequest(ctx, c.oraclesURL, &response)
 	}); err != nil {
 		return nil, fmt.Errorf("fetch oracles: %w", err)
@@ -217,7 +264,7 @@ func (c *Client) FetchOracles(ctx context.Context) (*OracleAPIResponse, error) {
 // FetchProtocols retrieves protocol metadata from DefiLlama /lite/protocols2 endpoint.
 func (c *Client) FetchProtocols(ctx context.Context) ([]Protocol, error) {
 	var protocols []Protocol
-	if err := c.doWithRetry(ctx, func() error {
+	if err := c.doWithRetry(ctx, func(ctx context.Context) error {
 		return c.doRequest(ctx, c.protocolsURL, &protocols)
 	}); err != nil {
 		return nil, fmt.Errorf("fetch protocols: %w", err)

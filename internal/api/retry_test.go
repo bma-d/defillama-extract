@@ -119,8 +119,8 @@ func TestDoWithRetry_RetryableErrorsUpToMax(t *testing.T) {
 	client := NewClient(cfg, newTestLogger(buf))
 
 	var payload testPayload
-	err := client.doWithRetry(context.Background(), func() error {
-		return client.doRequest(context.Background(), server.URL, &payload)
+	err := client.doWithRetry(context.Background(), func(ctx context.Context) error {
+		return client.doRequest(ctx, server.URL, &payload)
 	})
 
 	if err == nil {
@@ -153,8 +153,8 @@ func TestDoWithRetry_NonRetryableReturnsImmediately(t *testing.T) {
 	client := NewClient(cfg, newTestLogger(buf))
 
 	var payload testPayload
-	err := client.doWithRetry(context.Background(), func() error {
-		return client.doRequest(context.Background(), server.URL, &payload)
+	err := client.doWithRetry(context.Background(), func(ctx context.Context) error {
+		return client.doRequest(ctx, server.URL, &payload)
 	})
 
 	if err == nil {
@@ -188,8 +188,8 @@ func TestDoWithRetry_SucceedsAfterRetries(t *testing.T) {
 	client := NewClient(cfg, newTestLogger(buf))
 
 	var payload testPayload
-	if err := client.doWithRetry(context.Background(), func() error {
-		return client.doRequest(context.Background(), server.URL, &payload)
+	if err := client.doWithRetry(context.Background(), func(ctx context.Context) error {
+		return client.doRequest(ctx, server.URL, &payload)
 	}); err != nil {
 		t.Fatalf("expected success after retries, got %v", err)
 	}
@@ -222,7 +222,7 @@ func TestDoWithRetry_ContextCancellation(t *testing.T) {
 
 	go func() {
 		var payload testPayload
-		err := client.doWithRetry(ctx, func() error {
+		err := client.doWithRetry(ctx, func(ctx context.Context) error {
 			return client.doRequest(ctx, server.URL, &payload)
 		})
 		done <- err

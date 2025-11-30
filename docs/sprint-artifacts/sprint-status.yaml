@@ -50,7 +50,7 @@ development_status:
   2-3-implement-protocol-endpoint-fetcher: done
   2-4-implement-retry-logic-with-exponential-backoff: done
   2-5-implement-parallel-fetching-with-errgroup: done
-  2-6-implement-api-request-logging: ready-for-dev
+  2-6-implement-api-request-logging: done
   epic-2-retrospective: optional
 
   # Epic 3: Data Processing Pipeline (7 stories)
