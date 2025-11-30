@@ -1,0 +1,236 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>2</storyId>
+    <title>Extract Protocol Metadata and TVS Data</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-2-extract-protocol-metadata-and-tvs-data.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to extract relevant metadata and TVS for each filtered protocol</iWant>
+    <soThat>I have the data needed for aggregation and output</soThat>
+    <tasks>
+      <task id="1" title="Define AggregatedProtocol struct">
+        <subtask id="1.1">Create internal/aggregator/models.go with AggregatedProtocol struct</subtask>
+        <subtask id="1.2">Include fields: Name, Slug, Category, URL, TVL, Chains, TVS (total), TVSByChain (map[string]float64)</subtask>
+        <subtask id="1.3">Add JSON struct tags for output serialization</subtask>
+      </task>
+      <task id="2" title="Implement ExtractProtocolData function">
+        <subtask id="2.1">Create internal/aggregator/extractor.go with function signature</subtask>
+        <subtask id="2.2">Iterate over filtered protocols and copy metadata fields</subtask>
+        <subtask id="2.3">For each protocol, cross-reference Chains with oracleResp.OraclesTVS[oracleName]</subtask>
+        <subtask id="2.4">Sum TVS across all chains for protocol's total TVS</subtask>
+        <subtask id="2.5">Populate TVSByChain map with per-chain TVS values</subtask>
+        <subtask id="2.6">Handle empty/missing chains gracefully (return zero TVS)</subtask>
+      </task>
+      <task id="3" title="Implement timestamp extraction">
+        <subtask id="3.1">Create ExtractLatestTimestamp(oracleResp *api.OracleAPIResponse) helper function</subtask>
+        <subtask id="3.2">Parse chart data keys as Unix timestamps (strings to int64)</subtask>
+        <subtask id="3.3">Return the maximum timestamp found</subtask>
+      </task>
+      <task id="4" title="Write unit tests">
+        <subtask id="4.1">Create internal/aggregator/extractor_test.go</subtask>
+        <subtask id="4.2">Test: ExtractProtocolData populates all metadata fields correctly</subtask>
+        <subtask id="4.3">Test: TVS calculated correctly from OraclesTVS by matching chain</subtask>
+        <subtask id="4.4">Test: TVSByChain map populated for multi-chain protocol</subtask>
+        <subtask id="4.5">Test: Protocol with missing chains returns zero TVS (no panic)</subtask>
+        <subtask id="4.6">Test: ExtractLatestTimestamp returns max timestamp from chart keys</subtask>
+        <subtask id="4.7">Test: Empty oracle response returns zero timestamp</subtask>
+      </task>
+      <task id="5" title="Verification">
+        <subtask id="5.1">Run go build ./... and verify success</subtask>
+        <subtask id="5.2">Run go test ./internal/aggregator/... and verify all pass</subtask>
+        <subtask id="5.3">Run make lint and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">
+      <given>filtered Switchboard protocols and oracle API response</given>
+      <when>ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResponse, oracleName string) is called</when>
+      <then>for each protocol an AggregatedProtocol struct is created with: Name, Slug, Category, URL from protocol metadata, TVL from protocol metadata, Chains list from protocol metadata, and TVS calculated from oracle response data</then>
+    </criterion>
+    <criterion id="AC2">
+      <given>oracle response with OraclesTVS["Switchboard"]["Solana"] = 1000000</given>
+      <when>extracting TVS for a protocol on Solana</when>
+      <then>the protocol's TVS includes the Solana contribution</then>
+    </criterion>
+    <criterion id="AC3">
+      <given>a protocol operating on multiple chains</given>
+      <when>extracting TVS</when>
+      <then>TVSByChain map contains TVS for each chain where the protocol operates AND the oracle has TVS data</then>
+    </criterion>
+    <criterion id="AC4">
+      <given>oracle response chart data</given>
+      <when>extracting timestamp</when>
+      <then>the latest timestamp from chart data is extracted (FR14) as Unix timestamp</then>
+    </criterion>
+    <criterion id="AC5">
+      <given>a protocol with empty or missing Chains field</given>
+      <when>extracting TVS</when>
+      <then>the protocol is included with TVS = 0 and empty TVSByChain map (no crash)</then>
+    </criterion>
+    <criterion id="AC6">
+      <given>valid inputs</given>
+      <when>ExtractProtocolData completes</when>
+      <then>a slice of AggregatedProtocol structs and extracted timestamp are returned</then>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR11-FR14 Data Filtering and Extraction</section>
+        <snippet>FR11: System extracts TVS (Total Value Secured) data per protocol per chain. FR12: System extracts protocol metadata (name, slug, category, TVL, chains, URL). FR14: System extracts timestamp of latest data point from chart data.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-3-data-processing-pipeline.md</path>
+        <title>Epic 3: Data Processing Pipeline</title>
+        <section>Story 3.2: Extract Protocol Metadata and TVS Data</section>
+        <snippet>Given filtered Switchboard protocols and oracle API response, When ExtractProtocolData is called, Then for each protocol an AggregatedProtocol struct is created with relevant metadata and TVS calculated from oracle response data.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>API Response Models and Output Models</section>
+        <snippet>OracleAPIResponse contains Oracles, Chart, OraclesTVS, and ChainsByOracle maps. Protocol struct contains ID, Name, Slug, Category, TVL, Chains, Oracles, Oracle, and URL fields.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/fr-category-to-architecture-mapping.md</path>
+        <title>FR Category to Architecture Mapping</title>
+        <section>Data Filtering (FR9-FR14)</section>
+        <snippet>Data Filtering (FR9-FR14) maps to internal/aggregator package with filter.go as key file. Reference: 7-custom-aggregation-logic-go-implementation.md</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Table-driven tests in all test files. Mock server tests for HTTP client. Test data in testdata/ directory. High coverage required for aggregation logic (business-critical).</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>internal/aggregator/filter.go</path>
+        <kind>filter</kind>
+        <symbol>FilterByOracle</symbol>
+        <lines>7-20</lines>
+        <reason>FilterByOracle function returns filtered protocols for input to ExtractProtocolData. This function was implemented in Story 3.1 and provides the input []api.Protocol slice.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/filter_test.go</path>
+        <kind>test</kind>
+        <symbol>TestFilterByOracle</symbol>
+        <lines>10-104</lines>
+        <reason>Establishes table-driven test pattern with arrange/act/assert style. Test helpers buildProtocolDataset and assertContainsSlugs provide reusable patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/responses.go</path>
+        <kind>types</kind>
+        <symbol>OracleAPIResponse, Protocol, FetchResult</symbol>
+        <lines>9-33</lines>
+        <reason>Defines OracleAPIResponse with OraclesTVS map[string]map[string]map[string]float64 and Protocol struct with all metadata fields. These are the input types for ExtractProtocolData.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/doc.go</path>
+        <kind>package</kind>
+        <symbol>package aggregator</symbol>
+        <lines>1</lines>
+        <reason>Package where new extractor.go and models.go files should be added.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <goVersion>1.24.0</goVersion>
+        <dependency name="golang.org/x/sync" version="v0.18.0">errgroup for parallel operations</dependency>
+        <dependency name="gopkg.in/yaml.v3" version="v3.0.1">YAML configuration parsing</dependency>
+      </go>
+      <stdlib>
+        <package>strconv</package>
+        <package>sort</package>
+        <package>testing</package>
+        <package>fmt</package>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow existing package structure in internal/aggregator/</constraint>
+    <constraint type="pattern">Use table-driven tests matching filter_test.go pattern</constraint>
+    <constraint type="pattern">Import api package for Protocol and OracleAPIResponse types</constraint>
+    <constraint type="naming">New files: models.go (struct), extractor.go (function), extractor_test.go (tests)</constraint>
+    <constraint type="layer">AggregatedProtocol struct stays in aggregator package, not models package</constraint>
+    <constraint type="style">JSON struct tags required for output serialization</constraint>
+    <constraint type="error-handling">Handle nil/empty inputs gracefully - return empty slice or zero values, no panics</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>FilterByOracle</name>
+      <kind>function</kind>
+      <signature>func FilterByOracle(protocols []api.Protocol, oracleName string) []api.Protocol</signature>
+      <path>internal/aggregator/filter.go</path>
+    </interface>
+    <interface>
+      <name>OracleAPIResponse</name>
+      <kind>struct</kind>
+      <signature>type OracleAPIResponse struct { Oracles map[string][]string; Chart map[string]map[string]map[string]float64; OraclesTVS map[string]map[string]map[string]float64; ChainsByOracle map[string][]string }</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+    <interface>
+      <name>Protocol</name>
+      <kind>struct</kind>
+      <signature>type Protocol struct { ID, Name, Slug, Category, Oracle, URL string; TVL float64; Chains, Oracles []string }</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+    <interface>
+      <name>ExtractProtocolData (to implement)</name>
+      <kind>function</kind>
+      <signature>func ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResponse, oracleName string) ([]AggregatedProtocol, int64)</signature>
+      <path>internal/aggregator/extractor.go</path>
+    </interface>
+    <interface>
+      <name>ExtractLatestTimestamp (to implement)</name>
+      <kind>function</kind>
+      <signature>func ExtractLatestTimestamp(oracleResp *api.OracleAPIResponse) int64</signature>
+      <path>internal/aggregator/extractor.go</path>
+    </interface>
+    <interface>
+      <name>AggregatedProtocol (to implement)</name>
+      <kind>struct</kind>
+      <signature>type AggregatedProtocol struct { Name, Slug, Category, URL string; TVL, TVS float64; Chains []string; TVSByChain map[string]float64 }</signature>
+      <path>internal/aggregator/models.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Follow Go table-driven test pattern established in filter_test.go. Use arrange/act/assert style. Tests must cover success cases and edge cases (empty inputs, missing data, nil maps). High coverage required for aggregation logic as it is business-critical. Use descriptive test names that explain the scenario being tested.
+    </standards>
+    <locations>
+      <location>internal/aggregator/*_test.go</location>
+      <location>testdata/ (for fixture files if needed)</location>
+    </locations>
+    <ideas>
+      <idea acId="AC1">Test ExtractProtocolData populates all metadata fields (Name, Slug, Category, URL, TVL, Chains) correctly from input Protocol</idea>
+      <idea acId="AC2">Test TVS calculated correctly when protocol chain matches OraclesTVS chain key</idea>
+      <idea acId="AC3">Test TVSByChain map populated for multi-chain protocol (e.g., Solana + Sui)</idea>
+      <idea acId="AC4">Test ExtractLatestTimestamp returns maximum Unix timestamp from Chart keys</idea>
+      <idea acId="AC5">Test protocol with nil/empty Chains returns TVS=0 and empty TVSByChain without panic</idea>
+      <idea acId="AC6">Test ExtractProtocolData returns []AggregatedProtocol slice and int64 timestamp</idea>
+      <idea acId="edge">Test empty protocols slice returns empty result slice</idea>
+      <idea acId="edge">Test nil OracleAPIResponse handled gracefully</idea>
+      <idea acId="edge">Test missing oracle name in OraclesTVS returns zero TVS for all protocols</idea>
+      <idea acId="edge">Test empty Chart map returns zero timestamp</idea>
+    </ideas>
+  </tests>
+</story-context>
