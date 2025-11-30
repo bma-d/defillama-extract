@@ -48,3 +48,55 @@ func TestOracleAPIResponse_UnmarshalMissingFields(t *testing.T) {
 		t.Fatalf("expected Chart nil when omitted")
 	}
 }
+
+func TestProtocol_UnmarshalFixture(t *testing.T) {
+	fixturePath := filepath.Join("..", "..", "testdata", "protocol_response.json")
+	data, err := os.ReadFile(fixturePath)
+	if err != nil {
+		t.Fatalf("failed to read fixture: %v", err)
+	}
+
+	var protocols []Protocol
+	if err := json.Unmarshal(data, &protocols); err != nil {
+		t.Fatalf("failed to unmarshal fixture: %v", err)
+	}
+
+	if len(protocols) != 3 {
+		t.Fatalf("expected 3 protocols, got %d", len(protocols))
+	}
+
+	first := protocols[0]
+	if first.ID != "marinade-finance" || first.Category != "Liquid Staking" {
+		t.Fatalf("unexpected first protocol decoded: %+v", first)
+	}
+
+	second := protocols[1]
+	if second.Oracle != "Switchboard" || len(second.Oracles) != 2 {
+		t.Fatalf("expected oracle fields populated, got %+v", second)
+	}
+}
+
+func TestProtocol_UnmarshalMissingFields(t *testing.T) {
+	data := []byte(`[
+		{
+			"id": "minimal-protocol",
+			"name": "Minimal Protocol",
+			"slug": "minimal-protocol",
+			"category": "DEX"
+		}
+	]`)
+
+	var protocols []Protocol
+	if err := json.Unmarshal(data, &protocols); err != nil {
+		t.Fatalf("unexpected error unmarshaling protocol with missing optional fields: %v", err)
+	}
+
+	if len(protocols) != 1 {
+		t.Fatalf("expected one protocol decoded, got %d", len(protocols))
+	}
+
+	p := protocols[0]
+	if p.TVL != 0 || p.Chains != nil || p.URL != "" || p.Oracles != nil || p.Oracle != "" {
+		t.Fatalf("expected zero values for optional fields, got %+v", p)
+	}
+}

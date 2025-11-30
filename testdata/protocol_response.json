@@ -1,0 +1,29 @@
+[
+  {
+    "id": "marinade-finance",
+    "name": "Marinade Finance",
+    "slug": "marinade-finance",
+    "category": "Liquid Staking",
+    "tvl": 500000000,
+    "chains": ["Solana"],
+    "oracles": ["Switchboard"],
+    "url": "https://marinade.finance"
+  },
+  {
+    "id": "solend",
+    "name": "Solend",
+    "slug": "solend",
+    "category": "Lending",
+    "tvl": 150000000,
+    "chains": ["Solana"],
+    "oracles": ["Switchboard", "Pyth"],
+    "oracle": "Switchboard",
+    "url": "https://solend.fi"
+  },
+  {
+    "id": "minimal-protocol",
+    "name": "Minimal Protocol",
+    "slug": "minimal-protocol",
+    "category": "DEX"
+  }
+]

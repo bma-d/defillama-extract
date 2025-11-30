@@ -16,12 +16,13 @@ const userAgentValue = "defillama-extract/1.0"
 
 // Client wraps http.Client with configuration needed for DefiLlama requests.
 type Client struct {
-	httpClient *http.Client
-	oraclesURL string
-	userAgent  string
-	maxRetries int
-	retryDelay time.Duration
-	logger     *slog.Logger
+	httpClient   *http.Client
+	oraclesURL   string
+	protocolsURL string
+	userAgent    string
+	maxRetries   int
+	retryDelay   time.Duration
+	logger       *slog.Logger
 }
 
 // NewClient constructs a Client using API configuration. Nil logger falls back to slog.Default().
@@ -35,13 +36,19 @@ func NewClient(cfg *config.APIConfig, logger *slog.Logger) *Client {
 		oraclesURL = OraclesEndpoint
 	}
 
+	protocolsURL := cfg.ProtocolsURL
+	if protocolsURL == "" {
+		protocolsURL = ProtocolsEndpoint
+	}
+
 	return &Client{
-		httpClient: &http.Client{Timeout: cfg.Timeout},
-		oraclesURL: oraclesURL,
-		userAgent:  userAgentValue,
-		maxRetries: cfg.MaxRetries,
-		retryDelay: cfg.RetryDelay,
-		logger:     logger,
+		httpClient:   &http.Client{Timeout: cfg.Timeout},
+		oraclesURL:   oraclesURL,
+		protocolsURL: protocolsURL,
+		userAgent:    userAgentValue,
+		maxRetries:   cfg.MaxRetries,
+		retryDelay:   cfg.RetryDelay,
+		logger:       logger,
 	}
 }
 
@@ -79,4 +86,14 @@ func (c *Client) FetchOracles(ctx context.Context) (*OracleAPIResponse, error) {
 	}
 
 	return &response, nil
+}
+
+// FetchProtocols retrieves protocol metadata from DefiLlama /lite/protocols2 endpoint.
+func (c *Client) FetchProtocols(ctx context.Context) ([]Protocol, error) {
+	var protocols []Protocol
+	if err := c.doRequest(ctx, c.protocolsURL, &protocols); err != nil {
+		return nil, fmt.Errorf("fetch protocols: %w", err)
+	}
+
+	return protocols, nil
 }

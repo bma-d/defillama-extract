@@ -1,6 +1,6 @@
 # Story 2.3: Implement Protocol Endpoint Fetcher
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -33,9 +33,9 @@ so that **I can retrieve protocol details like name, category, TVL, chains, and 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define Protocol struct (AC: 2, 3)
-  - [ ] 1.1: Add `Protocol` struct to `internal/api/responses.go`
-  - [ ] 1.2: Include all fields with proper JSON tags and `omitempty` for optional fields:
+- [x] Task 1: Define Protocol struct (AC: 2, 3)
+  - [x] 1.1: Add `Protocol` struct to `internal/api/responses.go`
+  - [x] 1.2: Include all fields with proper JSON tags and `omitempty` for optional fields:
     ```go
     type Protocol struct {
         ID       string   `json:"id"`
@@ -50,35 +50,35 @@ so that **I can retrieve protocol details like name, category, TVL, chains, and 
     }
     ```
 
-- [ ] Task 2: Define ProtocolsEndpoint constant (AC: 1)
-  - [ ] 2.1: Add `ProtocolsEndpoint = "https://api.llama.fi/lite/protocols2?b=2"` to `internal/api/endpoints.go`
+- [x] Task 2: Define ProtocolsEndpoint constant (AC: 1)
+  - [x] 2.1: Add `ProtocolsEndpoint = "https://api.llama.fi/lite/protocols2?b=2"` to `internal/api/endpoints.go`
 
-- [ ] Task 3: Implement FetchProtocols method (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] 3.1: Add `FetchProtocols(ctx context.Context) ([]Protocol, error)` method to `Client` in `internal/api/client.go`
-  - [ ] 3.2: Call `c.doRequest(ctx, ProtocolsEndpoint, &protocols)` using existing helper
-  - [ ] 3.3: Return `(protocols, nil)` on success
-  - [ ] 3.4: Return `(nil, error)` on failure with wrapped error context: `fmt.Errorf("fetch protocols: %w", err)`
+- [x] Task 3: Implement FetchProtocols method (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] 3.1: Add `FetchProtocols(ctx context.Context) ([]Protocol, error)` method to `Client` in `internal/api/client.go`
+  - [x] 3.2: Call `c.doRequest(ctx, ProtocolsEndpoint, &protocols)` using existing helper
+  - [x] 3.3: Return `(protocols, nil)` on success
+  - [x] 3.4: Return `(nil, error)` on failure with wrapped error context: `fmt.Errorf("fetch protocols: %w", err)`
 
-- [ ] Task 4: Write unit tests for Protocol struct (AC: 2, 3)
-  - [ ] 4.1: Create test fixture `testdata/protocol_response.json` with sample response including protocols with all fields and some with missing optional fields
-  - [ ] 4.2: Add tests to `internal/api/responses_test.go` for Protocol struct JSON unmarshaling
-  - [ ] 4.3: Test JSON unmarshaling populates all fields correctly
-  - [ ] 4.4: Test protocols with missing optional fields have zero values
+- [x] Task 4: Write unit tests for Protocol struct (AC: 2, 3)
+  - [x] 4.1: Create test fixture `testdata/protocol_response.json` with sample response including protocols with all fields and some with missing optional fields
+  - [x] 4.2: Add tests to `internal/api/responses_test.go` for Protocol struct JSON unmarshaling
+  - [x] 4.3: Test JSON unmarshaling populates all fields correctly
+  - [x] 4.4: Test protocols with missing optional fields have zero values
 
-- [ ] Task 5: Write integration tests with mock server (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] 5.1: Create `internal/api/protocols_test.go` for FetchProtocols tests
-  - [ ] 5.2: Test successful fetch returns populated []Protocol slice
-  - [ ] 5.3: Test User-Agent header is present in request
-  - [ ] 5.4: Test HTTP 500 returns wrapped error
-  - [ ] 5.5: Test HTTP 404 returns wrapped error
-  - [ ] 5.6: Test malformed JSON returns decode error
-  - [ ] 5.7: Test context cancellation aborts request
-  - [ ] 5.8: Test empty array response `[]` returns empty slice without error
+- [x] Task 5: Write integration tests with mock server (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] 5.1: Create `internal/api/protocols_test.go` for FetchProtocols tests
+  - [x] 5.2: Test successful fetch returns populated []Protocol slice
+  - [x] 5.3: Test User-Agent header is present in request
+  - [x] 5.4: Test HTTP 500 returns wrapped error
+  - [x] 5.5: Test HTTP 404 returns wrapped error
+  - [x] 5.6: Test malformed JSON returns decode error
+  - [x] 5.7: Test context cancellation aborts request
+  - [x] 5.8: Test empty array response `[]` returns empty slice without error
 
-- [ ] Task 6: Verification (AC: all)
-  - [ ] 6.1: Run `go build ./...` and verify success
-  - [ ] 6.2: Run `go test ./internal/api/...` and verify all pass
-  - [ ] 6.3: Run `make lint` and verify no errors
+- [x] Task 6: Verification (AC: all)
+  - [x] 6.1: Run `go build ./...` and verify success
+  - [x] 6.2: Run `go test ./internal/api/...` and verify all pass
+  - [x] 6.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -220,20 +220,88 @@ Create `testdata/protocol_response.json` with realistic sample data:
 ### Debug Log References
 
 - docs/sprint-artifacts/validation-report-story-2-3-2025-11-30T08-44-24Z.md
+- Ran `go build ./...`, `go test ./internal/api/...`, and `make lint` locally; all passed.
 
 ### Completion Notes List
 
-- Drafted story from epic-2 API integration and tech-spec AC-2.3; aligned ACs, tasks, and tests.
-- Captured learnings from Story 2.2 (helper reuse, patterns, review outcome: no action items).
-- Validation pass with minor issue (empty Dev Agent Record fields now populated).
+- Implemented Protocol struct, endpoint constant, and FetchProtocols using existing doRequest helper with error wrapping.
+- Added fixture-driven unit and integration tests covering success, optional fields, user agent, status errors, malformed JSON, context cancellation, and empty responses.
+- Confirmed verification commands succeed (build, unit/integration tests, lint).
 
 ### File List
 
 - docs/sprint-artifacts/2-3-implement-protocol-endpoint-fetcher.md
 - docs/sprint-artifacts/validation-report-story-2-3-2025-11-30T08-44-24Z.md
+- docs/sprint-artifacts/sprint-status.yaml
+- internal/api/responses.go
+- internal/api/endpoints.go
+- internal/api/client.go
+- internal/api/responses_test.go
+- internal/api/protocols_test.go
+- testdata/protocol_response.json
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-2-api-integration.md and tech-spec-epic-2.md |
+| 2025-11-30 | Dev Agent (Amelia) | Implemented protocol endpoint fetcher, added tests/fixtures, updated status to review |
+| 2025-11-30 | Dev Agent (Amelia) | Senior Developer Review (AI) completed, outcome Approved, status moved to done |
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad
+- Date: 2025-11-30
+- Outcome: Approve (all ACs implemented; no findings)
+
+### Summary
+- Implementation matches tech spec for `/lite/protocols2` fetch; tests cover success, errors, optional fields, cancellation. All reviewed files clean; no action items.
+
+### Key Findings (by severity)
+- None.
+
+### Acceptance Criteria Coverage
+
+| AC# | Description | Status | Evidence |
+|-----|-------------|--------|----------|
+| 1 | GET to https://api.llama.fi/lite/protocols2?b=2 with User-Agent | Implemented | internal/api/endpoints.go:4-6; internal/api/client.go:55-74; internal/api/protocols_test.go:56-74 |
+| 2 | Successful response returns []Protocol with fields populated | Implemented | internal/api/responses.go:11-21; internal/api/client.go:92-98; internal/api/protocols_test.go:27-54 |
+| 3 | Missing optional fields decode to zero values | Implemented | internal/api/responses.go:17-21; internal/api/responses_test.go:79-101 |
+| 4 | HTTP errors return wrapped error | Implemented | internal/api/client.go:70-96; internal/api/protocols_test.go:77-96 |
+| 5 | Malformed JSON returns decode error | Implemented | internal/api/client.go:74-76; internal/api/protocols_test.go:99-115 |
+| 6 | Context cancellation aborts request | Implemented | internal/api/client.go:55-67; internal/api/protocols_test.go:118-139 |
+| 7 | Empty array returns empty slice without error | Implemented | internal/api/protocols_test.go:142-158 |
+
+Summary: 7 of 7 acceptance criteria fully implemented.
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| Task 1: Define Protocol struct | [x] | Verified complete | internal/api/responses.go:11-21; internal/api/responses_test.go:52-76 |
+| Task 2: Define ProtocolsEndpoint constant | [x] | Verified complete | internal/api/endpoints.go:3-6 |
+| Task 3: Implement FetchProtocols method | [x] | Verified complete | internal/api/client.go:92-98; internal/api/protocols_test.go:27-54 |
+| Task 4: Unit tests for Protocol struct | [x] | Verified complete | internal/api/responses_test.go:52-101; testdata/protocol_response.json |
+| Task 5: Integration tests with mock server | [x] | Verified complete | internal/api/protocols_test.go:27-158 |
+| Task 6: Verification commands (build/tests/lint) | [x] | Verified complete | go build ./...; go test ./... on 2025-11-30 (lint not rerun) |
+
+### Test Coverage and Gaps
+- go test ./... and go build ./... pass (2025-11-30); protocols unit/integration tests cover success, header, status errors, malformed JSON, cancellation, empty response.
+- golangci-lint not rerun during review (developer reported prior pass).
+
+### Architectural Alignment
+- Uses stdlib net/http + context with omitempty fields per ADR-001/ADR-003; Protocol model matches data-architecture.md; User-Agent constant aligns with tech-spec-epic-2.
+
+### Security Notes
+- Read-only public API calls; no secrets; no new security risks observed.
+
+### Best-Practices and References
+- ADR-001 (stdlib HTTP), data-architecture.md (Protocol struct), tech-spec-epic-2 (AC-2.3) remain authoritative; implementation conforms.
+
+### Action Items
+
+**Code Changes Required:**
+- None.
+
+**Advisory Notes:**
+- None.
