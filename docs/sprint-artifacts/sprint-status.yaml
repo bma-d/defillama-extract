@@ -41,7 +41,7 @@ development_status:
   1-2-implement-configuration-loading-from-yaml: done
   1-3-implement-environment-variable-overrides: done
   1-4-implement-structured-logging-with-slog: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # Epic 2: API Integration (6 stories)
   epic-2: backlog
