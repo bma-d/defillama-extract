@@ -1,0 +1,259 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>3</storyId>
+    <title>Implement Protocol Endpoint Fetcher</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-3-implement-protocol-endpoint-fetcher.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to fetch protocol metadata from the `/lite/protocols2` endpoint</iWant>
+    <soThat>I can retrieve protocol details like name, category, TVL, chains, and oracle associations for downstream filtering and aggregation</soThat>
+    <tasks>
+      <task id="1" acs="2,3">
+        <title>Define Protocol struct</title>
+        <subtasks>
+          <subtask id="1.1">Add Protocol struct to internal/api/responses.go</subtask>
+          <subtask id="1.2">Include all fields with proper JSON tags and omitempty for optional fields</subtask>
+        </subtasks>
+      </task>
+      <task id="2" acs="1">
+        <title>Define ProtocolsEndpoint constant</title>
+        <subtasks>
+          <subtask id="2.1">Add ProtocolsEndpoint = "https://api.llama.fi/lite/protocols2?b=2" to internal/api/endpoints.go</subtask>
+        </subtasks>
+      </task>
+      <task id="3" acs="1,2,3,4,5,6,7">
+        <title>Implement FetchProtocols method</title>
+        <subtasks>
+          <subtask id="3.1">Add FetchProtocols(ctx context.Context) ([]Protocol, error) method to Client in internal/api/client.go</subtask>
+          <subtask id="3.2">Call c.doRequest(ctx, ProtocolsEndpoint, &amp;protocols) using existing helper</subtask>
+          <subtask id="3.3">Return (protocols, nil) on success</subtask>
+          <subtask id="3.4">Return (nil, error) on failure with wrapped error context: fmt.Errorf("fetch protocols: %w", err)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" acs="2,3">
+        <title>Write unit tests for Protocol struct</title>
+        <subtasks>
+          <subtask id="4.1">Create test fixture testdata/protocol_response.json</subtask>
+          <subtask id="4.2">Add tests to internal/api/responses_test.go for Protocol struct JSON unmarshaling</subtask>
+          <subtask id="4.3">Test JSON unmarshaling populates all fields correctly</subtask>
+          <subtask id="4.4">Test protocols with missing optional fields have zero values</subtask>
+        </subtasks>
+      </task>
+      <task id="5" acs="1,2,3,4,5,6,7">
+        <title>Write integration tests with mock server</title>
+        <subtasks>
+          <subtask id="5.1">Create internal/api/protocols_test.go for FetchProtocols tests</subtask>
+          <subtask id="5.2">Test successful fetch returns populated []Protocol slice</subtask>
+          <subtask id="5.3">Test User-Agent header is present in request</subtask>
+          <subtask id="5.4">Test HTTP 500 returns wrapped error</subtask>
+          <subtask id="5.5">Test HTTP 404 returns wrapped error</subtask>
+          <subtask id="5.6">Test malformed JSON returns decode error</subtask>
+          <subtask id="5.7">Test context cancellation aborts request</subtask>
+          <subtask id="5.8">Test empty array response [] returns empty slice without error</subtask>
+        </subtasks>
+      </task>
+      <task id="6" acs="all">
+        <title>Verification</title>
+        <subtasks>
+          <subtask id="6.1">Run go build ./... and verify success</subtask>
+          <subtask id="6.2">Run go test ./internal/api/... and verify all pass</subtask>
+          <subtask id="6.3">Run make lint and verify no errors</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given a configured API client, When FetchProtocols(ctx context.Context) is called, Then a GET request is made to https://api.llama.fi/lite/protocols2?b=2 with User-Agent header</criterion>
+    <criterion id="AC2">Given a successful API response, When the response is parsed, Then the function returns ([]Protocol, nil) with all fields populated: ID, Name, Slug (string), Category (string), TVL (float64, optional), Chains ([]string, optional), Oracles ([]string, optional), Oracle (string, optional), URL (string, optional)</criterion>
+    <criterion id="AC3">Given protocols with missing optional fields (TVL, Chains, URL, Oracles, Oracle), When parsing completes, Then those fields are zero-valued (0, nil, "", nil) without error</criterion>
+    <criterion id="AC4">Given an HTTP error (network failure, timeout, non-2xx status), When the request fails, Then the function returns (nil, error) with descriptive error wrapping</criterion>
+    <criterion id="AC5">Given a malformed JSON response, When decoding fails, Then the function returns (nil, error) with decode error details</criterion>
+    <criterion id="AC6">Given a context with cancellation, When the context is cancelled during the request, Then the request is aborted and returns context.Canceled error</criterion>
+    <criterion id="AC7">Given an empty response array [], When parsing completes, Then the function returns ([]Protocol{}, nil) - empty slice with no error</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: API Integration</title>
+        <section>AC-2.3: Protocol Endpoint Fetcher</section>
+        <snippet>FetchProtocols(ctx) sends GET to https://api.llama.fi/lite/protocols2?b=2. Response decoded into []Protocol slice. Protocols with missing optional fields (TVL, Chains, URL) have zero values.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-2-api-integration.md</path>
+        <title>Epic 2: API Integration</title>
+        <section>Story 2.3: Implement Protocol Endpoint Fetcher</section>
+        <snippet>Fetch protocol metadata from /lite/protocols2 endpoint. Protocol struct includes ID, Name, Slug, Category, TVL, Chains, Oracles array, Oracle legacy field, URL.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>API Response Models - Protocol</section>
+        <snippet>Protocol struct with ID, Name, Slug, Category (required), TVL, Chains, Oracles, Oracle (legacy), URL (optional with omitempty tags).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/api-contracts.md</path>
+        <title>API Contracts</title>
+        <section>DefiLlama Endpoints</section>
+        <snippet>GET https://api.llama.fi/lite/protocols2?b=2 returns Protocol metadata array.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/implementation-patterns.md</path>
+        <title>Implementation Patterns</title>
+        <section>Context Propagation, Dependency Injection</section>
+        <snippet>All I/O functions accept context.Context as first parameter. Use constructor functions for dependency injection.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Fixtures, Mock Server Tests</section>
+        <snippet>Test data in testdata/ directory. Mock server tests in internal/api/client_test.go using httptest.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>internal/api package layout</section>
+        <snippet>client.go (HTTP client), endpoints.go (URL constants), responses.go (response structs), testdata/ for fixtures.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>internal/api/client.go</path>
+        <kind>service</kind>
+        <symbol>Client, NewClient, doRequest, FetchOracles</symbol>
+        <lines>1-83</lines>
+        <reason>Contains HTTP client implementation with doRequest helper to reuse for FetchProtocols. Follow same pattern as FetchOracles.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/endpoints.go</path>
+        <kind>constants</kind>
+        <symbol>OraclesEndpoint</symbol>
+        <lines>1-7</lines>
+        <reason>Add ProtocolsEndpoint constant following same pattern as OraclesEndpoint.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/responses.go</path>
+        <kind>types</kind>
+        <symbol>OracleAPIResponse</symbol>
+        <lines>1-10</lines>
+        <reason>Add Protocol struct definition alongside existing OracleAPIResponse.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/responses_test.go</path>
+        <kind>test</kind>
+        <symbol>TestOracleAPIResponse_UnmarshalFixture, TestOracleAPIResponse_UnmarshalMissingFields</symbol>
+        <lines>1-51</lines>
+        <reason>Add Protocol struct unmarshaling tests following same patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/oracles_test.go</path>
+        <kind>test</kind>
+        <symbol>TestFetchOracles_Success, TestFetchOracles_SetsUserAgent, TestFetchOracles_StatusErrors, TestFetchOracles_MalformedJSON, TestFetchOracles_ContextCancellation</symbol>
+        <lines>1-141</lines>
+        <reason>Reference test patterns for FetchProtocols tests. Use newTestClient helper, httptest.NewServer mock server, fixture loading.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/client_test.go</path>
+        <kind>test</kind>
+        <symbol>TestNewClient_SetsTimeout, TestDoRequest_SetsUserAgentAndDecodes, TestDoRequest_NonSuccessStatus</symbol>
+        <lines>1-150</lines>
+        <reason>Reference doRequest test patterns for additional coverage scenarios.</reason>
+      </artifact>
+      <artifact>
+        <path>testdata/oracle_response.json</path>
+        <kind>fixture</kind>
+        <symbol>oracle_response.json</symbol>
+        <lines>1-23</lines>
+        <reason>Reference fixture format for creating testdata/protocol_response.json.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <goVersion>1.23</goVersion>
+        <requires>
+          <require>gopkg.in/yaml.v3 v3.0.1</require>
+        </requires>
+        <stdlibUsed>
+          <pkg>net/http</pkg>
+          <pkg>context</pkg>
+          <pkg>encoding/json</pkg>
+          <pkg>fmt</pkg>
+          <pkg>time</pkg>
+          <pkg>log/slog</pkg>
+          <pkg>net/http/httptest</pkg>
+          <pkg>testing</pkg>
+          <pkg>os</pkg>
+          <pkg>path/filepath</pkg>
+          <pkg>strings</pkg>
+          <pkg>errors</pkg>
+        </stdlibUsed>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architectural">Use Go standard library net/http only per ADR-001 - no external HTTP frameworks</constraint>
+    <constraint type="architectural">Context propagation required for all I/O operations</constraint>
+    <constraint type="architectural">Explicit error returns over exceptions per ADR-003</constraint>
+    <constraint type="pattern">Follow FetchOracles implementation pattern using doRequest helper</constraint>
+    <constraint type="pattern">Wrap errors with context: fmt.Errorf("fetch protocols: %w", err)</constraint>
+    <constraint type="pattern">Use omitempty JSON tags for optional Protocol fields</constraint>
+    <constraint type="testing">Use httptest.NewServer for mock server integration tests</constraint>
+    <constraint type="testing">Test fixtures in testdata/ directory</constraint>
+    <constraint type="testing">Cover: success, User-Agent verification, status errors (500, 404), malformed JSON, context cancellation, empty array</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>FetchProtocols</name>
+      <kind>method</kind>
+      <signature>func (c *Client) FetchProtocols(ctx context.Context) ([]Protocol, error)</signature>
+      <path>internal/api/client.go</path>
+    </interface>
+    <interface>
+      <name>doRequest</name>
+      <kind>method</kind>
+      <signature>func (c *Client) doRequest(ctx context.Context, url string, target any) error</signature>
+      <path>internal/api/client.go</path>
+    </interface>
+    <interface>
+      <name>Protocol</name>
+      <kind>struct</kind>
+      <signature>type Protocol struct { ID, Name, Slug, Category string; TVL float64; Chains, Oracles []string; Oracle, URL string }</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+    <interface>
+      <name>ProtocolsEndpoint</name>
+      <kind>constant</kind>
+      <signature>const ProtocolsEndpoint = "https://api.llama.fi/lite/protocols2?b=2"</signature>
+      <path>internal/api/endpoints.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use Go standard testing package with table-driven tests. Use httptest.NewServer for HTTP mock servers. Test fixtures stored in testdata/ directory. Tests co-located with source files (*_test.go). Cover error handling paths and edge cases.</standards>
+    <locations>
+      <location>internal/api/*_test.go</location>
+      <location>testdata/protocol_response.json</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">TestFetchProtocols_Success - verify GET request returns parsed []Protocol slice</idea>
+      <idea ac="AC1">TestFetchProtocols_SetsUserAgent - capture and verify User-Agent header value</idea>
+      <idea ac="AC2">TestProtocol_UnmarshalFixture - verify all Protocol fields populate from JSON fixture</idea>
+      <idea ac="AC3">TestProtocol_UnmarshalMissingFields - verify optional fields default to zero values</idea>
+      <idea ac="AC4">TestFetchProtocols_StatusErrors - test HTTP 500 and 404 return wrapped errors</idea>
+      <idea ac="AC5">TestFetchProtocols_MalformedJSON - verify decode error returned</idea>
+      <idea ac="AC6">TestFetchProtocols_ContextCancellation - verify context.Canceled error propagates</idea>
+      <idea ac="AC7">TestFetchProtocols_EmptyArray - verify empty [] response returns empty slice with nil error</idea>
+    </ideas>
+  </tests>
+</story-context>
