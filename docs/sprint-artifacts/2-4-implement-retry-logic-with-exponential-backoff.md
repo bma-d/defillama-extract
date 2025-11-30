@@ -1,6 +1,6 @@
 # Story 2.4: Implement Retry Logic with Exponential Backoff
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -30,61 +30,61 @@ so that **temporary DefiLlama API issues don't cause extraction failures and the
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement isRetryable helper function (AC: 1, 6, 9)
-  - [ ] 1.1: Add `isRetryable(statusCode int, err error) bool` function to `internal/api/client.go`
-  - [ ] 1.2: Return `true` for: timeout errors, HTTP 429, 500, 502, 503, 504
-  - [ ] 1.3: Return `false` for: HTTP 400, 401, 403, 404 and other 4xx
-  - [ ] 1.4: Return `true` for network errors (connection refused, DNS failure)
+- [x] Task 1: Implement isRetryable helper function (AC: 1, 6, 9)
+  - [x] 1.1: Add `isRetryable(statusCode int, err error) bool` function to `internal/api/client.go`
+  - [x] 1.2: Return `true` for: timeout errors, HTTP 429, 500, 502, 503, 504
+  - [x] 1.3: Return `false` for: HTTP 400, 401, 403, 404 and other 4xx
+  - [x] 1.4: Return `true` for network errors (connection refused, DNS failure)
 
-- [ ] Task 2: Implement calculateBackoff helper (AC: 2, 3)
-  - [ ] 2.1: Add `calculateBackoff(attempt int, baseDelay time.Duration) time.Duration` function
-  - [ ] 2.2: Calculate exponential delay: `baseDelay * (1 << attempt)` (1s, 2s, 4s)
-  - [ ] 2.3: Apply jitter: `delay * (0.75 + rand.Float64()*0.5)` for +/-25% variation
-  - [ ] 2.4: Use `math/rand` for jitter calculation
+- [x] Task 2: Implement calculateBackoff helper (AC: 2, 3)
+  - [x] 2.1: Add `calculateBackoff(attempt int, baseDelay time.Duration) time.Duration` function
+  - [x] 2.2: Calculate exponential delay: `baseDelay * (1 << attempt)` (1s, 2s, 4s)
+  - [x] 2.3: Apply jitter: `delay * (0.75 + rand.Float64()*0.5)` for +/-25% variation
+  - [x] 2.4: Use `math/rand` for jitter calculation
 
-- [ ] Task 3: Implement doWithRetry wrapper method (AC: 1, 2, 3, 4, 5, 7, 8)
-  - [ ] 3.1: Add `doWithRetry(ctx context.Context, fn func() error) error` method to `Client`
-  - [ ] 3.2: Loop up to `c.maxRetries + 1` attempts (initial + retries)
-  - [ ] 3.3: On success, return nil immediately
-  - [ ] 3.4: On non-retryable error, return error immediately without retry
-  - [ ] 3.5: On retryable error, log at WARN with `url`, `attempt`, `max_attempts`, `backoff_ms`
-  - [ ] 3.6: Sleep with backoff, checking context cancellation before and after sleep
-  - [ ] 3.7: On max retries exhausted, log at ERROR with `url`, `total_attempts`, `final_error`
-  - [ ] 3.8: Return the final error with wrapped context
+- [x] Task 3: Implement doWithRetry wrapper method (AC: 1, 2, 3, 4, 5, 7, 8)
+  - [x] 3.1: Add `doWithRetry(ctx context.Context, fn func() error) error` method to `Client`
+  - [x] 3.2: Loop up to `c.maxRetries + 1` attempts (initial + retries)
+  - [x] 3.3: On success, return nil immediately
+  - [x] 3.4: On non-retryable error, return error immediately without retry
+  - [x] 3.5: On retryable error, log at WARN with `url`, `attempt`, `max_attempts`, `backoff_ms`
+  - [x] 3.6: Sleep with backoff, checking context cancellation before and after sleep
+  - [x] 3.7: On max retries exhausted, log at ERROR with `url`, `total_attempts`, `final_error`
+  - [x] 3.8: Return the final error with wrapped context
 
-- [ ] Task 4: Enhance doRequest to capture status code for retry decisions (AC: 1, 6)
-  - [ ] 4.1: Create `APIError` struct with `StatusCode`, `Endpoint`, `Message`, `Err` fields
-  - [ ] 4.2: Update `doRequest` to return `*APIError` for non-2xx responses
-  - [ ] 4.3: Add `IsRetryable() bool` method to `APIError`
+- [x] Task 4: Enhance doRequest to capture status code for retry decisions (AC: 1, 6)
+  - [x] 4.1: Create `APIError` struct with `StatusCode`, `Endpoint`, `Message`, `Err` fields
+  - [x] 4.2: Update `doRequest` to return `*APIError` for non-2xx responses
+  - [x] 4.3: Add `IsRetryable() bool` method to `APIError`
 
-- [ ] Task 5: Integrate retry logic into FetchOracles and FetchProtocols (AC: 1, 7)
-  - [ ] 5.1: Wrap `doRequest` call with `doWithRetry` in `FetchOracles`
-  - [ ] 5.2: Wrap `doRequest` call with `doWithRetry` in `FetchProtocols`
-  - [ ] 5.3: Ensure proper error propagation
+- [x] Task 5: Integrate retry logic into FetchOracles and FetchProtocols (AC: 1, 7)
+  - [x] 5.1: Wrap `doRequest` call with `doWithRetry` in `FetchOracles`
+  - [x] 5.2: Wrap `doRequest` call with `doWithRetry` in `FetchProtocols`
+  - [x] 5.3: Ensure proper error propagation
 
-- [ ] Task 6: Write unit tests for isRetryable (AC: 1, 6, 9)
-  - [ ] 6.1: Test returns true for status codes: 429, 500, 502, 503, 504
-  - [ ] 6.2: Test returns false for status codes: 400, 401, 403, 404
-  - [ ] 6.3: Test returns true for timeout errors
-  - [ ] 6.4: Test returns false for JSON decode errors
+- [x] Task 6: Write unit tests for isRetryable (AC: 1, 6, 9)
+  - [x] 6.1: Test returns true for status codes: 429, 500, 502, 503, 504
+  - [x] 6.2: Test returns false for status codes: 400, 401, 403, 404
+  - [x] 6.3: Test returns true for timeout errors
+  - [x] 6.4: Test returns false for JSON decode errors
 
-- [ ] Task 7: Write unit tests for calculateBackoff (AC: 2, 3)
-  - [ ] 7.1: Test exponential progression: 1s base -> 1s, 2s, 4s for attempts 0, 1, 2
-  - [ ] 7.2: Test jitter is applied (result differs from exact exponential)
-  - [ ] 7.3: Test jitter bounds are within +/-25% of base exponential value
+- [x] Task 7: Write unit tests for calculateBackoff (AC: 2, 3)
+  - [x] 7.1: Test exponential progression: 1s base -> 1s, 2s, 4s for attempts 0, 1, 2
+  - [x] 7.2: Test jitter is applied (result differs from exact exponential)
+  - [x] 7.3: Test jitter bounds are within +/-25% of base exponential value
 
-- [ ] Task 8: Write integration tests for doWithRetry with mock server (AC: 1, 4, 5, 6, 7, 8)
-  - [ ] 8.1: Test retryable error (429) retries up to max then fails
-  - [ ] 8.2: Test non-retryable error (404) returns immediately without retry
-  - [ ] 8.3: Test success on attempt 3 after 2 failures returns success
-  - [ ] 8.4: Test context cancellation exits retry loop
-  - [ ] 8.5: Test retry logs are emitted at WARN level (capture log output)
-  - [ ] 8.6: Test final failure logs at ERROR level
+- [x] Task 8: Write integration tests for doWithRetry with mock server (AC: 1, 4, 5, 6, 7, 8)
+  - [x] 8.1: Test retryable error (429) retries up to max then fails
+  - [x] 8.2: Test non-retryable error (404) returns immediately without retry
+  - [x] 8.3: Test success on attempt 3 after 2 failures returns success
+  - [x] 8.4: Test context cancellation exits retry loop
+  - [x] 8.5: Test retry logs are emitted at WARN level (capture log output)
+  - [x] 8.6: Test final failure logs at ERROR level
 
-- [ ] Task 9: Verification (AC: all)
-  - [ ] 9.1: Run `go build ./...` and verify success
-  - [ ] 9.2: Run `go test ./internal/api/...` and verify all pass including new retry tests
-  - [ ] 9.3: Run `make lint` and verify no errors
+- [x] Task 9: Verification (AC: all)
+  - [x] 9.1: Run `go build ./...` and verify success
+  - [x] 9.2: Run `go test ./internal/api/...` and verify all pass including new retry tests
+  - [x] 9.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -268,12 +268,84 @@ func isRetryable(err error) bool {
 
 ### Debug Log References
 
+- 2025-11-30: Plan — add APIError + retryable detection, backoff jitter helper, doWithRetry wrapper, wrap FetchOracles/FetchProtocols, author unit/integration tests for retry paths, run build/test/lint (AC1-9)
+
 ### Completion Notes List
 
+- 2025-11-30: Implemented APIError-based retry stack (isRetryable, calculateBackoff with jitter, doWithRetry) and wrapped FetchOracles/FetchProtocols with structured WARN/ERROR logging per AC1-8.
+- 2025-11-30: Tests green and lint clean (go build ./..., go test ./..., make lint) covering retry paths and jitter bounds (AC9).
+
 ### File List
+
+- internal/api/client.go
+- internal/api/responses.go
+- internal/api/retry_test.go
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/2-4-implement-retry-logic-with-exponential-backoff.md
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-2-api-integration.md and tech-spec-epic-2.md |
+| 2025-11-30 | Amelia (Dev Agent) | Implemented retry logic (APIError, isRetryable, backoff jitter, doWithRetry), wrapped fetchers, added retry tests; build/test/lint passing |
+| 2025-11-30 | Amelia (Dev Agent) | Senior Developer Review notes appended |
+
+## Senior Developer Review (AI)
+
+Reviewer: BMad
+
+Date: 2025-11-30
+
+Outcome: Approve — all ACs implemented; tests pass.
+
+Summary: Retry stack matches spec; WARN/ERROR/INFO logging present; tests cover AC paths; no action items.
+
+Key Findings (HIGH/MEDIUM/LOW): None.
+
+Acceptance Criteria Coverage
+
+| AC# | Description | Status | Evidence |
+|-----|-------------|--------|----------|
+| AC1 | Retry up to max for retryable errors (timeout, 429, 5xx) | IMPLEMENTED | internal/api/client.go:140-199; internal/api/retry_test.go:109-141 |
+| AC2 | Exponential backoff 1s,2s,4s | IMPLEMENTED | internal/api/client.go:132-138; internal/api/retry_test.go:84-107 |
+| AC3 | ±25% jitter on backoff | IMPLEMENTED | internal/api/client.go:132-138; internal/api/retry_test.go:84-107 |
+| AC4 | WARN log per retry with url/attempt/backoff_ms | IMPLEMENTED | internal/api/client.go:185-192; internal/api/retry_test.go:109-141 |
+| AC5 | ERROR log on exhaustion with url/total_attempts/final_error | IMPLEMENTED | internal/api/client.go:174-182; internal/api/retry_test.go:109-141 |
+| AC6 | No retries for 4xx (except 429) | IMPLEMENTED | internal/api/client.go:98-129,174-183; internal/api/retry_test.go:143-169 |
+| AC7 | Success after retries logged at info | IMPLEMENTED | internal/api/client.go:150-158; internal/api/retry_test.go:171-208 |
+| AC8 | Context cancellation exits immediately | IMPLEMENTED | internal/api/client.go:145-199; internal/api/retry_test.go:210-241 |
+| AC9 | Network timeout treated retryable | IMPLEMENTED | internal/api/client.go:98-129; internal/api/retry_test.go:63-75 |
+
+Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| Task 1: isRetryable helper | [x] | VERIFIED COMPLETE | internal/api/client.go:98-129; internal/api/retry_test.go:36-82 |
+| Task 2: calculateBackoff helper | [x] | VERIFIED COMPLETE | internal/api/client.go:132-138; internal/api/retry_test.go:84-107 |
+| Task 3: doWithRetry wrapper | [x] | VERIFIED COMPLETE | internal/api/client.go:140-199; internal/api/retry_test.go:109-241 |
+| Task 4: APIError + doRequest status handling | [x] | VERIFIED COMPLETE | internal/api/responses.go:29-51; internal/api/client.go:62-95 |
+| Task 5: Wrap FetchOracles/FetchProtocols | [x] | VERIFIED COMPLETE | internal/api/client.go:204-223 |
+| Task 6: isRetryable unit tests | [x] | VERIFIED COMPLETE | internal/api/retry_test.go:36-82 |
+| Task 7: calculateBackoff unit tests | [x] | VERIFIED COMPLETE | internal/api/retry_test.go:84-107 |
+| Task 8: doWithRetry integration tests | [x] | VERIFIED COMPLETE | internal/api/retry_test.go:109-241 |
+| Task 9: Verification (build/test/lint) | [x] | VERIFIED COMPLETE | go build ./...; go test ./...; make lint |
+
+Test Coverage and Gaps
+- go build ./...; go test ./...; make lint — all pass. Integration tests exercise retry paths, logging, cancellation.
+
+Architectural Alignment
+- Uses ADR-003 explicit errors and ADR-004 slog structured logging; retry logic confined to internal/api per tech-spec.
+
+Security Notes
+- No secrets; retries and logging avoid sensitive data. No new external deps.
+
+Best-Practices and References
+- Follows tech-spec-epic-2 AC-2.4 retry rules and architecture/implementation-patterns (context propagation, slog fields, stdlib-only).
+
+Action Items
+
+**Code Changes Required:** None.
+
+**Advisory Notes:**
+- Note: No follow-up items identified.

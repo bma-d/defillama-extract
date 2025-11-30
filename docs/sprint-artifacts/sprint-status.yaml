@@ -48,7 +48,7 @@ development_status:
   2-1-implement-base-http-client-with-timeout-and-user-agent: done
   2-2-implement-oracle-endpoint-fetcher: done
   2-3-implement-protocol-endpoint-fetcher: done
-  2-4-implement-retry-logic-with-exponential-backoff: ready-for-dev
+  2-4-implement-retry-logic-with-exponential-backoff: done
   2-5-implement-parallel-fetching-with-errgroup: backlog
   2-6-implement-api-request-logging: backlog
   epic-2-retrospective: optional

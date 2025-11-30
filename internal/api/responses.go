@@ -1,5 +1,10 @@
 package api
 
+import (
+	"fmt"
+	"net/http"
+)
+
 // OracleAPIResponse represents the payload returned by GET /oracles.
 type OracleAPIResponse struct {
 	Oracles        map[string][]string                      `json:"oracles"`
@@ -19,4 +24,29 @@ type Protocol struct {
 	Oracles  []string `json:"oracles,omitempty"`
 	Oracle   string   `json:"oracle,omitempty"`
 	URL      string   `json:"url,omitempty"`
+}
+
+// APIError represents an HTTP error response with metadata for retry decisions.
+type APIError struct {
+	Endpoint   string
+	StatusCode int
+	Message    string
+	Err        error
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("API error %d on %s: %s", e.StatusCode, e.Endpoint, e.Message)
+}
+
+func (e *APIError) Unwrap() error {
+	return e.Err
+}
+
+func (e *APIError) IsRetryable() bool {
+	switch e.StatusCode {
+	case http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+		return true
+	default:
+		return false
+	}
 }
