@@ -19,3 +19,11 @@ type ChainBreakdown struct {
 	Percentage    float64 `json:"percentage"`
 	ProtocolCount int     `json:"protocol_count"`
 }
+
+// CategoryBreakdown represents TVS metrics for a protocol category.
+type CategoryBreakdown struct {
+	Category      string  `json:"category"`
+	TVS           float64 `json:"tvs"`
+	Percentage    float64 `json:"percentage"`
+	ProtocolCount int     `json:"protocol_count"`
+}

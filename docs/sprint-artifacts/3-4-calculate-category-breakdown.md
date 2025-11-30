@@ -1,6 +1,6 @@
 # Story 3.4: Calculate Category Breakdown
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -26,36 +26,36 @@ Source: Epic 3.4 / PRD FR17, FR24
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define CategoryBreakdown struct (AC: 1)
-  - [ ] 1.1: Add `CategoryBreakdown` struct to `internal/aggregator/models.go`
-  - [ ] 1.2: Include fields: `Category` (string), `TVS` (float64), `Percentage` (float64), `ProtocolCount` (int)
-  - [ ] 1.3: Add JSON struct tags for output serialization
+- [x] Task 1: Define CategoryBreakdown struct (AC: 1)
+  - [x] 1.1: Add `CategoryBreakdown` struct to `internal/aggregator/models.go`
+  - [x] 1.2: Include fields: `Category` (string), `TVS` (float64), `Percentage` (float64), `ProtocolCount` (int)
+  - [x] 1.3: Add JSON struct tags for output serialization
 
-- [ ] Task 2: Implement CalculateCategoryBreakdown function (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 2.1: Add function signature `func CalculateCategoryBreakdown(protocols []AggregatedProtocol) []CategoryBreakdown` to `internal/aggregator/metrics.go`
-  - [ ] 2.2: Iterate over protocols and aggregate TVS by category
-  - [ ] 2.3: Handle empty/missing category as "Uncategorized"
-  - [ ] 2.4: Track protocol count per category
-  - [ ] 2.5: Calculate total TVS across all categories
-  - [ ] 2.6: Calculate percentage for each category as `(categoryTVS / totalTVS) * 100`
-  - [ ] 2.7: Handle zero total TVS gracefully (return percentages as 0)
-  - [ ] 2.8: Sort results by TVS descending using `sort.Slice()`
+- [x] Task 2: Implement CalculateCategoryBreakdown function (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 2.1: Add function signature `func CalculateCategoryBreakdown(protocols []AggregatedProtocol) []CategoryBreakdown` to `internal/aggregator/metrics.go`
+  - [x] 2.2: Iterate over protocols and aggregate TVS by category
+  - [x] 2.3: Handle empty/missing category as "Uncategorized"
+  - [x] 2.4: Track protocol count per category
+  - [x] 2.5: Calculate total TVS across all categories
+  - [x] 2.6: Calculate percentage for each category as `(categoryTVS / totalTVS) * 100`
+  - [x] 2.7: Handle zero total TVS gracefully (return percentages as 0)
+  - [x] 2.8: Sort results by TVS descending using `sort.Slice()`
 
-- [ ] Task 3: Write unit tests (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 3.1: Add tests to `internal/aggregator/metrics_test.go`
-  - [ ] 3.2: Test: CategoryBreakdown returned with correct fields populated
-  - [ ] 3.3: Test: TVS sums correctly across multiple protocols in same category
-  - [ ] 3.4: Test: Percentages calculate correctly (verify 60/30/10 split example)
-  - [ ] 3.5: Test: Results sorted by TVS descending
-  - [ ] 3.6: Test: Zero total TVS returns empty slice or zero percentages (no panic)
-  - [ ] 3.7: Test: Empty protocols slice returns empty result
-  - [ ] 3.8: Test: Protocol count reflects number of protocols per category
-  - [ ] 3.9: Test: Empty/missing category grouped as "Uncategorized"
+- [x] Task 3: Write unit tests (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 3.1: Add tests to `internal/aggregator/metrics_test.go`
+  - [x] 3.2: Test: CategoryBreakdown returned with correct fields populated
+  - [x] 3.3: Test: TVS sums correctly across multiple protocols in same category
+  - [x] 3.4: Test: Percentages calculate correctly (verify 60/30/10 split example)
+  - [x] 3.5: Test: Results sorted by TVS descending
+  - [x] 3.6: Test: Zero total TVS returns empty slice or zero percentages (no panic)
+  - [x] 3.7: Test: Empty protocols slice returns empty result
+  - [x] 3.8: Test: Protocol count reflects number of protocols per category
+  - [x] 3.9: Test: Empty/missing category grouped as "Uncategorized"
 
-- [ ] Task 4: Verification (AC: all)
-  - [ ] 4.1: Run `go build ./...` and verify success
-  - [ ] 4.2: Run `go test ./internal/aggregator/...` and verify all pass
-  - [ ] 4.3: Run `make lint` and verify no errors
+- [x] Task 4: Verification (AC: all)
+  - [x] 4.1: Run `go build ./...` and verify success
+  - [x] 4.2: Run `go test ./internal/aggregator/...` and verify all pass
+  - [x] 4.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -207,13 +207,73 @@ func TestCalculateCategoryBreakdown(t *testing.T) {
 {{agent_model_name_version}}
 
 ### Debug Log References
+- Implemented CategoryBreakdown mirroring CalculateChainBreakdown with uncategorized fallback and zero-TV S percentage guard.
+- Added table-driven coverage for AC1-AC6 plus edge cases (empty input, zero TVS, uncategorized grouping, sorting).
 
 ### Completion Notes List
+- Implemented category aggregation and percentages with uncategorized handling and descending sort; matches FR17/FR24.
+- Added comprehensive tests; go test ./internal/aggregator/..., go build ./..., and make lint all pass locally.
 
 ### File List
+- internal/aggregator/models.go
+- internal/aggregator/metrics.go
+- internal/aggregator/metrics_test.go
+- docs/sprint-artifacts/sprint-status.yaml
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-3-data-processing-pipeline.md |
+| 2025-11-30 | Dev Agent (Amelia) | Implemented category breakdown aggregation, tests, and updated sprint status |
+| 2025-11-30 | Dev Agent (Amelia) | Senior Developer Review (AI) completed; status updated to done |
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad  
+- Date: 2025-11-30  
+- Outcome: Approve (all ACs implemented, all tasks verified, no issues found)  
+
+### Summary
+- Category breakdown implementation mirrors chain breakdown pattern with uncategorized fallback; tests cover AC1-AC6 including percentage math and sorting.
+- Build, targeted tests, and lint all pass locally (`go build ./...`, `go test ./internal/aggregator/...`, `make lint`).
+- No tech spec for Epic 3 was found; relied on story context, PRD FR17/FR24, and architecture mapping docs.
+
+### Key Findings
+- High: None  
+- Medium: None  
+- Low: None  
+
+### Acceptance Criteria Coverage
+| AC# | Description | Status | Evidence |
+| --- | --- | --- | --- |
+| AC1 | CategoryBreakdown returns unique categories with TVS, Percentage, ProtocolCount | Implemented | internal/aggregator/metrics.go:63-99; internal/aggregator/models.go:23-28 |
+| AC2 | Lending/CDP/Dexes percentages 60/30/10 example | Implemented | internal/aggregator/metrics_test.go:125-208 |
+| AC3 | Sorted by TVS descending | Implemented | internal/aggregator/metrics.go:101-103; metrics_test.go:125-208 |
+| AC4 | Empty/missing category → "Uncategorized" | Implemented | internal/aggregator/metrics.go:69-74; metrics_test.go:140-152 |
+| AC5 | Zero total TVS → percentages 0, no panic | Implemented | internal/aggregator/metrics.go:89-91; metrics_test.go:154-162 |
+| AC6 | Unique categories derived | Implemented | internal/aggregator/metrics.go:63-79; metrics_test.go:125-152 |
+
+### Task Completion Validation
+| Task | Marked As | Verified As | Evidence |
+| --- | --- | --- | --- |
+| Task 1: Define CategoryBreakdown struct | Complete | Verified complete | internal/aggregator/models.go:23-28 |
+| Task 2: Implement CalculateCategoryBreakdown | Complete | Verified complete | internal/aggregator/metrics.go:57-105 |
+| Task 3: Write unit tests | Complete | Verified complete | internal/aggregator/metrics_test.go:114-223 |
+| Task 4: Verification (build/tests/lint) | Complete | Verified complete | Commands: `go build ./...`; `go test ./internal/aggregator/...`; `make lint` (all pass) |
+
+### Test Coverage and Gaps
+- Targeted unit tests cover AC1-AC6 plus empty input and uncategorized grouping; percentages validated with table-driven cases. No gaps identified for story scope.
+
+### Architectural Alignment
+- Implementation follows Aggregation & Metrics mapping (docs/architecture/fr-category-to-architecture-mapping.md) and mirrors existing chain breakdown pattern for consistency.
+
+### Security Notes
+- No new external dependencies added; pure data aggregation only.
+
+### Best-Practices and References
+- Go 1.23 standard library patterns per docs/architecture/technology-stack-details.md and testing guidance per docs/architecture/testing-strategy.md. Maintains minimal dependency ADR (ADR-005).
+
+### Action Items
+**Code Changes Required:** None  
+**Advisory Notes:** - Note: None
