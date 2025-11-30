@@ -1,0 +1,199 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>4.2</storyId>
+    <title>Implement State Comparison for Skip Logic</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-2-implement-state-comparison-for-skip-logic.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to compare current API timestamp against last processed timestamp</iWant>
+    <soThat>I can skip processing when no new data is available</soThat>
+    <tasks>
+      <task id="1" title="Implement ShouldProcess method">
+        <subtask id="1.1">Add `func (sm *StateManager) ShouldProcess(currentTS int64, state *State) bool` method to `internal/storage/state.go`</subtask>
+        <subtask id="1.2">Handle first-run case: `state.LastUpdated == 0` -> return `true`, log debug "first run"</subtask>
+        <subtask id="1.3">Handle new-data case: `currentTS > state.LastUpdated` -> return `true`, log debug with delta</subtask>
+        <subtask id="1.4">Handle no-new-data case: `currentTS == state.LastUpdated` -> return `false`, log info</subtask>
+        <subtask id="1.5">Handle clock-skew case: `currentTS < state.LastUpdated` -> return `false`, log warn</subtask>
+        <subtask id="1.6">Add doc comment explaining function behavior and return semantics</subtask>
+      </task>
+      <task id="2" title="Write unit tests">
+        <subtask id="2.1">Add tests to `internal/storage/state_test.go`</subtask>
+        <subtask id="2.2">Test: first run (LastUpdated=0) returns true</subtask>
+        <subtask id="2.3">Test: new data (currentTS > LastUpdated) returns true</subtask>
+        <subtask id="2.4">Test: no new data (currentTS == LastUpdated) returns false</subtask>
+        <subtask id="2.5">Test: clock skew (currentTS < LastUpdated) returns false</subtask>
+        <subtask id="2.6">Test: verify log output for each scenario using log capture</subtask>
+      </task>
+      <task id="3" title="Verification">
+        <subtask id="3.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="3.2">Run `go test ./internal/storage/...` and verify all pass</subtask>
+        <subtask id="3.3">Run `make lint` and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given `state.LastUpdated == 0` (first run) When `ShouldProcess(currentTS, state)` is called Then returns `true` And debug log: "first run, processing required"</criterion>
+    <criterion id="AC2">Given `currentTS > state.LastUpdated` (new data available) When `ShouldProcess(currentTS, state)` is called Then returns `true` And debug log: "new data available" with attributes `current_ts`, `last_ts`, `delta_seconds`</criterion>
+    <criterion id="AC3">Given `currentTS == state.LastUpdated` (no new data) When `ShouldProcess(currentTS, state)` is called Then returns `false` And info log: "no new data, skipping extraction"</criterion>
+    <criterion id="AC4">Given `currentTS < state.LastUpdated` (clock skew) When `ShouldProcess(currentTS, state)` is called Then returns `false` And warn log: "clock skew detected, API timestamp older than last processed" with `current_ts`, `last_ts`</criterion>
+    <criterion id="AC5">Given any call to `ShouldProcess` When decision is made Then appropriate log level is used (debug for process, info for skip, warn for anomaly) And all relevant attributes logged per ADR-004</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: State and History Management</title>
+        <section>AC-4.2: State Comparison for Skip Logic</section>
+        <snippet>ShouldProcess(currentTS, state) returns true when state.LastUpdated==0, true when currentTS > state.LastUpdated, false when equal (info log), false when currentTS < state.LastUpdated (warn log for clock skew). All decisions logged with appropriate level and attributes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: State and History Management</title>
+        <section>Workflows and Sequencing - Skip Decision Flow</section>
+        <snippet>Skip Decision Flow: [state.LastUpdated == 0] -> return true (first run); [currentTS > state.LastUpdated] -> log.Debug("new data available") -> return true; [currentTS == state.LastUpdated] -> log.Info("no new data") -> return false; [currentTS < state.LastUpdated] -> log.Warn("clock skew detected") -> return false</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>defillama-extract - Product Requirements Document</title>
+        <section>FR26, FR27</section>
+        <snippet>FR26: System compares latest API timestamp against last processed timestamp. FR27: System skips processing when no new data is available.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-4-state-history-management.md</path>
+        <title>Epic 4: State and History Management</title>
+        <section>Story 4.2</section>
+        <snippet>Implement state comparison for skip logic - compare current API timestamp against last processed timestamp to skip processing when no new data is available.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records (ADRs)</title>
+        <section>ADR-004: Structured Logging with slog</section>
+        <snippet>Use log/slog (stdlib) with JSON output in daemon mode. Built into Go 1.21+. Structured fields enable log aggregation. Text mode available for development.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests in *_test.go co-located. Table-Driven tests for multiple inputs/outputs. Test fixtures in testdata/ directory.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/4-1-implement-state-file-structure-and-loading.md</path>
+        <title>Story 4.1: Implement State File Structure and Loading</title>
+        <section>Dev Agent Record / Learnings</section>
+        <snippet>StateManager Pattern: Constructor (NewStateManager) with encapsulated paths and logger established. Nil Logger Handling: Constructor defaults nil logger to slog.Default(). Test Patterns: Table-driven tests with fixtures used.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>internal/storage/state.go</path>
+        <kind>service</kind>
+        <symbol>StateManager</symbol>
+        <lines>26-47</lines>
+        <reason>StateManager struct and NewStateManager constructor - method ShouldProcess will be added here following established pattern</reason>
+      </artifact>
+      <artifact>
+        <path>internal/storage/state.go</path>
+        <kind>model</kind>
+        <symbol>State</symbol>
+        <lines>12-24</lines>
+        <reason>State struct containing LastUpdated field used for timestamp comparison in ShouldProcess</reason>
+      </artifact>
+      <artifact>
+        <path>internal/storage/state.go</path>
+        <kind>method</kind>
+        <symbol>LoadState</symbol>
+        <lines>49-78</lines>
+        <reason>Existing method showing established logging patterns and error handling to follow</reason>
+      </artifact>
+      <artifact>
+        <path>internal/storage/state_test.go</path>
+        <kind>test</kind>
+        <symbol>newTestLogger</symbol>
+        <lines>13-15</lines>
+        <reason>Test helper for creating logger that captures output - reuse for ShouldProcess tests</reason>
+      </artifact>
+      <artifact>
+        <path>internal/storage/state_test.go</path>
+        <kind>test</kind>
+        <symbol>TestLoadState_ValidFile</symbol>
+        <lines>37-69</lines>
+        <reason>Example test showing fixture loading and log verification pattern to follow</reason>
+      </artifact>
+      <artifact>
+        <path>internal/storage/testdata/valid_state.json</path>
+        <kind>fixture</kind>
+        <symbol>valid_state.json</symbol>
+        <reason>Existing fixture with State struct sample - can reuse LastUpdated values for ShouldProcess tests</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="go">
+        <package name="github.com/switchboard-xyz/defillama-extract" version="module">Main module</package>
+        <package name="golang.org/x/sync" version="v0.18.0">Sync primitives (errgroup)</package>
+        <package name="gopkg.in/yaml.v3" version="v3.0.1">YAML config parsing</package>
+      </ecosystem>
+      <stdlib>
+        <package name="log/slog">Structured logging (ADR-004)</package>
+        <package name="encoding/json">JSON marshaling</package>
+        <package name="os">File operations</package>
+        <package name="path/filepath">Path manipulation</package>
+        <package name="testing">Test framework</package>
+        <package name="bytes">Buffer for log capture in tests</package>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint id="C1">Go stdlib only - no external dependencies for this story (log/slog, testing)</constraint>
+    <constraint id="C2">ADR-003: Explicit error returns, wrap with context - however ShouldProcess returns bool only (no error), decision logged</constraint>
+    <constraint id="C3">ADR-004: Structured logging with slog - use Debug/Info/Warn levels per scenario</constraint>
+    <constraint id="C4">Method must be on StateManager struct for consistency with existing LoadState pattern</constraint>
+    <constraint id="C5">Keep implementation in internal/storage/state.go - no new files</constraint>
+    <constraint id="C6">Tests in internal/storage/state_test.go - extend existing test file</constraint>
+    <constraint id="C7">All log messages must include relevant timestamp attributes per ADR-004 observability requirements</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ShouldProcess</name>
+      <kind>method</kind>
+      <signature>func (sm *StateManager) ShouldProcess(currentTS int64, state *State) bool</signature>
+      <path>internal/storage/state.go</path>
+    </interface>
+    <interface>
+      <name>State struct</name>
+      <kind>struct</kind>
+      <signature>type State struct { OracleName string; LastUpdated int64; LastUpdatedISO string; LastProtocolCount int; LastTVS float64; SnapshotCount int; OldestSnapshot int64; NewestSnapshot int64 }</signature>
+      <path>internal/storage/state.go</path>
+    </interface>
+    <interface>
+      <name>StateManager struct</name>
+      <kind>struct</kind>
+      <signature>type StateManager struct { outputDir string; stateFile string; outputFile string; logger *slog.Logger }</signature>
+      <path>internal/storage/state.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Follow Go table-driven test pattern with test cases covering all four timestamp scenarios (first run, new data, no new data, clock skew). Use bytes.Buffer with slog.NewJSONHandler to capture and verify log output including level and message content. Use existing newTestLogger helper from state_test.go.</standards>
+    <locations>
+      <location>internal/storage/state_test.go</location>
+      <location>internal/storage/testdata/*.json</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1">TestShouldProcess_FirstRun: state.LastUpdated=0 -> returns true, log contains "first run" at DEBUG level</idea>
+      <idea acRef="AC2">TestShouldProcess_NewData: currentTS > state.LastUpdated -> returns true, log contains "new data available" with delta_seconds at DEBUG level</idea>
+      <idea acRef="AC3">TestShouldProcess_NoNewData: currentTS == state.LastUpdated -> returns false, log contains "no new data" at INFO level</idea>
+      <idea acRef="AC4">TestShouldProcess_ClockSkew: currentTS < state.LastUpdated -> returns false, log contains "clock skew" at WARN level</idea>
+      <idea acRef="AC5">TestShouldProcess_TableDriven: Combined table-driven test with all scenarios verifying return value and log level</idea>
+    </ideas>
+  </tests>
+</story-context>
