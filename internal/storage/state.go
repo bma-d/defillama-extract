@@ -77,6 +77,30 @@ func (sm *StateManager) LoadState() (*State, error) {
 	return &state, nil
 }
 
+// SaveState persists the state to disk using atomic write semantics.
+func (sm *StateManager) SaveState(state *State) error {
+	data, err := json.MarshalIndent(state, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal state: %w", err)
+	}
+
+	if err := os.MkdirAll(sm.outputDir, 0o755); err != nil {
+		return fmt.Errorf("create output directory %s: %w", sm.outputDir, err)
+	}
+
+	if err := WriteAtomic(sm.stateFile, data, 0o644); err != nil {
+		return fmt.Errorf("write state file: %w", err)
+	}
+
+	sm.logger.Info("state saved",
+		"timestamp", state.LastUpdated,
+		"protocol_count", state.LastProtocolCount,
+		"tvs", state.LastTVS,
+	)
+
+	return nil
+}
+
 // ShouldProcess determines whether extraction should proceed based on the API
 // timestamp compared to the last processed timestamp in state. It returns true
 // when processing is required (first run or newer data) and false when work

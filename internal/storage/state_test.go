@@ -251,6 +251,115 @@ func TestStateManager_ShouldProcess(t *testing.T) {
 	}
 }
 
+func TestSaveState_Success(t *testing.T) {
+	tmpDir := t.TempDir()
+	buf := &bytes.Buffer{}
+	logger := newTestLogger(buf)
+	sm := NewStateManager(tmpDir, logger)
+
+	state := &State{
+		OracleName:        "switchboard",
+		LastUpdated:       1700001234,
+		LastProtocolCount: 10,
+		LastTVS:           123.45,
+	}
+
+	if err := sm.SaveState(state); err != nil {
+		t.Fatalf("SaveState returned error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(tmpDir, "state.json"))
+	if err != nil {
+		t.Fatalf("failed reading state file: %v", err)
+	}
+
+	var got State
+	if err := json.Unmarshal(data, &got); err != nil {
+		t.Fatalf("unmarshal state: %v", err)
+	}
+
+	if got.LastUpdated != state.LastUpdated || got.LastTVS != state.LastTVS || got.LastProtocolCount != state.LastProtocolCount {
+		t.Fatalf("state mismatch after save: %+v", got)
+	}
+
+	info, err := os.Stat(filepath.Join(tmpDir, "state.json"))
+	if err != nil {
+		t.Fatalf("stat state file: %v", err)
+	}
+	if info.Mode().Perm() != 0o644 {
+		t.Fatalf("state file perm = %v, want %v", info.Mode().Perm(), os.FileMode(0o644))
+	}
+}
+
+func TestSaveState_CreatesDirectory(t *testing.T) {
+	baseDir := t.TempDir()
+	outputDir := filepath.Join(baseDir, "nested", "state")
+	sm := NewStateManager(outputDir, newTestLogger(&bytes.Buffer{}))
+
+	if err := sm.SaveState(&State{}); err != nil {
+		t.Fatalf("SaveState returned error: %v", err)
+	}
+
+	if _, err := os.Stat(outputDir); err != nil {
+		t.Fatalf("output dir missing: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(outputDir, "state.json")); err != nil {
+		t.Fatalf("state file missing: %v", err)
+	}
+}
+
+func TestSaveState_LogsSuccess(t *testing.T) {
+	buf := &bytes.Buffer{}
+	sm := NewStateManager(t.TempDir(), newTestLogger(buf))
+	state := &State{LastUpdated: 1700000000, LastProtocolCount: 5, LastTVS: 42.0}
+
+	if err := sm.SaveState(state); err != nil {
+		t.Fatalf("SaveState returned error: %v", err)
+	}
+
+	lines := bytes.Split(bytes.TrimSpace(buf.Bytes()), []byte("\n"))
+	if len(lines) == 0 {
+		t.Fatal("expected log output")
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(lines[len(lines)-1], &payload); err != nil {
+		t.Fatalf("parse log payload: %v", err)
+	}
+
+	if msg, ok := payload["msg"].(string); !ok || msg != "state saved" {
+		t.Fatalf("log msg = %v, want 'state saved'", payload["msg"])
+	}
+	if lvl, ok := payload["level"].(string); !ok || lvl != "INFO" {
+		t.Fatalf("log level = %v, want INFO", payload["level"])
+	}
+
+	if ts, ok := payload["timestamp"].(float64); !ok || int64(ts) != state.LastUpdated {
+		t.Fatalf("timestamp attr = %v, want %d", payload["timestamp"], state.LastUpdated)
+	}
+	if pc, ok := payload["protocol_count"].(float64); !ok || int(pc) != state.LastProtocolCount {
+		t.Fatalf("protocol_count attr = %v, want %d", payload["protocol_count"], state.LastProtocolCount)
+	}
+	if tvs, ok := payload["tvs"].(float64); !ok || tvs != state.LastTVS {
+		t.Fatalf("tvs attr = %v, want %f", payload["tvs"], state.LastTVS)
+	}
+}
+
+func TestSaveState_ErrorWhenOutputDirNotWritable(t *testing.T) {
+	baseDir := t.TempDir()
+	readOnly := filepath.Join(baseDir, "ro")
+	if err := os.MkdirAll(readOnly, 0o500); err != nil {
+		t.Fatalf("mkdir read-only dir: %v", err)
+	}
+
+	outputDir := filepath.Join(readOnly, "child")
+	sm := NewStateManager(outputDir, newTestLogger(&bytes.Buffer{}))
+
+	if err := sm.SaveState(&State{}); err == nil {
+		t.Fatal("expected error when output dir not writable")
+	}
+}
+
 func TestStateJSONRoundTrip(t *testing.T) {
 	original := State{
 		OracleName:        "switchboard",
