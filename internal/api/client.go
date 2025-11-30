@@ -14,6 +14,7 @@ import (
 	"log/slog"
 
 	"github.com/switchboard-xyz/defillama-extract/internal/config"
+	"golang.org/x/sync/errgroup"
 )
 
 const userAgentValue = "defillama-extract/1.0"
@@ -223,4 +224,60 @@ func (c *Client) FetchProtocols(ctx context.Context) ([]Protocol, error) {
 	}
 
 	return protocols, nil
+}
+
+// FetchAll retrieves oracle and protocol data concurrently using errgroup.
+func (c *Client) FetchAll(ctx context.Context) (*FetchResult, error) {
+	start := time.Now()
+	var (
+		oracleResp       *OracleAPIResponse
+		protocols        []Protocol
+		oracleDuration   time.Duration
+		protocolDuration time.Duration
+	)
+
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		fetchStart := time.Now()
+		resp, err := c.FetchOracles(ctx)
+		oracleDuration = time.Since(fetchStart)
+		if err != nil {
+			return err
+		}
+		oracleResp = resp
+		return nil
+	})
+
+	g.Go(func() error {
+		fetchStart := time.Now()
+		resp, err := c.FetchProtocols(ctx)
+		protocolDuration = time.Since(fetchStart)
+		if err != nil {
+			return err
+		}
+		protocols = resp
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		total := time.Since(start)
+		c.logger.Error("parallel fetch failed",
+			"error", err,
+			"total_duration_ms", total.Milliseconds(),
+		)
+		return nil, err
+	}
+
+	total := time.Since(start)
+	c.logger.Info("parallel fetch completed",
+		"oracle_duration_ms", oracleDuration.Milliseconds(),
+		"protocol_duration_ms", protocolDuration.Milliseconds(),
+		"total_duration_ms", total.Milliseconds(),
+	)
+
+	return &FetchResult{
+		OracleResponse: oracleResp,
+		Protocols:      protocols,
+	}, nil
 }

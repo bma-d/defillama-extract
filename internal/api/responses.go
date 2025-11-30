@@ -26,6 +26,12 @@ type Protocol struct {
 	URL      string   `json:"url,omitempty"`
 }
 
+// FetchResult aggregates oracle and protocol responses from parallel fetch operations.
+type FetchResult struct {
+	OracleResponse *OracleAPIResponse
+	Protocols      []Protocol
+}
+
 // APIError represents an HTTP error response with metadata for retry decisions.
 type APIError struct {
 	Endpoint   string
