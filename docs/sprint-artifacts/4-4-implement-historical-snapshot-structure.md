@@ -1,6 +1,6 @@
 # Story 4.4: Implement Historical Snapshot Structure
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -28,34 +28,34 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-4.md#AC-4.4] / [Source: do
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement CreateSnapshot function (AC: 1, 2)
-  - [ ] 1.1: Create `internal/storage/history.go` with package declaration and imports
-  - [ ] 1.2: Add `func CreateSnapshot(result *aggregator.AggregationResult) aggregator.Snapshot`
-  - [ ] 1.3: Set `Timestamp` directly from `result.Timestamp`
-  - [ ] 1.4: Format `Date` using `time.Unix(result.Timestamp, 0).UTC().Format("2006-01-02")`
-  - [ ] 1.5: Set `TVS` from `result.TotalTVS`
-  - [ ] 1.6: Build `TVSByChain` map by iterating `result.ChainBreakdown` and extracting chain -> TVS
-  - [ ] 1.7: Set `ProtocolCount` from `result.TotalProtocols`
-  - [ ] 1.8: Set `ChainCount` as `len(result.ActiveChains)`
-  - [ ] 1.9: Add doc comment explaining the function's purpose and field mapping
+- [x] Task 1: Implement CreateSnapshot function (AC: 1, 2)
+  - [x] 1.1: Create `internal/storage/history.go` with package declaration and imports
+  - [x] 1.2: Add `func CreateSnapshot(result *aggregator.AggregationResult) aggregator.Snapshot`
+  - [x] 1.3: Set `Timestamp` directly from `result.Timestamp`
+  - [x] 1.4: Format `Date` using `time.Unix(result.Timestamp, 0).UTC().Format("2006-01-02")`
+  - [x] 1.5: Set `TVS` from `result.TotalTVS`
+  - [x] 1.6: Build `TVSByChain` map by iterating `result.ChainBreakdown` and extracting chain -> TVS
+  - [x] 1.7: Set `ProtocolCount` from `result.TotalProtocols`
+  - [x] 1.8: Set `ChainCount` as `len(result.ActiveChains)`
+  - [x] 1.9: Add doc comment explaining the function's purpose and field mapping
 
-- [ ] Task 2: Handle empty/nil inputs gracefully (AC: 3)
-  - [ ] 2.1: Initialize `TVSByChain` as `make(map[string]float64)` before population
-  - [ ] 2.2: Handle nil `result.ChainBreakdown` slice by leaving map empty
-  - [ ] 2.3: Handle nil `result.ActiveChains` by setting `ChainCount` to 0
+- [x] Task 2: Handle empty/nil inputs gracefully (AC: 3)
+  - [x] 2.1: Initialize `TVSByChain` as `make(map[string]float64)` before population
+  - [x] 2.2: Handle nil `result.ChainBreakdown` slice by leaving map empty
+  - [x] 2.3: Handle nil `result.ActiveChains` by setting `ChainCount` to 0
 
-- [ ] Task 3: Write unit tests for CreateSnapshot (AC: 1-4)
-  - [ ] 3.1: Create `internal/storage/history_test.go`
-  - [ ] 3.2: Test: valid AggregationResult produces Snapshot with all fields populated correctly
-  - [ ] 3.3: Test: empty ChainBreakdown produces empty map (not nil)
-  - [ ] 3.4: Test: timestamp 1700000000 produces date "2023-11-14" (UTC)
-  - [ ] 3.5: Test: timestamp formatting for different dates (edge cases: year boundary, leap year)
-  - [ ] 3.6: Test: TVSByChain populated correctly from ChainBreakdown
+- [x] Task 3: Write unit tests for CreateSnapshot (AC: 1-4)
+  - [x] 3.1: Create `internal/storage/history_test.go`
+  - [x] 3.2: Test: valid AggregationResult produces Snapshot with all fields populated correctly
+  - [x] 3.3: Test: empty ChainBreakdown produces empty map (not nil)
+  - [x] 3.4: Test: timestamp 1700000000 produces date "2023-11-14" (UTC)
+  - [x] 3.5: Test: timestamp formatting for different dates (edge cases: year boundary, leap year)
+  - [x] 3.6: Test: TVSByChain populated correctly from ChainBreakdown
 
-- [ ] Task 4: Verification (AC: all)
-  - [ ] 4.1: Run `go build ./...` and verify success
-  - [ ] 4.2: Run `go test ./internal/storage/...` and verify all pass
-  - [ ] 4.3: Run `make lint` and verify no errors
+- [x] Task 4: Verification (AC: all)
+  - [x] 4.1: Run `go build ./...` and verify success
+  - [x] 4.2: Run `go test ./internal/storage/...` and verify all pass
+  - [x] 4.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -207,12 +207,77 @@ Go's time format layout string `"2006-01-02"` produces ISO 8601 date format YYYY
 
 ### Debug Log References
 
+- Plan: map AggregationResult→Snapshot (AC1-2), enforce non-nil TVSByChain (AC3), UTC date format tests including 1700000000→2023-11-14 (AC4); follow storage package patterns.
+- Execution: Added `CreateSnapshot` in `internal/storage/history.go` with UTC date formatting and safe map init; table-driven tests cover population, nil/empty inputs, and date edges; ran gofmt/go build/go test/make lint.
+
 ### Completion Notes List
 
+- Implemented `CreateSnapshot` that reuses `aggregator.Snapshot`, initializes TVSByChain, and maps counts directly from AggregationResult.
+- Added comprehensive unit tests for field mapping, nil/empty handling, and date formatting across edge timestamps.
+- Verified with `go build ./...`, `go test ./internal/storage/...`, and `make lint` (all passing).
+
 ### File List
+
+- internal/storage/history.go
+- internal/storage/history_test.go
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/4-4-implement-historical-snapshot-structure.md
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-4 and tech-spec-epic-4.md |
+| 2025-11-30 | Amelia | Implemented CreateSnapshot with tests; updated sprint status and story metadata |
+| 2025-11-30 | Amelia | Senior Developer Review (AI) approved; no blocking findings |
+| 2025-11-30 | Amelia | Added nil guard to CreateSnapshot for defensive safety |
+
+## Senior Developer Review (AI)
+
+**Reviewer:** BMad  
+**Date:** 2025-11-30  
+**Outcome:** Approve — all ACs and completed tasks verified with evidence.
+
+### Summary
+- Implementation matches tech spec for Snapshot creation; map initialization and UTC date formatting verified.
+- Tests cover happy path, nil/empty inputs, and date edge cases; build/test/lint all pass locally.
+
+### Key Findings
+- High: None
+- Medium: None
+- Low: None
+- Notes: Defensive guard added for nil `AggregationResult` to return zero-value snapshot with empty map.
+
+### Acceptance Criteria Coverage
+| AC# | Description | Status | Evidence |
+| --- | ----------- | ------ | -------- |
+| AC1 | CreateSnapshot returns Snapshot using existing type | Implemented | `internal/storage/history.go:9-27` |
+| AC2 | Snapshot fields map exactly from AggregationResult | Implemented | `internal/storage/history.go:20-26`, `internal/storage/history_test.go:10-53` |
+| AC3 | Empty ChainBreakdown yields empty (non-nil) map | Implemented | `internal/storage/history.go:13-25`, `internal/storage/history_test.go:56-78` |
+| AC4 | Timestamp 1700000000 formats to 2023-11-14 UTC | Implemented | `internal/storage/history.go:22`, `internal/storage/history_test.go:98-119` |
+
+### Task Completion Validation
+| Task | Marked As | Verified As | Evidence |
+| ---- | --------- | ----------- | -------- |
+| Task 1: Implement CreateSnapshot (subs 1.1-1.9) | Complete | Verified complete | `internal/storage/history.go:9-27` |
+| Task 2: Handle empty/nil inputs | Complete | Verified complete | `internal/storage/history.go:13-26`, `history_test.go:56-96` |
+| Task 3: Unit tests for CreateSnapshot | Complete | Verified complete | `internal/storage/history_test.go:10-119` |
+| Task 4: Verification commands (build/test/lint) | Complete | Verified complete | `go build ./...`, `go test ./internal/storage/...`, `make lint` |
+
+### Test Coverage and Gaps
+- Executed: `go build ./...`; `go test ./internal/storage/...`; `make lint` (all pass).
+- Tests exercise mapping, nil/empty slices, date edge cases including AC timestamp.
+
+### Architectural Alignment
+- Reuses `aggregator.Snapshot` per tech spec; pure function, stdlib only; no logging side-effects. Aligns with data-architecture and ADR-003.
+
+### Security Notes
+- None identified (pure data mapping, no I/O).
+
+### Best-Practices and References
+- Date formatting via `time.Unix(...).UTC().Format("2006-01-02")` aligns with Epic-4 tech spec and `docs/architecture/data-architecture.md`.
+
+### Action Items
+**Code Changes Required:** None  
+**Advisory Notes:**  
+- Note: If upstream might pass nil `AggregationResult`, add a nil guard in `CreateSnapshot` to avoid panic.
