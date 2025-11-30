@@ -1,6 +1,6 @@
 # Story 1.4: Implement Structured Logging with slog
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -26,42 +26,42 @@ so that **logs are machine-parseable and include consistent contextual informati
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create logging initialization function (AC: 1, 2, 4, 6)
-  - [ ] 1.1: Create `internal/logging/logging.go` file
-  - [ ] 1.2: Implement `Setup(cfg config.LoggingConfig) *slog.Logger` function
-  - [ ] 1.3: Map config level string ("debug", "info", "warn", "error") to `slog.Level` constant
-  - [ ] 1.4: Create `slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})` when format is "json"
-  - [ ] 1.5: Create `slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})` when format is "text"
-  - [ ] 1.6: Return the configured logger
+- [x] Task 1: Create logging initialization function (AC: 1, 2, 4, 6)
+  - [x] 1.1: Create `internal/logging/logging.go` file
+  - [x] 1.2: Implement `Setup(cfg config.LoggingConfig) *slog.Logger` function
+  - [x] 1.3: Map config level string ("debug", "info", "warn", "error") to `slog.Level` constant
+  - [x] 1.4: Create `slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})` when format is "json"
+  - [x] 1.5: Create `slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})` when format is "text"
+  - [x] 1.6: Return the configured logger
 
-- [ ] Task 2: Integrate logger setup into main.go (AC: 6, 7)
-  - [ ] 2.1: Import `internal/logging` package in `cmd/extractor/main.go`
-  - [ ] 2.2: After config loads successfully, call `logging.Setup(cfg.Logging)`
-  - [ ] 2.3: Call `slog.SetDefault(logger)` to set as global default
-  - [ ] 2.4: Log startup message: `slog.Info("application started", "oracle", cfg.Oracle.Name, "log_level", cfg.Logging.Level)`
+- [x] Task 2: Integrate logger setup into main.go (AC: 6, 7)
+  - [x] 2.1: Import `internal/logging` package in `cmd/extractor/main.go`
+  - [x] 2.2: After config loads successfully, call `logging.Setup(cfg.Logging)`
+  - [x] 2.3: Call `slog.SetDefault(logger)` to set as global default
+  - [x] 2.4: Log startup message: `slog.Info("application started", "oracle", cfg.Oracle.Name, "log_level", cfg.Logging.Level)`
 
-- [ ] Task 3: Write unit tests for logging setup (AC: 1, 2, 3, 4, 5)
-  - [ ] 3.1: Create `internal/logging/logging_test.go`
-  - [ ] 3.2: Test JSON handler produces valid JSON output with timestamp, level, msg fields
-  - [ ] 3.3: Test text handler produces human-readable output
-  - [ ] 3.4: Test level mapping: "debug" -> `slog.LevelDebug`, "info" -> `slog.LevelInfo`, etc.
-  - [ ] 3.5: Test level filtering: warn level suppresses info and debug messages
-  - [ ] 3.6: Test structured attributes appear in output (`"key": "value"` in JSON)
-  - [ ] 3.7: Use `bytes.Buffer` as output destination to capture and verify log output
+- [x] Task 3: Write unit tests for logging setup (AC: 1, 2, 3, 4, 5)
+  - [x] 3.1: Create `internal/logging/logging_test.go`
+  - [x] 3.2: Test JSON handler produces valid JSON output with timestamp, level, msg fields
+  - [x] 3.3: Test text handler produces human-readable output
+  - [x] 3.4: Test level mapping: "debug" -> `slog.LevelDebug`, "info" -> `slog.LevelInfo`, etc.
+  - [x] 3.5: Test level filtering: warn level suppresses info and debug messages
+  - [x] 3.6: Test structured attributes appear in output (`"key": "value"` in JSON)
+  - [x] 3.7: Use `bytes.Buffer` as output destination to capture and verify log output
 
-- [ ] Task 4: Update main.go to load config and initialize logging (AC: all)
-  - [ ] 4.1: Add `flag` package for `--config` flag parsing
-  - [ ] 4.2: Parse `--config` flag with default value "configs/config.yaml"
-  - [ ] 4.3: Call `config.Load(configPath)` and handle errors
-  - [ ] 4.4: On config error, log to stderr and exit with code 1
-  - [ ] 4.5: After logger initialized, replace placeholder `fmt.Println` with proper startup log
+- [x] Task 4: Update main.go to load config and initialize logging (AC: all)
+  - [x] 4.1: Add `flag` package for `--config` flag parsing
+  - [x] 4.2: Parse `--config` flag with default value "configs/config.yaml"
+  - [x] 4.3: Call `config.Load(configPath)` and handle errors
+  - [x] 4.4: On config error, log to stderr and exit with code 1
+  - [x] 4.5: After logger initialized, replace placeholder `fmt.Println` with proper startup log
 
-- [ ] Task 5: Verification (AC: all)
-  - [ ] 5.1: Run `go build ./...` and verify success
-  - [ ] 5.2: Run `go test ./internal/logging/...` and verify all pass
-  - [ ] 5.3: Run `make lint` and verify no errors
-  - [ ] 5.4: Manual test: run binary with sample config, verify JSON log output
-  - [ ] 5.5: Manual test: run binary with `LOG_FORMAT=text` env var, verify text output
+- [x] Task 5: Verification (AC: all)
+  - [x] 5.1: Run `go build ./...` and verify success
+  - [x] 5.2: Run `go test ./internal/logging/...` and verify all pass
+  - [x] 5.3: Run `make lint` and verify no errors
+  - [x] 5.4: Manual test: run binary with sample config, verify JSON log output
+  - [x] 5.5: Manual test: run binary with `LOG_FORMAT=text` env var, verify text output
 
 ## Dev Notes
 
@@ -221,12 +221,76 @@ Per testing-strategy.md:
 
 ### Debug Log References
 
+- 2025-11-30: Plan — add `internal/logging` with `Setup`/`parse level`, support json/text handlers; integrate config load + logger wiring in `cmd/extractor/main.go` with `--config`; add tests for json/text output, level mapping/filtering, structured attrs, SetDefault; run gofmt, go test ./..., go build ./..., make lint.
+
 ### Completion Notes List
 
+- 2025-11-30: Implemented slog setup with JSON/text handlers and level mapping; added tests for formats, structured attrs, filtering, SetDefault; wired config loading and startup log in main; commands run: gofmt, go test ./..., go build ./..., make lint, go run ./cmd/extractor (json + text).
+
 ### File List
+
+- cmd/extractor/main.go
+- internal/logging/logging.go
+- internal/logging/logging_test.go
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/1-4-implement-structured-logging-with-slog.md
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-1-foundation.md and tech-spec-epic-1.md |
+| 2025-11-30 | Amelia (Dev Agent) | Implemented structured logging setup, main integration, tests, and updated sprint status |
+| 2025-11-30 | BMad (Reviewer) | Senior Developer Review (AI) appended and story approved |
+
+## Senior Developer Review (AI)
+
+- **Reviewer:** BMad
+- **Date:** 2025-11-30
+- **Outcome:** Approve — all ACs implemented and verified; no blocking findings
+
+### Summary
+- Logging setup cleanly maps config to slog handlers (JSON/Text) with level filtering and global default wiring.
+- Tests cover handler selection, level mapping/filtering, structured attributes, and SetDefault behavior.
+- Startup log now emits oracle name and configured log level as structured fields after config load.
+
+### Key Findings
+- None.
+
+### Acceptance Criteria Coverage
+| AC | Status | Evidence |
+|----|--------|----------|
+| AC1 JSON handler emits structured output | Implemented | internal/logging/logging.go:18-30; internal/logging/logging_test.go:14-42 |
+| AC2 Text handler for debug level | Implemented | internal/logging/logging.go:22-27; internal/logging/logging_test.go:44-60 |
+| AC3 Structured key-value preserved | Implemented | internal/logging/logging_test.go:18-35 |
+| AC4 Supports debug/info/warn/error | Implemented | internal/logging/logging.go:33-44; internal/logging/logging_test.go:63-80 |
+| AC5 Messages below level suppressed | Implemented | internal/logging/logging.go:19-21; internal/logging/logging_test.go:83-103 |
+| AC6 slog.SetDefault uses configured handler | Implemented | cmd/extractor/main.go:21-28; internal/logging/logging_test.go:105-128 |
+| AC7 Startup message with oracle + log level | Implemented | cmd/extractor/main.go:24-28 |
+
+### Task Completion Validation
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| 1: Logging initialization function | [x] | Verified complete | internal/logging/logging.go:12-30 |
+| 2: Integrate logger setup into main.go | [x] | Verified complete | cmd/extractor/main.go:12-28 |
+| 3: Unit tests for logging setup | [x] | Verified complete | internal/logging/logging_test.go:14-128 |
+| 4: Update main.go with config load + startup log | [x] | Verified complete | cmd/extractor/main.go:12-28 |
+| 5.1-5.3: Build/Test/Lint commands | [x] | Verified complete | go build ./...; go test ./...; make lint (2025-11-30) |
+| 5.4-5.5: Manual JSON/Text run checks | [x] | Not independently verified (manual) | — |
+
+### Test Coverage and Gaps
+- Executed: `go test ./...`, `go build ./...`, `make lint` on 2025-11-30 (all pass).
+- Manual run checks (JSON/Text outputs) not re-run in this review; rely on automated tests.
+
+### Architectural Alignment
+- Uses Go stdlib `log/slog` per ADR-004; no extra dependencies (logging.go:3-7).
+- Handler selection and level mapping follow consistency-rules logging strategy (logging.go:18-44).
+
+### Security Notes
+- No secrets introduced; logging writes to stdout only.
+
+### Best-Practices and References
+- Go 1.23 module; slog structured logging per ADR-004.
+
+### Action Items
+- None.
