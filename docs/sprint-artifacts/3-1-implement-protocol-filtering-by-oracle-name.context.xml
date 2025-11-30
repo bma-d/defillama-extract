@@ -1,0 +1,180 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>1</storyId>
+    <title>Implement Protocol Filtering by Oracle Name</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/3-1-implement-protocol-filtering-by-oracle-name.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to filter protocols that use Switchboard as their oracle</iWant>
+    <soThat>only relevant protocols are included in aggregations</soThat>
+    <tasks>
+      <task id="1" title="Create aggregator package structure">
+        <subtask id="1.1">Create `internal/aggregator/filter.go` file</subtask>
+        <subtask id="1.2">Add package documentation in `doc.go` if not exists</subtask>
+        <subtask id="1.3">Define `FilterByOracle` function signature</subtask>
+      </task>
+      <task id="2" title="Implement FilterByOracle function">
+        <subtask id="2.1">Implement iteration over protocols slice</subtask>
+        <subtask id="2.2">Check `Oracles` slice for exact case-sensitive match</subtask>
+        <subtask id="2.3">Check `Oracle` string field for exact case-sensitive match (legacy fallback)</subtask>
+        <subtask id="2.4">Return filtered slice containing only matching protocols</subtask>
+      </task>
+      <task id="3" title="Write unit tests for FilterByOracle">
+        <subtask id="3.1">Create `internal/aggregator/filter_test.go`</subtask>
+        <subtask id="3.2">Test: protocol with oracle in `Oracles` array is included</subtask>
+        <subtask id="3.3">Test: protocol with multiple oracles including target is included (AC: 2)</subtask>
+        <subtask id="3.4">Test: protocol with legacy `Oracle` field only is included (AC: 3)</subtask>
+        <subtask id="3.5">Test: protocol without target oracle is excluded (AC: 4)</subtask>
+        <subtask id="3.6">Test: case-sensitive matching (e.g., "switchboard" != "Switchboard")</subtask>
+        <subtask id="3.7">Test: empty input returns empty slice</subtask>
+        <subtask id="3.8">Test: empty oracle name returns empty slice</subtask>
+        <subtask id="3.9">Test: realistic dataset filtering (~500 protocols yields ~21 results) (AC: 5)</subtask>
+      </task>
+      <task id="4" title="Verification">
+        <subtask id="4.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="4.2">Run `go test ./internal/aggregator/...` and verify all pass</subtask>
+        <subtask id="4.3">Run `make lint` and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given a list of protocols from the API When `FilterByOracle(protocols []Protocol, oracleName string)` is called with "Switchboard" Then only protocols where `oracles` array contains "Switchboard" (exact match, case-sensitive) OR `oracle` field equals "Switchboard" (legacy field check) are returned</criterion>
+    <criterion id="AC2">Given a protocol with `oracles: ["Chainlink", "Switchboard"]` When filtering for "Switchboard" Then the protocol IS included (multi-oracle protocol)</criterion>
+    <criterion id="AC3">Given a protocol with `oracle: "Switchboard"` but empty `oracles` array When filtering for "Switchboard" Then the protocol IS included (legacy field fallback)</criterion>
+    <criterion id="AC4">Given a protocol with `oracles: ["Chainlink"]` and `oracle: ""` When filtering for "Switchboard" Then the protocol is NOT included</criterion>
+    <criterion id="AC5">Given ~500 protocols from the API When filtering for "Switchboard" Then approximately 21 protocols are returned (expected count per PRD)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR9-FR10</section>
+        <snippet>FR9: System filters protocols by exact oracle name match ("Switchboard"). FR10: System checks both `oracles` array and legacy `oracle` field for matching.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-3-data-processing-pipeline.md</path>
+        <title>Epic 3: Data Processing Pipeline</title>
+        <section>Story 3.1</section>
+        <snippet>Implement Protocol Filtering by Oracle Name - filter protocols using Switchboard oracle, check both Oracles slice and Oracle field with case-sensitive exact match.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/fr-category-to-architecture-mapping.md</path>
+        <title>FR Category to Architecture Mapping</title>
+        <section>Data Filtering</section>
+        <snippet>Data Filtering (FR9-FR14) maps to `internal/aggregator` package, key files: filter.go. Reference: 7-custom-aggregation-logic-go-implementation.md.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>API Response Models</section>
+        <snippet>Protocol struct includes: ID, Name, Slug, Category, TVL, Chains, Oracles []string, Oracle string (legacy field), URL.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit Tests: *_test.go co-located. Table-Driven Tests: All test files. Test fixtures in testdata/ directory.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>Package Layout</section>
+        <snippet>internal/aggregator/ contains: aggregator.go, filter.go, filter_test.go, metrics.go, metrics_test.go. Filter handles protocol filtering by oracle name.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <entry>
+        <path>internal/api/responses.go</path>
+        <kind>type definitions</kind>
+        <symbol>Protocol</symbol>
+        <lines>17-27</lines>
+        <reason>Protocol struct with Oracles []string and Oracle string fields - direct input type for FilterByOracle function</reason>
+      </entry>
+      <entry>
+        <path>internal/api/responses.go</path>
+        <kind>type definitions</kind>
+        <symbol>FetchResult</symbol>
+        <lines>29-33</lines>
+        <reason>FetchResult.Protocols []Protocol - source of protocols data for filtering</reason>
+      </entry>
+      <entry>
+        <path>internal/aggregator/doc.go</path>
+        <kind>package documentation</kind>
+        <symbol>aggregator</symbol>
+        <lines>1-2</lines>
+        <reason>Existing package placeholder where filter.go will be added</reason>
+      </entry>
+      <entry>
+        <path>internal/api/protocols_test.go</path>
+        <kind>test file</kind>
+        <symbol>TestFetchProtocols_*</symbol>
+        <lines>27-159</lines>
+        <reason>Reference testing pattern: individual test functions with httptest.Server, t.Cleanup, assertion style</reason>
+      </entry>
+    </code>
+    <dependencies>
+      <ecosystem name="go">
+        <package>github.com/switchboard-xyz/defillama-extract</package>
+        <package>golang.org/x/sync v0.18.0</package>
+        <package>gopkg.in/yaml.v3 v3.0.1</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="Dev Notes">Package Location: Create new package at `internal/aggregator/filter.go`</constraint>
+    <constraint source="Dev Notes">Input Type: Use `[]api.Protocol` from `internal/api/responses.go`</constraint>
+    <constraint source="Dev Notes">Output Type: Return `[]api.Protocol` (same type, filtered)</constraint>
+    <constraint source="Dev Notes">Matching Logic: Exact string match, case-sensitive. Check both Oracles slice and Oracle field</constraint>
+    <constraint source="Dev Notes">No External Dependencies: Pure Go, no additional packages needed</constraint>
+    <constraint source="Testing Strategy">Follow table-driven test pattern established in internal/api/*_test.go</constraint>
+    <constraint source="Architecture">Code follows Go idioms and standard project layout</constraint>
+    <constraint source="Learnings">Use `api.Protocol` struct directly from `internal/api/responses.go`</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>FilterByOracle</name>
+      <kind>function signature</kind>
+      <signature>func FilterByOracle(protocols []api.Protocol, oracleName string) []api.Protocol</signature>
+      <path>internal/aggregator/filter.go</path>
+    </interface>
+    <interface>
+      <name>containsOracle</name>
+      <kind>helper function</kind>
+      <signature>func containsOracle(oracles []string, target string) bool</signature>
+      <path>internal/aggregator/filter.go</path>
+    </interface>
+    <interface>
+      <name>Protocol</name>
+      <kind>struct type</kind>
+      <signature>type Protocol struct { ID, Name, Slug, Category string; TVL float64; Chains, Oracles []string; Oracle, URL string }</signature>
+      <path>internal/api/responses.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Table-driven tests with `tests := []struct{...}` pattern. Each test case has name, input, expected output. Use `t.Run(tt.name, func(t *testing.T) {...})` for subtests. Error paths must be tested. Test fixtures in testdata/ directory. Use `t.Fatalf` for fatal assertions, avoid third-party assertion libraries.</standards>
+    <locations>
+      <location>internal/aggregator/filter_test.go</location>
+      <location>testdata/</location>
+    </locations>
+    <ideas>
+      <idea forAC="AC1">Table-driven test with protocols having target oracle in Oracles array</idea>
+      <idea forAC="AC2">Test case: protocol with multiple oracles ["Chainlink", "Switchboard"] is included</idea>
+      <idea forAC="AC3">Test case: protocol with empty Oracles but Oracle="Switchboard" is included</idea>
+      <idea forAC="AC4">Test case: protocol with Oracles=["Chainlink"] and Oracle="" is excluded</idea>
+      <idea forAC="AC5">Test case: generate ~500 mock protocols with ~21 having Switchboard, verify count</idea>
+      <idea forAC="all">Edge cases: empty input slice, nil slice, empty oracle name, case mismatch "switchboard" vs "Switchboard"</idea>
+    </ideas>
+  </tests>
+</story-context>

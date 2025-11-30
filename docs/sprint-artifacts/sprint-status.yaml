@@ -55,7 +55,7 @@ development_status:
 
   # Epic 3: Data Processing Pipeline (7 stories)
   epic-3: backlog
-  3-1-implement-protocol-filtering-by-oracle-name: backlog
+  3-1-implement-protocol-filtering-by-oracle-name: ready-for-dev
   3-2-extract-protocol-metadata-and-tvs-data: backlog
   3-3-calculate-total-tvs-and-chain-breakdown: backlog
   3-4-calculate-category-breakdown: backlog
