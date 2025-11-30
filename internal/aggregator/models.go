@@ -36,3 +36,23 @@ type CategoryBreakdown struct {
 	Percentage    float64 `json:"percentage"`
 	ProtocolCount int     `json:"protocol_count"`
 }
+
+// Snapshot represents a point-in-time TVS measurement for historical tracking.
+type Snapshot struct {
+	Timestamp     int64              `json:"timestamp"`
+	Date          string             `json:"date"`
+	TVS           float64            `json:"tvs"`
+	TVSByChain    map[string]float64 `json:"tvs_by_chain"`
+	ProtocolCount int                `json:"protocol_count"`
+	ChainCount    int                `json:"chain_count"`
+}
+
+// ChangeMetrics captures TVS and protocol count changes over time windows.
+// Pointer fields are used so nil conveys "no data available" for that period.
+type ChangeMetrics struct {
+	Change24h              *float64 `json:"change_24h,omitempty"`
+	Change7d               *float64 `json:"change_7d,omitempty"`
+	Change30d              *float64 `json:"change_30d,omitempty"`
+	ProtocolCountChange7d  *int     `json:"protocol_count_change_7d,omitempty"`
+	ProtocolCountChange30d *int     `json:"protocol_count_change_30d,omitempty"`
+}

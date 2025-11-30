@@ -1,6 +1,6 @@
 # Story 3.6: Calculate Historical Change Metrics
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -34,62 +34,67 @@ Source: Epic 3.6 / PRD FR19, FR20, FR21, FR22
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define Snapshot struct (AC: 1, 6, 7, 8)
-  - [ ] 1.1: Add `Snapshot` struct to `internal/aggregator/models.go` with fields: `Timestamp` (int64), `Date` (string), `TVS` (float64), `TVSByChain` (map[string]float64), `ProtocolCount` (int), `ChainCount` (int)
-  - [ ] 1.2: Add JSON struct tags for all fields
+- [x] Task 1: Define Snapshot struct (AC: 1, 6, 7, 8)
+  - [x] 1.1: Add `Snapshot` struct to `internal/aggregator/models.go` with fields: `Timestamp` (int64), `Date` (string), `TVS` (float64), `TVSByChain` (map[string]float64), `ProtocolCount` (int), `ChainCount` (int)
+  - [x] 1.2: Add JSON struct tags for all fields
 
-- [ ] Task 2: Define ChangeMetrics struct (AC: 1, 4, 5)
-  - [ ] 2.1: Add `ChangeMetrics` struct to `internal/aggregator/models.go`
-  - [ ] 2.2: Include pointer fields for optional values: `Change24h` (*float64), `Change7d` (*float64), `Change30d` (*float64)
-  - [ ] 2.3: Include protocol count change fields: `ProtocolCountChange7d` (*int), `ProtocolCountChange30d` (*int)
-  - [ ] 2.4: Add JSON struct tags with `omitempty` for pointer fields
+- [x] Task 2: Define ChangeMetrics struct (AC: 1, 4, 5)
+  - [x] 2.1: Add `ChangeMetrics` struct to `internal/aggregator/models.go`
+  - [x] 2.2: Include pointer fields for optional values: `Change24h` (*float64), `Change7d` (*float64), `Change30d` (*float64)
+  - [x] 2.3: Include protocol count change fields: `ProtocolCountChange7d` (*int), `ProtocolCountChange30d` (*int)
+  - [x] 2.4: Add JSON struct tags with `omitempty` for pointer fields
 
-- [ ] Task 3: Implement time constants (AC: 6, 7)
-  - [ ] 3.1: Add constants to `internal/aggregator/metrics.go`: `Hours24` (24*60*60), `Days7` (7*24*60*60), `Days30` (30*24*60*60), `SnapshotTolerance` (2*60*60)
+- [x] Task 3: Implement time constants (AC: 6, 7)
+  - [x] 3.1: Add constants to `internal/aggregator/metrics.go`: `Hours24` (24*60*60), `Days7` (7*24*60*60), `Days30` (30*24*60*60), `SnapshotTolerance` (2*60*60)
 
-- [ ] Task 4: Implement FindSnapshotAtTime helper (AC: 6, 7, 8)
-  - [ ] 4.1: Add function `func FindSnapshotAtTime(snapshots []Snapshot, targetTime int64, tolerance int64) *Snapshot`
-  - [ ] 4.2: Return snapshot closest to targetTime if within tolerance
-  - [ ] 4.3: Return nil if no snapshot found within tolerance
-  - [ ] 4.4: Handle empty snapshots slice gracefully
+- [x] Task 4: Implement FindSnapshotAtTime helper (AC: 6, 7, 8)
+  - [x] 4.1: Add function `func FindSnapshotAtTime(snapshots []Snapshot, targetTime int64, tolerance int64) *Snapshot`
+  - [x] 4.2: Return snapshot closest to targetTime if within tolerance
+  - [x] 4.3: Return nil if no snapshot found within tolerance
+  - [x] 4.4: Handle empty snapshots slice gracefully
 
-- [ ] Task 5: Implement CalculatePercentageChange helper (AC: 2, 3, 9)
-  - [ ] 5.1: Add function `func CalculatePercentageChange(oldValue, newValue float64) float64`
-  - [ ] 5.2: Use formula: `((new - old) / old) * 100`
-  - [ ] 5.3: Return 0 if oldValue is 0 (avoid division by zero)
-  - [ ] 5.4: Round result to 2 decimal places
+- [x] Task 5: Implement CalculatePercentageChange helper (AC: 2, 3, 9)
+  - [x] 5.1: Add function `func CalculatePercentageChange(oldValue, newValue float64) float64`
+  - [x] 5.2: Use formula: `((new - old) / old) * 100`
+  - [x] 5.3: Return 0 if oldValue is 0 (avoid division by zero)
+  - [x] 5.4: Round result to 2 decimal places
 
-- [ ] Task 6: Implement CalculateChangeMetrics function (AC: 1, 2, 3, 4, 5, 10)
-  - [ ] 6.1: Add function `func CalculateChangeMetrics(currentTVS float64, currentProtocolCount int, history []Snapshot) ChangeMetrics`
-  - [ ] 6.2: Get current time using `time.Now().Unix()`
-  - [ ] 6.3: Find snapshot for 24h ago using FindSnapshotAtTime
-  - [ ] 6.4: Find snapshot for 7d ago using FindSnapshotAtTime
-  - [ ] 6.5: Find snapshot for 30d ago using FindSnapshotAtTime
-  - [ ] 6.6: Calculate Change24h if 24h snapshot found (else nil)
-  - [ ] 6.7: Calculate Change7d if 7d snapshot found (else nil)
-  - [ ] 6.8: Calculate Change30d if 30d snapshot found (else nil)
-  - [ ] 6.9: Calculate ProtocolCountChange7d if 7d snapshot found (else nil)
-  - [ ] 6.10: Calculate ProtocolCountChange30d if 30d snapshot found (else nil)
-  - [ ] 6.11: Return ChangeMetrics with all populated (or nil) fields
+- [x] Task 6: Implement CalculateChangeMetrics function (AC: 1, 2, 3, 4, 5, 10)
+  - [x] 6.1: Add function `func CalculateChangeMetrics(currentTVS float64, currentProtocolCount int, history []Snapshot) ChangeMetrics`
+  - [x] 6.2: Get current time using `time.Now().Unix()`
+  - [x] 6.3: Find snapshot for 24h ago using FindSnapshotAtTime
+  - [x] 6.4: Find snapshot for 7d ago using FindSnapshotAtTime
+  - [x] 6.5: Find snapshot for 30d ago using FindSnapshotAtTime
+  - [x] 6.6: Calculate Change24h if 24h snapshot found (else nil)
+  - [x] 6.7: Calculate Change7d if 7d snapshot found (else nil)
+  - [x] 6.8: Calculate Change30d if 30d snapshot found (else nil)
+  - [x] 6.9: Calculate ProtocolCountChange7d if 7d snapshot found (else nil)
+  - [x] 6.10: Calculate ProtocolCountChange30d if 30d snapshot found (else nil)
+  - [x] 6.11: Return ChangeMetrics with all populated (or nil) fields
 
-- [ ] Task 7: Write unit tests (AC: 1-10)
-  - [ ] 7.1: Add tests to `internal/aggregator/metrics_test.go`
-  - [ ] 7.2: Test: CalculatePercentageChange with positive change (10% increase)
-  - [ ] 7.3: Test: CalculatePercentageChange with negative change (10% decrease)
-  - [ ] 7.4: Test: CalculatePercentageChange with zero old value returns 0
-  - [ ] 7.5: Test: FindSnapshotAtTime returns exact match
-  - [ ] 7.6: Test: FindSnapshotAtTime returns closest within tolerance
-  - [ ] 7.7: Test: FindSnapshotAtTime returns nil when outside tolerance
-  - [ ] 7.8: Test: FindSnapshotAtTime returns nil for empty history
-  - [ ] 7.9: Test: CalculateChangeMetrics with full history
-  - [ ] 7.10: Test: CalculateChangeMetrics with partial history (only 24h available)
-  - [ ] 7.11: Test: CalculateChangeMetrics with empty history returns all nil
-  - [ ] 7.12: Test: Protocol count change calculation
+- [x] Task 7: Write unit tests (AC: 1-10)
+  - [x] 7.1: Add tests to `internal/aggregator/metrics_test.go`
+  - [x] 7.2: Test: CalculatePercentageChange with positive change (10% increase)
+  - [x] 7.3: Test: CalculatePercentageChange with negative change (10% decrease)
+  - [x] 7.4: Test: CalculatePercentageChange with zero old value returns 0
+  - [x] 7.5: Test: FindSnapshotAtTime returns exact match
+  - [x] 7.6: Test: FindSnapshotAtTime returns closest within tolerance
+  - [x] 7.7: Test: FindSnapshotAtTime returns nil when outside tolerance
+  - [x] 7.8: Test: FindSnapshotAtTime returns nil for empty history
+  - [x] 7.9: Test: CalculateChangeMetrics with full history
+  - [x] 7.10: Test: CalculateChangeMetrics with partial history (only 24h available)
+  - [x] 7.11: Test: CalculateChangeMetrics with empty history returns all nil
+  - [x] 7.12: Test: Protocol count change calculation
 
-- [ ] Task 8: Verification (AC: all)
-  - [ ] 8.1: Run `go build ./...` and verify success
-  - [ ] 8.2: Run `go test ./internal/aggregator/...` and verify all pass
-  - [ ] 8.3: Run `make lint` and verify no errors
+- [x] Task 8: Verification (AC: all)
+  - [x] 8.1: Run `go build ./...` and verify success
+  - [x] 8.2: Run `go test ./internal/aggregator/...` and verify all pass
+  - [x] 8.3: Run `make lint` and verify no errors
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][High] Add JSON serialization test ensuring `ChangeMetrics` omits nil pointers (Task 7.5) in `internal/aggregator/metrics_test.go`
+- [x] [AI-Review][Med] Add end-to-end negative change case in `TestCalculateChangeMetrics` to validate 7d decrease scenario (AC3) in `internal/aggregator/metrics_test.go`
 
 ## Dev Notes
 
@@ -376,21 +381,28 @@ func TestFindSnapshotAtTime(t *testing.T) {
 
 ### Agent Model Used
 
-- GPT-5 Codex (Scrum Master persona)
+- GPT-5 Codex (Developer Agent)
 
-### Debug Log References
+### Debug Log
 
-- docs/sprint-artifacts/validation-report-story-3-6-2025-11-30T19-31-48Z.md
+- Planned against AC 1-10 and context XML; mapped code changes to structs, helpers, tests.
+- Implemented Snapshot/ChangeMetrics structs, time constants, helper functions, and change metrics computation in aggregator package.
+- Added table-driven tests for percentage change, snapshot lookup, and change metrics coverage.
+- Commands: `go test ./internal/aggregator/...`; `go build ./...`; `make lint` (all pass, 2025-11-30).
 
-### Completion Notes List
+### Completion Notes
 
-- Added architecture citations (data architecture, implementation patterns) per validation.
-- Dev Agent Record populated with model and validation reference.
+- All tasks/subtasks completed; change metrics functions align with tolerance, pointer semantics, and rounding requirements.
+- New unit tests cover positive/negative/zero cases, tolerance boundaries, partial/empty history, protocol count deltas, and JSON pointer behavior.
+- Build, tests, and lint succeed; story status set to review and sprint-status.yaml updated accordingly.
 
 ### File List
 
-- docs/sprint-artifacts/3-6-calculate-historical-change-metrics.md (story)
-- docs/sprint-artifacts/validation-report-story-3-6-2025-11-30T19-31-48Z.md (validation report)
+- internal/aggregator/models.go
+- internal/aggregator/metrics.go
+- internal/aggregator/metrics_test.go
+- docs/sprint-artifacts/3-6-calculate-historical-change-metrics.md
+- docs/sprint-artifacts/sprint-status.yaml
 
 ## Change Log
 
@@ -398,3 +410,136 @@ func TestFindSnapshotAtTime(t *testing.T) {
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-3-data-processing-pipeline.md |
 | 2025-11-30 | SM Agent (Bob) | Added architecture citations and populated Dev Agent Record |
+| 2025-11-30 | Developer Agent (Amelia) | Implemented change metrics structs/functions, added tests, updated status to review |
+| 2025-11-30 | Developer Agent (Amelia) | Senior Developer Review (AI) notes appended; initial outcome Blocked (add missing tests) |
+| 2025-11-30 | Developer Agent (Amelia) | Follow-up tests added; review blockers resolved |
+| 2025-11-30 | Developer Agent (Amelia) | Senior Developer Review (AI) rerun; outcome Approve; sprint status → done |
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad
+- Date: 2025-11-30
+- Outcome: Approve — follow-up tests added; ACs verified and tasks complete
+- Summary: Added JSON serialization coverage for `ChangeMetrics` omitempty behavior and an end-to-end negative-change test for 7d decreases. Build/test/lint all pass.
+
+### Key Findings
+
+- Resolved — Added `TestChangeMetricsJSONSerialization` to ensure nil pointers are omitted and populated fields serialize correctly (`internal/aggregator/metrics_test.go`).
+- Resolved — Added negative-change scenario in `TestCalculateChangeMetrics` validating AC3 end-to-end (7d decrease).
+
+### Acceptance Criteria Coverage
+
+| AC # | Status | Evidence |
+|------|--------|----------|
+| 1 | Implemented | `CalculateChangeMetrics` returns `ChangeMetrics` with all fields (internal/aggregator/metrics.go:204-233) and struct defined with pointers (internal/aggregator/models.go:50-58) |
+| 2 | Implemented | 24h change computed when snapshot found (metrics.go:214-217) and validated at +10% (metrics_test.go:423-439) |
+| 3 | Implemented | Negative 7d change verified end-to-end (metrics_test.go:470-479) |
+| 4 | Implemented | Nil pointers when no data for period (metrics.go:214-231; metrics_test.go:441-468) |
+| 5 | Implemented | Protocol count deltas set for 7d/30d snapshots (metrics.go:219-230; metrics_test.go:431-439) |
+| 6 | Implemented | Exact-time snapshot selection (metrics.go:180-201; metrics_test.go:368-409) |
+| 7 | Implemented | Closest-within-tolerance logic (metrics.go:180-201; metrics_test.go:368-409) |
+| 8 | Implemented | Nil when outside tolerance/empty history (metrics.go:180-201; metrics_test.go:385-409, 454-461) |
+| 9 | Implemented | Division-by-zero guard returns 0 (metrics.go:170-177; metrics_test.go:352-355) |
+| 10 | Implemented | Empty history yields nil change fields (metrics.go:204-233; metrics_test.go:454-461) |
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| 1 (Snapshot struct) | Complete | Verified | internal/aggregator/models.go:40-48 |
+| 2 (ChangeMetrics struct) | Complete | Verified | internal/aggregator/models.go:50-58 |
+| 3 (Time constants) | Complete | Verified | internal/aggregator/metrics.go:9-14 |
+| 4 (FindSnapshotAtTime) | Complete | Verified | internal/aggregator/metrics.go:180-201; metrics_test.go:368-409 |
+| 5 (CalculatePercentageChange) | Complete | Verified | internal/aggregator/metrics.go:170-178; metrics_test.go:345-365 |
+| 6 (CalculateChangeMetrics) | Complete | Verified | internal/aggregator/metrics.go:204-233; metrics_test.go:423-468, 470-479 |
+| 7.1-7.4,7.6-7.12 (tests) | Complete | Verified | metrics_test.go:345-468 |
+| 7.5 (JSON omitempty test) | Complete | Verified | metrics_test.go:481-511 |
+| 8.1 `go build ./...` | Complete | Verified | Command run 2025-11-30 |
+| 8.2 `go test ./internal/aggregator/...` | Complete | Verified | Command run 2025-11-30 (pass) |
+| 8.3 `make lint` | Complete | Verified | Command run 2025-11-30 (pass) |
+
+### Test Coverage and Gaps
+
+- Commands executed: `go build ./...`; `go test ./...`; `make lint` (all pass on 2025-11-30).
+- Gaps: None noted after follow-up tests.
+
+### Architectural Alignment
+
+- Uses pointer semantics for optional fields (models.go:50-58) and 2-hour tolerance per seed doc (metrics.go:10-14, 180-201). No architecture violations observed.
+
+### Security Notes
+
+- Pure in-memory calculations; no new I/O or external calls introduced. No security risks identified.
+
+### Action Items
+
+**Code Changes Required:**
+- None (all prior follow-ups completed).
+
+**Advisory Notes:**
+- None.
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad
+- Date: 2025-11-30
+- Outcome: Approve
+- Summary: All ACs and tasks verified with fresh evidence; build/test/lint passing. No tech-spec file for Epic 3 found; relying on story/context and architecture docs.
+
+### Key Findings
+
+- Low — Epic 3 tech-spec not present (`docs/sprint-artifacts/tech-spec-epic-3*.md` missing); consider authoring for traceability.
+
+### Acceptance Criteria Coverage
+
+| AC # | Status | Evidence |
+|------|--------|----------|
+| 1 | Implemented | ChangeMetrics returned with 24h/7d/30d pointers (internal/aggregator/metrics.go:204-233; internal/aggregator/models.go:50-58) |
+| 2 | Implemented | 24h delta computed via CalculatePercentageChange (metrics.go:214-218; metrics_test.go:345-365, 431-439) |
+| 3 | Implemented | Negative 7d case validated (metrics.go:219-224; metrics_test.go:470-479) |
+| 4 | Implemented | Nil when period missing (metrics.go:214-231; metrics_test.go:441-452, 454-462) |
+| 5 | Implemented | Protocol count deltas set for 7d/30d (metrics.go:219-230; metrics_test.go:431-439) |
+| 6 | Implemented | Exact snapshot selection within tolerance (metrics.go:180-201; metrics_test.go:368-409) |
+| 7 | Implemented | Closest snapshot chosen when within tolerance (metrics.go:180-201; metrics_test.go:368-409) |
+| 8 | Implemented | Nil when outside tolerance/empty (metrics.go:180-201; metrics_test.go:383-409, 454-462) |
+| 9 | Implemented | Division-by-zero guard returns 0 (metrics.go:170-177; metrics_test.go:345-365, 464-468) |
+| 10 | Implemented | Empty history returns nil fields (metrics.go:204-233; metrics_test.go:454-462) |
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| 1 Snapshot struct | Complete | Verified | internal/aggregator/models.go:40-48 |
+| 2 ChangeMetrics struct | Complete | Verified | internal/aggregator/models.go:50-58 |
+| 3 Time constants | Complete | Verified | internal/aggregator/metrics.go:9-14 |
+| 4 FindSnapshotAtTime | Complete | Verified | internal/aggregator/metrics.go:180-201; metrics_test.go:368-409 |
+| 5 CalculatePercentageChange | Complete | Verified | internal/aggregator/metrics.go:170-177; metrics_test.go:345-365 |
+| 6 CalculateChangeMetrics | Complete | Verified | internal/aggregator/metrics.go:204-233; metrics_test.go:431-439, 441-479 |
+| 7 Tests (7.1-7.12) | Complete | Verified | metrics_test.go:345-519 |
+| 8 Verification commands | Complete | Verified | go build ./...; go test ./internal/aggregator/...; make lint (2025-11-30) |
+
+### Test Coverage and Gaps
+
+- Executed: `go build ./...`; `go test ./internal/aggregator/...`; `make lint` (pass).
+- Gaps: None identified.
+
+### Architectural Alignment
+
+- Uses pointer semantics and 2-hour tolerance per seed doc (metrics.go:9-14, 180-201). No layering or dependency violations detected.
+
+### Security Notes
+
+- Pure computation; no new I/O or external calls. No secrets or auth flows touched.
+
+### Best-Practices and References
+
+- Percentage-change formula and rounding align with seed doc 7-custom-aggregation-logic-go-implementation.md.
+- Testing follows table-driven pattern per docs/architecture/testing-strategy.md.
+
+### Action Items
+
+**Code Changes Required:**
+- None.
+
+**Advisory Notes:**
+- Note: Create Epic 3 tech-spec document for traceability (no code change required).
