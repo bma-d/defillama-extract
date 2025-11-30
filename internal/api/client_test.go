@@ -1,17 +1,17 @@
 package api
 
 import (
-    "context"
-    "errors"
-    "net/http"
-    "net/http/httptest"
-    "strings"
-    "testing"
-    "time"
+	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
 
-    "log/slog"
+	"log/slog"
 
-    "github.com/switchboard-xyz/defillama-extract/internal/config"
+	"github.com/switchboard-xyz/defillama-extract/internal/config"
 )
 
 type testPayload struct {
@@ -129,21 +129,21 @@ func TestDoRequest_ContextCancellation(t *testing.T) {
 }
 
 func TestDoRequest_NonSuccessStatus(t *testing.T) {
-    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        w.WriteHeader(http.StatusInternalServerError)
-    }))
-    t.Cleanup(server.Close)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(server.Close)
 
-    cfg := &config.APIConfig{Timeout: 2 * time.Second}
-    client := NewClient(cfg, nil)
+	cfg := &config.APIConfig{Timeout: 2 * time.Second}
+	client := NewClient(cfg, nil)
 
-    var payload testPayload
-    err := client.doRequest(context.Background(), server.URL, &payload)
-    if err == nil {
-        t.Fatalf("expected error for non-2xx status, got nil")
-    }
+	var payload testPayload
+	err := client.doRequest(context.Background(), server.URL, &payload)
+	if err == nil {
+		t.Fatalf("expected error for non-2xx status, got nil")
+	}
 
-    if !strings.Contains(err.Error(), "unexpected status: 500") {
-        t.Fatalf("expected unexpected status error, got %v", err)
-    }
+	if !strings.Contains(err.Error(), "unexpected status: 500") {
+		t.Fatalf("expected unexpected status error, got %v", err)
+	}
 }

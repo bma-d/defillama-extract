@@ -1,0 +1,22 @@
+{
+  "oracles": {
+    "Switchboard": ["marinade-finance", "solend", "drift-protocol"]
+  },
+  "chart": {
+    "Switchboard": {
+      "Solana": {
+        "1699574400": 500000000
+      }
+    }
+  },
+  "oraclesTVS": {
+    "Switchboard": {
+      "Solana": {
+        "tvs": 500000000
+      }
+    }
+  },
+  "chainsByOracle": {
+    "Switchboard": ["Solana", "Sui", "Aptos"]
+  }
+}

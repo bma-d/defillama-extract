@@ -17,7 +17,7 @@ const userAgentValue = "defillama-extract/1.0"
 // Client wraps http.Client with configuration needed for DefiLlama requests.
 type Client struct {
 	httpClient *http.Client
-	baseURL    string
+	oraclesURL string
 	userAgent  string
 	maxRetries int
 	retryDelay time.Duration
@@ -30,9 +30,14 @@ func NewClient(cfg *config.APIConfig, logger *slog.Logger) *Client {
 		logger = slog.Default()
 	}
 
+	oraclesURL := cfg.OraclesURL
+	if oraclesURL == "" {
+		oraclesURL = OraclesEndpoint
+	}
+
 	return &Client{
 		httpClient: &http.Client{Timeout: cfg.Timeout},
-		baseURL:    "",
+		oraclesURL: oraclesURL,
 		userAgent:  userAgentValue,
 		maxRetries: cfg.MaxRetries,
 		retryDelay: cfg.RetryDelay,
@@ -64,4 +69,14 @@ func (c *Client) doRequest(ctx context.Context, url string, target any) error {
 	}
 
 	return nil
+}
+
+// FetchOracles retrieves oracle TVS data from DefiLlama /oracles endpoint.
+func (c *Client) FetchOracles(ctx context.Context) (*OracleAPIResponse, error) {
+	var response OracleAPIResponse
+	if err := c.doRequest(ctx, c.oraclesURL, &response); err != nil {
+		return nil, fmt.Errorf("fetch oracles: %w", err)
+	}
+
+	return &response, nil
 }

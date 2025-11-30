@@ -1,6 +1,6 @@
 # Story 2.2: Implement Oracle Endpoint Fetcher
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -26,9 +26,9 @@ so that **I can retrieve TVS data and protocol-to-oracle mappings for downstream
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define OracleAPIResponse struct (AC: 2)
-  - [ ] 1.1: Create `internal/api/responses.go` file (or add to existing)
-  - [ ] 1.2: Define `OracleAPIResponse` struct with JSON tags matching API response:
+- [x] Task 1: Define OracleAPIResponse struct (AC: 2)
+  - [x] 1.1: Create `internal/api/responses.go` file (or add to existing)
+  - [x] 1.2: Define `OracleAPIResponse` struct with JSON tags matching API response:
     ```go
     type OracleAPIResponse struct {
         Oracles        map[string][]string                       `json:"oracles"`
@@ -38,33 +38,33 @@ so that **I can retrieve TVS data and protocol-to-oracle mappings for downstream
     }
     ```
 
-- [ ] Task 2: Define endpoints constant (AC: 1)
-  - [ ] 2.1: Create `internal/api/endpoints.go` file (or add to existing)
-  - [ ] 2.2: Define `OraclesEndpoint = "https://api.llama.fi/oracles"` constant
+- [x] Task 2: Define endpoints constant (AC: 1)
+  - [x] 2.1: Create `internal/api/endpoints.go` file (or add to existing)
+  - [x] 2.2: Define `OraclesEndpoint = "https://api.llama.fi/oracles"` constant
 
-- [ ] Task 3: Implement FetchOracles method (AC: 1, 2, 3, 4, 5)
-  - [ ] 3.1: Add `FetchOracles(ctx context.Context) (*OracleAPIResponse, error)` method to `Client`
-  - [ ] 3.2: Call `c.doRequest(ctx, OraclesEndpoint, &response)` using existing helper
-  - [ ] 3.3: Return `(*OracleAPIResponse, nil)` on success
-  - [ ] 3.4: Return `(nil, error)` on failure with wrapped error context
+- [x] Task 3: Implement FetchOracles method (AC: 1, 2, 3, 4, 5)
+  - [x] 3.1: Add `FetchOracles(ctx context.Context) (*OracleAPIResponse, error)` method to `Client`
+  - [x] 3.2: Call `c.doRequest(ctx, OraclesEndpoint, &response)` using existing helper
+  - [x] 3.3: Return `(*OracleAPIResponse, nil)` on success
+  - [x] 3.4: Return `(nil, error)` on failure with wrapped error context
 
-- [ ] Task 4: Write unit tests for OracleAPIResponse struct (AC: 2)
-  - [ ] 4.1: Create test fixture `testdata/oracle_response.json` with sample response
-  - [ ] 4.2: Test JSON unmarshaling populates all fields correctly
-  - [ ] 4.3: Test optional/missing fields don't cause panic
+- [x] Task 4: Write unit tests for OracleAPIResponse struct (AC: 2)
+  - [x] 4.1: Create test fixture `testdata/oracle_response.json` with sample response
+  - [x] 4.2: Test JSON unmarshaling populates all fields correctly
+  - [x] 4.3: Test optional/missing fields don't cause panic
 
-- [ ] Task 5: Write integration tests with mock server (AC: 1, 2, 3, 4, 5)
-  - [ ] 5.1: Test successful fetch returns populated OracleAPIResponse
-  - [ ] 5.2: Test User-Agent header is present in request
-  - [ ] 5.3: Test HTTP 500 returns wrapped error
-  - [ ] 5.4: Test HTTP 404 returns wrapped error
-  - [ ] 5.5: Test malformed JSON returns decode error
-  - [ ] 5.6: Test context cancellation aborts request
+- [x] Task 5: Write integration tests with mock server (AC: 1, 2, 3, 4, 5)
+  - [x] 5.1: Test successful fetch returns populated OracleAPIResponse
+  - [x] 5.2: Test User-Agent header is present in request
+  - [x] 5.3: Test HTTP 500 returns wrapped error
+  - [x] 5.4: Test HTTP 404 returns wrapped error
+  - [x] 5.5: Test malformed JSON returns decode error
+  - [x] 5.6: Test context cancellation aborts request
 
-- [ ] Task 6: Verification (AC: all)
-  - [ ] 6.1: Run `go build ./...` and verify success
-  - [ ] 6.2: Run `go test ./internal/api/...` and verify all pass
-  - [ ] 6.3: Run `make lint` and verify no errors
+- [x] Task 6: Verification (AC: all)
+  - [x] 6.1: Run `go build ./...` and verify success
+  - [x] 6.2: Run `go test ./internal/api/...` and verify all pass
+  - [x] 6.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -193,18 +193,84 @@ Create `testdata/oracle_response.json` with realistic sample data for Switchboar
 
 - Draft validation via *validate-create-story at 2025-11-30T08:18:41Z (see validation-report-story-2-2-2025-11-30T08-18-41Z.md)
 
+### Debug Log
+
+- Planned scope: define Oracle response model, add endpoint constant, implement FetchOracles using existing doRequest helper, and cover AC1-AC5 with unit+integration tests. Confirmed config fallback to default endpoint.
+
 ### Completion Notes List
 
-- Story drafted from epic/tech spec; awaiting context XML and ready-for-dev promotion.
-- No code changes yet; implementation pending.
+- Implemented OracleAPIResponse model, OraclesEndpoint constant, and FetchOracles with error/context propagation using existing doRequest helper.
+- Added fixture `testdata/oracle_response.json` plus unit tests for struct decoding and integration tests covering success, headers, non-2xx, malformed JSON, and context cancellation.
+- Verification: `go build ./...`, `go test ./...`, `make lint` (all passing on 2025-11-30).
 
 ### File List
 
 - docs/sprint-artifacts/2-2-implement-oracle-endpoint-fetcher.md
 - docs/sprint-artifacts/validation-report-story-2-2-2025-11-30T08-18-41Z.md
+- docs/sprint-artifacts/sprint-status.yaml
+- internal/api/client.go
+- internal/api/endpoints.go
+- internal/api/responses.go
+- internal/api/client_test.go
+- internal/api/oracles_test.go
+- internal/api/responses_test.go
+- testdata/oracle_response.json
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-2-api-integration.md and tech-spec-epic-2.md |
+| 2025-11-30 | Amelia | Implemented Oracle fetcher, response model, constants, tests, and verified build/test/lint |
+| 2025-11-30 | Amelia | Senior Developer Review (AI) appended; outcome Approve |
+
+## Senior Developer Review (AI)
+
+- **Reviewer:** BMad
+- **Date:** 2025-11-30
+- **Outcome:** Approve — All ACs satisfied; tests and lint pass
+- **Summary:** FetchOracles uses configured `/oracles` URL with User-Agent injection, returns typed response, and surfaces status/decode/context errors with wrapping. Unit and integration tests cover happy path, status errors, decode failures, and cancellation; `go build`, `go test ./...`, and `make lint` pass.
+
+**Key Findings (by severity)**
+- None.
+
+**Acceptance Criteria Coverage**
+
+| AC | Description | Status | Evidence |
+| --- | --- | --- | --- |
+| AC1 | GET https://api.llama.fi/oracles invoked with User-Agent | IMPLEMENTED | `internal/api/client.go:49-65` request with UA; `internal/api/endpoints.go:5` endpoint; `internal/api/oracles_test.go:56-74` asserts header |
+| AC2 | Successful response populates OracleAPIResponse fields | IMPLEMENTED | `internal/api/responses.go:3-8` struct; `internal/api/oracles_test.go:27-53` verifies map contents; `internal/api/responses_test.go:10-33` fixture decode |
+| AC3 | HTTP errors return wrapped error | IMPLEMENTED | `internal/api/client.go:63-79` status guard + wrapping; `internal/api/oracles_test.go:77-96` 500/404 cases |
+| AC4 | Malformed JSON returns decode error | IMPLEMENTED | `internal/api/client.go:67-79` decode wrap; `internal/api/oracles_test.go:99-115` malformed JSON case |
+| AC5 | Context cancellation aborts request and surfaces context.Canceled | IMPLEMENTED | `internal/api/client.go:50-60` context-bound request; `internal/api/oracles_test.go:118-139` cancellation scenario |
+
+**Task Completion Validation**
+
+| Task | Marked As | Verified As | Evidence |
+| --- | --- | --- | --- |
+| Task 1: OracleAPIResponse struct | [x] | Verified complete | `internal/api/responses.go:3-8`; `internal/api/responses_test.go:10-50` |
+| Task 2: OraclesEndpoint constant | [x] | Verified complete | `internal/api/endpoints.go:3-5` |
+| Task 3: FetchOracles method | [x] | Verified complete | `internal/api/client.go:74-81`; `internal/api/oracles_test.go:27-74` |
+| Task 4: Unit tests for struct | [x] | Verified complete | `internal/api/responses_test.go:10-50`; `testdata/oracle_response.json` |
+| Task 5: Integration tests with mock server | [x] | Verified complete | `internal/api/oracles_test.go:27-139` |
+| Task 6: Verification commands | [x] | Verified complete | `go build ./...`, `go test ./...`, `make lint` (2025-11-30) |
+
+**Test Coverage and Gaps**
+- `go test ./...` (pass) — covers success, header injection, status errors, malformed JSON, and context cancellation for FetchOracles; fixture decode paths covered. No gaps identified for ACs.
+
+**Architectural Alignment**
+- Uses stdlib `net/http` with context propagation; HTTPS endpoint constant; error wrapping uses `%w`; no external HTTP deps.
+
+**Security Notes**
+- HTTPS endpoint; no secrets handled; no additional risks observed.
+
+**Best-Practices and References**
+- Data model matches `docs/architecture/data-architecture.md` (OracleAPIResponse).
+
+### Action Items
+
+**Code Changes Required:**
+- [ ] None (no changes requested).
+
+**Advisory Notes:**
+- Note: No additional advisories.
