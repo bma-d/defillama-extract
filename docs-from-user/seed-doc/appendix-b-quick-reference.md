@@ -34,6 +34,6 @@
 **Author:** Claude Code Assistant
 
 ## Changelog
-- **v1.2.0**: Updated to latest stable versions - Go 1.24, Alpine 3.22, prometheus/client_golang v1.20.0
+- **v1.2.0**: Updated to latest stable versions - Go 1.23, Alpine 3.22, prometheus/client_golang v1.20.0
 - **v1.1.0**: Added complete Go implementations for aggregation, enhanced testing section, added operational concerns, complete main.go, graceful shutdown, Prometheus metrics, health checks, API validation
 - **v1.0.0**: Initial specification

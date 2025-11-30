@@ -4,17 +4,17 @@
 
 ## Core Technologies
 
-**Go 1.24**
+**Go 1.23 (pinned for toolchain compatibility)**
 - Compiled to single binary (NFR19)
 - Built-in concurrency with goroutines
 - Comprehensive standard library
-- `slog` for structured logging (since Go 1.21)
+- `slog` for structured logging (available since Go 1.21)
 
 **Dependencies (go.mod)**
 ```go
 module github.com/switchboard-xyz/defillama-extract
 
-go 1.24
+go 1.23
 
 require (
     gopkg.in/yaml.v3 v3.0.1

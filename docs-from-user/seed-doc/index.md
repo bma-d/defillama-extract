@@ -73,7 +73,7 @@
     - [14.5 Phase 5: Orchestration](./14-implementation-checklist.md#145-phase-5-orchestration)
     - [14.6 Phase 6: Production Readiness](./14-implementation-checklist.md#146-phase-6-production-readiness)
   - [15. Go-Specific Patterns & Idioms](./15-go-specific-patterns-idioms.md)
-    - [15.1 Structured Logging with slog (Go 1.24+)](./15-go-specific-patterns-idioms.md#151-structured-logging-with-slog-go-124)
+    - [15.1 Structured Logging with slog (Go 1.23+)](./15-go-specific-patterns-idioms.md#151-structured-logging-with-slog-go-123)
     - [15.2 Context Propagation](./15-go-specific-patterns-idioms.md#152-context-propagation)
     - [15.3 Dependency Injection Pattern](./15-go-specific-patterns-idioms.md#153-dependency-injection-pattern)
   - [16. Operational Concerns](./16-operational-concerns.md)

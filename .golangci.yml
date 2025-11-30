@@ -1,0 +1,17 @@
+run:
+  timeout: 3m
+  tests: true
+issues:
+  exclude-dirs:
+    - vendor
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - gofmt
+    - gosimple
+    - ineffassign
+output:
+  formats:
+    - format: colored-line-number

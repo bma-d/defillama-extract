@@ -167,7 +167,7 @@
         <path>docs/architecture/development-environment.md</path>
         <title>Development Environment</title>
         <section>Prerequisites, Setup Commands</section>
-        <snippet>Requires Go 1.24+, golangci-lint, Make. Setup: go mod download, make test, make build, make lint.</snippet>
+        <snippet>Requires Go 1.23, golangci-lint, Make. Setup: go mod download, make test, make build, make lint.</snippet>
       </doc>
     </docs>
     <code>

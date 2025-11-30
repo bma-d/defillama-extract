@@ -239,8 +239,8 @@ _Consider addressing for smoother implementation_
 _Minor items for consideration_
 
 1. **Version Pinning**
-   - Architecture specifies Go 1.24 but that's a future version (current stable is 1.21/1.22)
-   - **Note:** May be intentional forward reference; verify Go version before starting
+   - Project is pinned to Go 1.23 (tooling compatibility with golangci-lint); update any remaining references to future versions
+   - **Note:** Upgrade plan to Go 1.24 can resume once lint/tooling support lands
 
 2. **Test Data Availability**
    - Test fixtures referenced but need to be created during Epic 1
@@ -298,9 +298,8 @@ _Minor items for consideration_
    - If not accessible, ensure all critical information is captured in architecture shards (appears to be the case)
 
 2. **Confirm Go Version**
-   - Architecture references Go 1.24 - verify intended version
-   - If using current stable (1.21/1.22), update architecture doc
-   - slog requires Go 1.21+
+   - Standardize on Go 1.23 across architecture/seed docs (chosen due to lint/tooling limits)
+   - Plan upgrade path to Go 1.24 once toolchain and linters support it; slog remains available since Go 1.21+
 
 ### Sequencing Adjustments
 

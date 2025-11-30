@@ -1,6 +1,6 @@
 # 15. Go-Specific Patterns & Idioms
 
-## 15.1 Structured Logging with slog (Go 1.24+)
+## 15.1 Structured Logging with slog (Go 1.23+)
 
 ```go
 // internal/logging/logger.go

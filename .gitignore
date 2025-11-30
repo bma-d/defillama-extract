@@ -1,36 +1,10 @@
-# Archive folder - original documents before sharding
-.archive/
-
-# Output data directory
-data/
-
-# Go build artifacts
+# Build outputs
+bin/
 *.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.test
-*.out
 
-# Go workspace
-go.work
+# Data and vendor
+data/
+vendor/
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS generated files
+# OS/filesystem
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-Thumbs.db
-
-# Environment files
-.env
-.env.local
-*.env

@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-- Go 1.24 or later
+- Go 1.23 (pinned to keep golangci-lint compatible; revisit when tools support higher versions)
 - `golangci-lint` (for linting)
 - Make (for build targets)
 

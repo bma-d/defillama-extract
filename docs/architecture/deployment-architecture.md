@@ -5,7 +5,7 @@
 ## Local Execution
 
 ```bash
-# Run once
+# Run once (Go 1.23 toolchain)
 ./extractor --once --config config.yaml
 
 # Run as daemon
