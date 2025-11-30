@@ -1,0 +1,222 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>5</storyId>
+    <title>Implement History Loading from Output File</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-5-implement-history-loading-from-output-file.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>existing history loaded from the output file on startup</iWant>
+    <soThat>historical data is preserved across runs</soThat>
+    <tasks>
+      <task id="1" description="Implement LoadFromOutput function">
+        <subtask id="1.1">Add LoadFromOutput(outputPath string, logger *slog.Logger) ([]aggregator.Snapshot, error) to internal/storage/history.go</subtask>
+        <subtask id="1.2">Read file using os.ReadFile(outputPath)</subtask>
+        <subtask id="1.3">Define minimal struct to extract only historical field: type outputHistoryExtract struct { Historical []aggregator.Snapshot json:"historical" }</subtask>
+        <subtask id="1.4">Unmarshal JSON into extract struct</subtask>
+        <subtask id="1.5">Sort snapshots by timestamp ascending using sort.Slice</subtask>
+        <subtask id="1.6">Add doc comment explaining the function's purpose and graceful handling</subtask>
+      </task>
+      <task id="2" description="Handle missing file gracefully">
+        <subtask id="2.1">Check for os.IsNotExist(err) after os.ReadFile</subtask>
+        <subtask id="2.2">Log debug message: "no existing history found, starting fresh" with path attribute</subtask>
+        <subtask id="2.3">Return empty []aggregator.Snapshot{} and nil error</subtask>
+      </task>
+      <task id="3" description="Handle empty/missing historical field">
+        <subtask id="3.1">After successful unmarshal, check if Historical slice is nil or empty</subtask>
+        <subtask id="3.2">Return empty slice (already initialized by Go) - no special handling needed</subtask>
+      </task>
+      <task id="4" description="Handle corrupted file gracefully">
+        <subtask id="4.1">If json.Unmarshal returns error, log warn: "failed to load history, starting fresh" with path and error attributes</subtask>
+        <subtask id="4.2">Return empty []aggregator.Snapshot{} and nil error (graceful degradation)</subtask>
+      </task>
+      <task id="5" description="Write unit tests for LoadFromOutput">
+        <subtask id="5.1">Create test fixtures in internal/storage/testdata/ directory</subtask>
+        <subtask id="5.2">Create output_with_history.json fixture with valid historical data (multiple snapshots, unsorted)</subtask>
+        <subtask id="5.3">Create output_no_history.json fixture with valid JSON but no/empty historical field</subtask>
+        <subtask id="5.4">Create output_corrupted.json fixture with invalid JSON</subtask>
+        <subtask id="5.5">Test: valid output file returns sorted snapshots</subtask>
+        <subtask id="5.6">Test: missing file returns empty slice, no error</subtask>
+        <subtask id="5.7">Test: empty historical field returns empty slice</subtask>
+        <subtask id="5.8">Test: corrupted file returns empty slice, no error, warn logged</subtask>
+        <subtask id="5.9">Test: verify sort order is timestamp ascending</subtask>
+      </task>
+      <task id="6" description="Verification">
+        <subtask id="6.1">Run go build ./... and verify success</subtask>
+        <subtask id="6.2">Run go test ./internal/storage/... and verify all pass</subtask>
+        <subtask id="6.3">Run make lint and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1">Given output file switchboard-oracle-data.json exists with historical array When LoadFromOutput(outputPath string) is called Then the historical array is extracted and returned as []aggregator.Snapshot</criterion>
+    <criterion id="AC-2">Given a valid output file with historical data When LoadFromOutput is called Then snapshots are returned sorted by timestamp ascending (oldest first)</criterion>
+    <criterion id="AC-3">Given output file doesn't exist When LoadFromOutput is called Then empty slice is returned (not an error) And debug log: "no existing history found, starting fresh"</criterion>
+    <criterion id="AC-4">Given output file exists but historical field is empty or missing When LoadFromOutput is called Then empty slice is returned (not an error)</criterion>
+    <criterion id="AC-5">Given output file is corrupted (invalid JSON) When LoadFromOutput is called Then warn log: "failed to load history, starting fresh" And empty slice is returned (graceful degradation, not error)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: State and History Management</title>
+        <section>AC-4.5: History Loading from Output File</section>
+        <snippet>LoadFromOutput(path) extracts historical[] from output JSON. Returns empty slice when file doesn't exist (not error). Returns empty slice when historical is missing/empty. Returns empty slice with warning when file is corrupted. Snapshots returned sorted by timestamp ascending.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-4-state-history-management.md</path>
+        <title>Epic 4: State and History Management</title>
+        <section>Story 4.5</section>
+        <snippet>LoadHistory(outputPath string) extracts historical array and returns as []Snapshot. Graceful degradation: missing, empty, or corrupted files return empty slice with appropriate logging.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>Output Models</section>
+        <snippet>FullOutput struct contains Historical []Snapshot json:"historical" field. This is the source array LoadFromOutput must extract.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-003, ADR-004</section>
+        <snippet>ADR-003: Explicit error returns over exceptions. ADR-004: Structured logging with slog - use JSON output in daemon mode, text mode for development.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests in *_test.go co-located. Table-driven tests for multiple scenarios. Test fixtures in testdata/ directory.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/4-4-implement-historical-snapshot-structure.md</path>
+        <title>Previous Story 4.4</title>
+        <section>Dev Agent Record</section>
+        <snippet>CreateSnapshot function available in internal/storage/history.go:12-34. Table-driven test patterns established. Nil guards encouraged for defensive programming.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>internal/storage/history.go</path>
+        <kind>module</kind>
+        <symbol>CreateSnapshot</symbol>
+        <lines>12-34</lines>
+        <reason>Existing function in same file. LoadFromOutput will be added here. Uses aggregator.Snapshot type.</reason>
+      </file>
+      <file>
+        <path>internal/aggregator/models.go</path>
+        <kind>model</kind>
+        <symbol>Snapshot</symbol>
+        <lines>41-48</lines>
+        <reason>Return type for LoadFromOutput. Contains Timestamp, Date, TVS, TVSByChain, ProtocolCount, ChainCount fields.</reason>
+      </file>
+      <file>
+        <path>internal/storage/state.go</path>
+        <kind>module</kind>
+        <symbol>StateManager</symbol>
+        <lines>28-47</lines>
+        <reason>StateManager has outputFile field pointing to switchboard-oracle-data.json. LoadFromOutput may integrate with StateManager in Story 4.8.</reason>
+      </file>
+      <file>
+        <path>internal/storage/state.go</path>
+        <kind>module</kind>
+        <symbol>LoadState</symbol>
+        <lines>52-78</lines>
+        <reason>Pattern to follow for graceful file loading: check os.ErrNotExist, log warning on corruption, return zero-value.</reason>
+      </file>
+      <file>
+        <path>internal/storage/writer.go</path>
+        <kind>utility</kind>
+        <symbol>WriteAtomic</symbol>
+        <lines>12-69</lines>
+        <reason>Atomic write utility. Not directly used by LoadFromOutput but establishes file handling patterns in this package.</reason>
+      </file>
+      <file>
+        <path>internal/storage/history_test.go</path>
+        <kind>test</kind>
+        <symbol>TestCreateSnapshot_*</symbol>
+        <lines>1-133</lines>
+        <reason>Existing test patterns for history.go. New LoadFromOutput tests should follow table-driven style.</reason>
+      </file>
+      <file>
+        <path>internal/storage/testdata/valid_state.json</path>
+        <kind>fixture</kind>
+        <symbol>N/A</symbol>
+        <lines>N/A</lines>
+        <reason>Testdata directory exists. Create output_with_history.json, output_no_history.json, output_corrupted.json fixtures here.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <version>go 1.24.0</version>
+        <deps>
+          <dep>golang.org/x/sync v0.18.0</dep>
+          <dep>gopkg.in/yaml.v3 v3.0.1</dep>
+        </deps>
+      </go>
+      <stdlib>
+        <package>encoding/json</package>
+        <package>errors</package>
+        <package>log/slog</package>
+        <package>os</package>
+        <package>sort</package>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use Go standard library only - no external dependencies for JSON/file operations</constraint>
+    <constraint>Follow ADR-003: Explicit error returns, not exceptions</constraint>
+    <constraint>Follow ADR-004: Structured logging with slog, include path and error attributes</constraint>
+    <constraint>Graceful degradation pattern: missing/corrupted files return empty slice, not error (NFR10)</constraint>
+    <constraint>All paths must stay within internal/storage/ package per project structure</constraint>
+    <constraint>Do NOT return error for expected conditions (missing file, corruption) - only log appropriately</constraint>
+    <constraint>Sort snapshots by timestamp ascending (oldest first) before returning</constraint>
+    <constraint>Use partial JSON parsing - only extract historical field to minimize overhead</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>LoadFromOutput</name>
+      <kind>function signature</kind>
+      <signature>func LoadFromOutput(outputPath string, logger *slog.Logger) ([]aggregator.Snapshot, error)</signature>
+      <path>internal/storage/history.go</path>
+    </interface>
+    <interface>
+      <name>aggregator.Snapshot</name>
+      <kind>struct</kind>
+      <signature>type Snapshot struct { Timestamp int64; Date string; TVS float64; TVSByChain map[string]float64; ProtocolCount int; ChainCount int }</signature>
+      <path>internal/aggregator/models.go:41-48</path>
+    </interface>
+    <interface>
+      <name>outputHistoryExtract</name>
+      <kind>internal struct</kind>
+      <signature>type outputHistoryExtract struct { Historical []aggregator.Snapshot `json:"historical"` }</signature>
+      <path>internal/storage/history.go (to be added)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Follow Go table-driven test patterns. Co-locate tests in *_test.go files. Use testdata/ fixtures for predefined scenarios. Test both success and error paths. Verify logging occurs with expected attributes using slog handler capture pattern or log output inspection.</standards>
+    <locations>
+      <location>internal/storage/history_test.go</location>
+      <location>internal/storage/testdata/*.json</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-1">TestLoadFromOutput_ValidFile: Create output_with_history.json with multiple unsorted snapshots. Call LoadFromOutput. Assert returned slice length matches. Assert all snapshot fields populated correctly.</idea>
+      <idea ac="AC-2">TestLoadFromOutput_SortOrder: Use fixture with timestamps [1700003600, 1700000000, 1700007200]. Verify returned order is [1700000000, 1700003600, 1700007200] (ascending).</idea>
+      <idea ac="AC-3">TestLoadFromOutput_MissingFile: Call with non-existent path. Assert empty slice returned. Assert no error. Optionally verify debug log message.</idea>
+      <idea ac="AC-4">TestLoadFromOutput_EmptyHistorical: Create fixture with valid JSON but historical: [] or missing field. Assert empty slice returned.</idea>
+      <idea ac="AC-5">TestLoadFromOutput_CorruptedFile: Create output_corrupted.json with invalid JSON. Assert empty slice returned. Assert no error. Optionally verify warn log message.</idea>
+      <idea ac="AC-1,2">TestLoadFromOutput_SingleSnapshot: Edge case with exactly one snapshot. Verify it is returned correctly.</idea>
+      <idea ac="AC-4">TestLoadFromOutput_NullHistorical: JSON with "historical": null. Should return empty slice.</idea>
+    </ideas>
+  </tests>
+</story-context>
