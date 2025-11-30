@@ -1,6 +1,6 @@
 # Story 4.1: Implement State File Structure and Loading
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -25,39 +25,39 @@ Source: Epic 4.1 / Tech Spec AC-4.1 / [Source: docs/prd.md#fr25-fr29]
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define State struct (AC: 1)
-  - [ ] 1.1: Add `State` struct to `internal/storage/state.go` with fields: `OracleName`, `LastUpdated`, `LastUpdatedISO`, `LastProtocolCount`, `LastTVS`, `SnapshotCount`, `OldestSnapshot`, `NewestSnapshot`
-  - [ ] 1.2: Add JSON struct tags for all fields (snake_case)
-  - [ ] 1.3: Add doc comment explaining struct purpose and zero-value semantics
+- [x] Task 1: Define State struct (AC: 1)
+  - [x] 1.1: Add `State` struct to `internal/storage/state.go` with fields: `OracleName`, `LastUpdated`, `LastUpdatedISO`, `LastProtocolCount`, `LastTVS`, `SnapshotCount`, `OldestSnapshot`, `NewestSnapshot`
+  - [x] 1.2: Add JSON struct tags for all fields (snake_case)
+  - [x] 1.3: Add doc comment explaining struct purpose and zero-value semantics
 
-- [ ] Task 2: Define StateManager struct (AC: 1, implementation guidance)
-  - [ ] 2.1: Add `StateManager` struct with fields: `outputDir`, `stateFile`, `outputFile`, `logger`
-  - [ ] 2.2: Implement `NewStateManager(outputDir string, logger *slog.Logger) *StateManager` constructor
-  - [ ] 2.3: Constructor sets `stateFile = outputDir + "/state.json"` and `outputFile = outputDir + "/switchboard-oracle-data.json"`
+- [x] Task 2: Define StateManager struct (AC: 1, implementation guidance)
+  - [x] 2.1: Add `StateManager` struct with fields: `outputDir`, `stateFile`, `outputFile`, `logger`
+  - [x] 2.2: Implement `NewStateManager(outputDir string, logger *slog.Logger) *StateManager` constructor
+  - [x] 2.3: Constructor sets `stateFile = outputDir + "/state.json"` and `outputFile = outputDir + "/switchboard-oracle-data.json"`
 
-- [ ] Task 3: Implement LoadState method (AC: 1, 2, 3)
-  - [ ] 3.1: Add `func (sm *StateManager) LoadState() (*State, error)` method
-  - [ ] 3.2: Use `os.ReadFile(sm.stateFile)` to read file
-  - [ ] 3.3: Handle `os.ErrNotExist` → return `&State{}`, nil (first run)
-  - [ ] 3.4: Handle other read errors → return nil, wrapped error
-  - [ ] 3.5: Use `json.Unmarshal()` to parse JSON
-  - [ ] 3.6: Handle JSON parse error → log warning, return `&State{}`, nil (graceful recovery)
-  - [ ] 3.7: On success → log debug with state attributes, return populated state
+- [x] Task 3: Implement LoadState method (AC: 1, 2, 3)
+  - [x] 3.1: Add `func (sm *StateManager) LoadState() (*State, error)` method
+  - [x] 3.2: Use `os.ReadFile(sm.stateFile)` to read file
+  - [x] 3.3: Handle `os.ErrNotExist` → return `&State{}`, nil (first run)
+  - [x] 3.4: Handle other read errors → return nil, wrapped error
+  - [x] 3.5: Use `json.Unmarshal()` to parse JSON
+  - [x] 3.6: Handle JSON parse error → log warning, return `&State{}`, nil (graceful recovery)
+  - [x] 3.7: On success → log debug with state attributes, return populated state
 
-- [ ] Task 4: Write unit tests (AC: 1-3)
-  - [ ] 4.1: Create `internal/storage/state_test.go`
-  - [ ] 4.2: Test: NewStateManager creates instance with correct paths
-  - [ ] 4.3: Test: LoadState with valid JSON returns populated State
-  - [ ] 4.4: Test: LoadState with missing file returns zero-value State (no error)
-  - [ ] 4.5: Test: LoadState with corrupted JSON returns zero-value State, logs warning
-  - [ ] 4.6: Test: LoadState with partial JSON returns zero-value State, logs warning
-  - [ ] 4.7: Test: State struct JSON marshaling/unmarshaling round-trip
-  - [ ] 4.8: Create testdata fixtures: `valid_state.json`, `corrupted_state.json`
+- [x] Task 4: Write unit tests (AC: 1-3)
+  - [x] 4.1: Create `internal/storage/state_test.go`
+  - [x] 4.2: Test: NewStateManager creates instance with correct paths
+  - [x] 4.3: Test: LoadState with valid JSON returns populated State
+  - [x] 4.4: Test: LoadState with missing file returns zero-value State (no error)
+  - [x] 4.5: Test: LoadState with corrupted JSON returns zero-value State, logs warning
+  - [x] 4.6: Test: LoadState with partial JSON returns zero-value State, logs warning
+  - [x] 4.7: Test: State struct JSON marshaling/unmarshaling round-trip
+  - [x] 4.8: Create testdata fixtures: `valid_state.json`, `corrupted_state.json`
 
-- [ ] Task 5: Verification (AC: all)
-  - [ ] 5.1: Run `go build ./...` and verify success
-  - [ ] 5.2: Run `go test ./internal/storage/...` and verify all pass
-  - [ ] 5.3: Run `make lint` and verify no errors
+- [x] Task 5: Verification (AC: all)
+  - [x] 5.1: Run `go build ./...` and verify success
+  - [x] 5.2: Run `go test ./internal/storage/...` and verify all pass
+  - [x] 5.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -216,14 +216,90 @@ func (sm *StateManager) LoadState() (*State, error) {
 
 {{agent_model_name_version}}
 
+### Completion Notes
+**Completed:** 2025-11-30  
+**Definition of Done:** All acceptance criteria met, code reviewed, tests passing
+
 ### Debug Log References
+
+- Planned and implemented `State` + `StateManager` per ACs; constructor builds canonical paths, nil logger defaults to slog default.
+- `LoadState` handles missing file (first run), read errors (wrapped), and JSON corruption (warn + zero-value) with structured logging.
+- Tests cover happy path, missing file, corrupted/partial JSON, path construction, JSON round-trip; fixtures under `internal/storage/testdata`.
 
 ### Completion Notes List
 
+- Implemented `state.go` with `State` struct, `StateManager`, and `LoadState` covering AC1–AC3 with structured debug/warn logs.
+- Added table-driven unit tests plus fixtures for valid, corrupted, and partial state files; verified constructor path setup and JSON round-trip.
+- Verification run: `go build ./...`, `go test ./internal/storage/...`, `make lint`.
+
 ### File List
+
+- internal/storage/state.go
+- internal/storage/state_test.go
+- internal/storage/testdata/valid_state.json
+- internal/storage/testdata/corrupted_state.json
+- internal/storage/testdata/partial_state.json
+- docs/sprint-artifacts/sprint-status.yaml
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-4-state-history-management.md and tech-spec-epic-4.md |
+| 2025-11-30 | Amelia (Dev Agent) | Implemented StateManager LoadState with tests and fixtures; marked story ready for review |
+| 2025-11-30 | Amelia (Dev Agent) | Senior Developer Review (AI) approved; notes appended |
+
+## Senior Developer Review (AI)
+
+**Reviewer:** BMad  
+**Date:** 2025-11-30  
+**Outcome:** Approve (all ACs implemented; no issues found)
+
+### Summary
+- LoadState meets AC1–AC3; zero regressions detected.
+- Tests, build, lint all passing locally.
+
+### Key Findings
+- None.
+
+### Acceptance Criteria Coverage
+| AC# | Description | Status | Evidence |
+|-----|-------------|--------|----------|
+| AC1 | LoadState returns populated State when state.json exists | Implemented | internal/storage/state.go:49-77 |
+| AC2 | Missing state file returns zero-value State, no error | Implemented | internal/storage/state.go:53-58 |
+| AC3 | Corrupted/invalid JSON logs warning and returns zero-value State | Implemented | internal/storage/state.go:62-66 |
+
+Summary: 3/3 ACs implemented.
+
+### Task Completion Validation
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| Define State struct + JSON tags | Done | Verified complete | internal/storage/state.go:12-24 |
+| Define StateManager struct + constructor paths | Done | Verified complete | internal/storage/state.go:26-47 |
+| Implement LoadState handling missing/corrupted files | Done | Verified complete | internal/storage/state.go:49-77 |
+| Unit tests + fixtures (valid/missing/corrupted/partial, round-trip) | Done | Verified complete | internal/storage/state_test.go:17-175; internal/storage/testdata/*.json |
+| Verification commands (build, tests, lint) | Done | Verified complete | go build ./...; go test ./internal/storage/...; make lint |
+
+Completed tasks: 5/5; Questionable: 0; False completions: 0.
+
+### Test Coverage and Gaps
+- go test ./internal/storage/... (pass)
+- go build ./... (pass)
+- make lint (pass)
+- No gaps noted for AC1–AC3 paths.
+
+### Architectural Alignment
+- Uses slog per ADR-004; stdlib-only per tech spec; path construction via filepath.Join.
+
+### Security Notes
+- No secrets handled; file I/O limited to configured outputDir; logs do not leak data.
+
+### Best-Practices and References
+- Stack: Go 1.24; slog JSON handler for structured logs.
+
+### Action Items
+**Code Changes Required:**
+- [ ] None
+
+**Advisory Notes:**
+- Note: None

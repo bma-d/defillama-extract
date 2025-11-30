@@ -1,0 +1,10 @@
+{
+  "oracle_name": "switchboard",
+  "last_updated": 1700000000,
+  "last_updated_iso": "2023-11-14T22:00:00Z",
+  "last_protocol_count": 50,
+  "last_tvs": 1500000000.0,
+  "snapshot_count": 10,
+  "oldest_snapshot": 1699000000,
+  "newest_snapshot": 1700000000
+}
