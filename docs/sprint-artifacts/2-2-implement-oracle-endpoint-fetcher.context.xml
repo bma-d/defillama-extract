@@ -1,0 +1,213 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2</storyId>
+    <title>Implement Oracle Endpoint Fetcher</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-2-implement-oracle-endpoint-fetcher.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to fetch oracle data from the `/oracles` endpoint</iWant>
+    <soThat>I can retrieve TVS data and protocol-to-oracle mappings for downstream aggregation</soThat>
+    <tasks>
+      <task id="1" status="pending">Define OracleAPIResponse struct (AC: 2)
+        <subtask id="1.1">Create `internal/api/responses.go` file (or add to existing)</subtask>
+        <subtask id="1.2">Define `OracleAPIResponse` struct with JSON tags matching API response</subtask>
+      </task>
+      <task id="2" status="pending">Define endpoints constant (AC: 1)
+        <subtask id="2.1">Create `internal/api/endpoints.go` file (or add to existing)</subtask>
+        <subtask id="2.2">Define `OraclesEndpoint = "https://api.llama.fi/oracles"` constant</subtask>
+      </task>
+      <task id="3" status="pending">Implement FetchOracles method (AC: 1, 2, 3, 4, 5)
+        <subtask id="3.1">Add `FetchOracles(ctx context.Context) (*OracleAPIResponse, error)` method to `Client`</subtask>
+        <subtask id="3.2">Call `c.doRequest(ctx, OraclesEndpoint, &amp;response)` using existing helper</subtask>
+        <subtask id="3.3">Return `(*OracleAPIResponse, nil)` on success</subtask>
+        <subtask id="3.4">Return `(nil, error)` on failure with wrapped error context</subtask>
+      </task>
+      <task id="4" status="pending">Write unit tests for OracleAPIResponse struct (AC: 2)
+        <subtask id="4.1">Create test fixture `testdata/oracle_response.json` with sample response</subtask>
+        <subtask id="4.2">Test JSON unmarshaling populates all fields correctly</subtask>
+        <subtask id="4.3">Test optional/missing fields don't cause panic</subtask>
+      </task>
+      <task id="5" status="pending">Write integration tests with mock server (AC: 1, 2, 3, 4, 5)
+        <subtask id="5.1">Test successful fetch returns populated OracleAPIResponse</subtask>
+        <subtask id="5.2">Test User-Agent header is present in request</subtask>
+        <subtask id="5.3">Test HTTP 500 returns wrapped error</subtask>
+        <subtask id="5.4">Test HTTP 404 returns wrapped error</subtask>
+        <subtask id="5.5">Test malformed JSON returns decode error</subtask>
+        <subtask id="5.6">Test context cancellation aborts request</subtask>
+      </task>
+      <task id="6" status="pending">Verification (AC: all)
+        <subtask id="6.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="6.2">Run `go test ./internal/api/...` and verify all pass</subtask>
+        <subtask id="6.3">Run `make lint` and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given a configured API client When `FetchOracles(ctx context.Context)` is called Then a GET request is made to `https://api.llama.fi/oracles` with User-Agent header</criterion>
+    <criterion id="AC2">Given a successful API response When the response is parsed Then the function returns `(*OracleAPIResponse, nil)` with all fields populated: Oracles (map[string][]string), Chart (map[string]map[string]map[string]float64), OraclesTVS (map[string]map[string]map[string]float64), ChainsByOracle (map[string][]string)</criterion>
+    <criterion id="AC3">Given an HTTP error (network failure, timeout, non-2xx status) When the request fails Then the function returns `(nil, error)` with descriptive error wrapping</criterion>
+    <criterion id="AC4">Given a malformed JSON response When decoding fails Then the function returns `(nil, error)` with decode error details</criterion>
+    <criterion id="AC5">Given a context with cancellation When the context is cancelled during the request Then the request is aborted and returns `context.Canceled` error</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>API Integration (FR1-FR8)</section>
+        <snippet>FR1: System fetches oracle data from DefiLlama GET /oracles endpoint. FR4: System includes proper User-Agent header identifying the extractor.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Data Models and Contracts</section>
+        <snippet>OracleAPIResponse struct definition with Oracles, Chart, OraclesTVS, ChainsByOracle fields. AC-2.2 defines oracle endpoint fetcher acceptance criteria.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-2-api-integration.md</path>
+        <title>Epic 2: API Integration</title>
+        <section>Story 2.2</section>
+        <snippet>Story describes implementing FetchOracles method that retrieves TVS data and protocol-to-oracle mappings from DefiLlama /oracles endpoint.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>API Response Models</section>
+        <snippet>Defines OracleAPIResponse Go struct with JSON tags: Oracles (map[string][]string), Chart/OraclesTVS (triple-nested maps), ChainsByOracle (map[string][]string).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/implementation-patterns.md</path>
+        <title>Implementation Patterns</title>
+        <section>Context Propagation</section>
+        <snippet>All I/O functions accept context.Context as first parameter. Use http.NewRequestWithContext(ctx, "GET", url, nil) for cancellation support.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Fixtures</section>
+        <snippet>Test data lives in testdata/ directory. oracle_response.json provides sample /oracles response. Mock server tests use httptest package.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>internal/api/client.go</path>
+        <kind>service</kind>
+        <symbol>Client, NewClient, doRequest</symbol>
+        <lines>1-67</lines>
+        <reason>Existing HTTP client infrastructure. FetchOracles method will be added here. Uses doRequest helper which handles User-Agent header, JSON decoding, and non-2xx error handling.</reason>
+      </file>
+      <file>
+        <path>internal/api/client_test.go</path>
+        <kind>test</kind>
+        <symbol>TestDoRequest_*, TestNewClient_*</symbol>
+        <lines>1-149</lines>
+        <reason>Existing test patterns for client. Shows httptest.NewServer usage, User-Agent verification, timeout testing, context cancellation testing, and non-2xx status handling.</reason>
+      </file>
+      <file>
+        <path>internal/config/config.go</path>
+        <kind>config</kind>
+        <symbol>APIConfig</symbol>
+        <lines>29-35</lines>
+        <reason>APIConfig struct contains OraclesURL which provides the endpoint URL. defaultConfig() sets OraclesURL to "https://api.llama.fi/oracles".</reason>
+      </file>
+      <file>
+        <path>internal/api/endpoints.go</path>
+        <kind>const</kind>
+        <symbol>OraclesEndpoint</symbol>
+        <lines>1-40 (planned)</lines>
+        <reason>Planned constants file defining OraclesEndpoint; add exact lines after file is created.</reason>
+      </file>
+      <file>
+        <path>internal/api/responses.go</path>
+        <kind>model</kind>
+        <symbol>OracleAPIResponse</symbol>
+        <lines>1-80 (planned)</lines>
+        <reason>Planned response models file; will house OracleAPIResponse struct with JSON tags. Update line range once implemented.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <version>go 1.23</version>
+        <deps>
+          <dep>gopkg.in/yaml.v3 v3.0.1</dep>
+        </deps>
+        <stdlib>
+          <pkg>net/http</pkg>
+          <pkg>context</pkg>
+          <pkg>encoding/json</pkg>
+          <pkg>log/slog</pkg>
+          <pkg>fmt</pkg>
+          <pkg>time</pkg>
+        </stdlib>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architectural">Uses Go standard library net/http only (ADR-001: No external HTTP frameworks)</constraint>
+    <constraint type="architectural">Context propagation required for all I/O operations</constraint>
+    <constraint type="architectural">Explicit error returns over exceptions (ADR-003)</constraint>
+    <constraint type="architectural">Structured logging with slog (ADR-004)</constraint>
+    <constraint type="testing">Tests co-located in *_test.go files</constraint>
+    <constraint type="testing">Use httptest.NewServer for mock server tests</constraint>
+    <constraint type="testing">Test fixtures in testdata/ directory</constraint>
+    <constraint type="code-style">Error messages use lowercase, wrap errors with %w verb</constraint>
+    <constraint type="code-style">Use fmt.Errorf for error wrapping with context</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>FetchOracles</name>
+      <kind>method signature</kind>
+      <signature>func (c *Client) FetchOracles(ctx context.Context) (*OracleAPIResponse, error)</signature>
+      <path>internal/api/client.go</path>
+    </interface>
+    <interface>
+      <name>doRequest</name>
+      <kind>internal helper</kind>
+      <signature>func (c *Client) doRequest(ctx context.Context, url string, target any) error</signature>
+      <path>internal/api/client.go</path>
+    </interface>
+    <interface>
+      <name>OraclesEndpoint</name>
+      <kind>constant</kind>
+      <signature>const OraclesEndpoint = "https://api.llama.fi/oracles"</signature>
+      <path>internal/api/endpoints.go (to be created)</path>
+    </interface>
+    <interface>
+      <name>OracleAPIResponse</name>
+      <kind>struct</kind>
+      <signature>type OracleAPIResponse struct { Oracles map[string][]string; Chart map[string]map[string]map[string]float64; OraclesTVS map[string]map[string]map[string]float64; ChainsByOracle map[string][]string }</signature>
+      <path>internal/api/responses.go (to be created)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Table-driven tests with multiple scenarios per test function. Use httptest.NewServer for mock HTTP server. Test fixtures in testdata/ directory. Co-located test files (*_test.go). Coverage targets: 90%+ for client.go, all error paths tested.</standards>
+    <locations>
+      <location>internal/api/*_test.go</location>
+      <location>testdata/oracle_response.json</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">TestFetchOracles_SendsUserAgent - verify User-Agent header is present using httptest server</idea>
+      <idea ac="AC1">TestFetchOracles_UsesCorrectEndpoint - verify GET request to /oracles endpoint</idea>
+      <idea ac="AC2">TestFetchOracles_Success - mock server returns valid JSON, verify all struct fields populated</idea>
+      <idea ac="AC2">TestOracleAPIResponse_Unmarshal - unit test JSON unmarshaling with fixture file</idea>
+      <idea ac="AC3">TestFetchOracles_HTTP500 - mock server returns 500, verify error returned with status info</idea>
+      <idea ac="AC3">TestFetchOracles_HTTP404 - mock server returns 404, verify error returned</idea>
+      <idea ac="AC3">TestFetchOracles_NetworkError - simulate network failure, verify error wrapping</idea>
+      <idea ac="AC4">TestFetchOracles_MalformedJSON - mock server returns invalid JSON, verify decode error</idea>
+      <idea ac="AC4">TestFetchOracles_EmptyResponse - mock server returns empty body, verify decode error</idea>
+      <idea ac="AC5">TestFetchOracles_ContextCancellation - cancel context mid-request, verify context.Canceled returned</idea>
+    </ideas>
+  </tests>
+</story-context>
