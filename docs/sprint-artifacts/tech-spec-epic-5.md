@@ -174,8 +174,8 @@ func GenerateSummaryOutput(result *AggregationResult, cfg *Config) *SummaryOutpu
 // WriteJSON writes data to path atomically (temp + rename)
 func WriteJSON(path string, data interface{}, indent bool) error
 
-// WriteAllOutputs writes full, minified, and summary files
-func WriteAllOutputs(outputDir string, full *FullOutput, summary *SummaryOutput) error
+// WriteAllOutputs writes full, minified, and summary files using cfg.Output filenames
+func WriteAllOutputs(outputDir string, cfg *Config, full *FullOutput, summary *SummaryOutput) error
 ```
 
 **Runner Interface:**
@@ -514,6 +514,11 @@ Signal received while waiting:
 - Unit test coverage: 80%+ on `internal/storage/writer.go`, `cmd/extractor/main.go`
 - Integration tests: Cover all happy paths and primary error paths
 - No external dependencies: All tests use mocks/stubs for API calls
+
+## Post-Review Follow-ups
+
+- [x] [Story 5.1][High] Ensure output writers respect `cfg.Output.FullFile/MinFile/SummaryFile` so configurable filenames take effect rather than the current constants.
+- [x] [Story 5.1][Medium] Populate `metadata.update_frequency` from `cfg.Scheduler.Interval` so outputs reflect the actual configured cadence instead of the fixed "2 hours" literal.
 
 ---
 
