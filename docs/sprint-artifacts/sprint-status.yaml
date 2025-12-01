@@ -76,16 +76,9 @@ development_status:
   4-8-build-state-manager-component: done
   epic-4-retrospective: done
 
-  # Epic 5: Output & CLI (3 stories)
+  # Epic 5: Output & CLI (3 stories - consolidated per sprint-change-proposal-2025-11-30)
   epic-5: contexted
-  5-1-implement-output-file-generation: ready-for-dev
-  5-2-implement-minified-output-json-generation: backlog
-  5-3-implement-summary-output-json-generation: backlog
-  5-4-implement-atomic-file-writer: backlog
-  5-5-implement-cli-flag-parsing: backlog
-  5-6-implement-single-extraction-mode: backlog
-  5-7-implement-daemon-mode-with-scheduler: backlog
-  5-8-implement-graceful-shutdown: backlog
-  5-9-implement-extraction-cycle-logging: backlog
-  5-10-build-complete-main-entry-point: backlog
+  5-1-implement-output-file-generation: review          # Full/minified/summary + atomic writes (was 5.1-5.4)
+  5-2-implement-cli-and-single-run-mode: backlog        # CLI flags + single-run + logging (was 5.5+5.6+5.9)
+  5-3-implement-daemon-mode: backlog                    # Daemon + graceful shutdown + main (was 5.7+5.8+5.10)
   epic-5-retrospective: optional
