@@ -74,7 +74,7 @@ development_status:
   4-6-implement-snapshot-deduplication: done
   4-7-implement-history-retention-keep-all: done
   4-8-build-state-manager-component: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   # Epic 5: Output & CLI (10 stories)
   epic-5: backlog
