@@ -1,0 +1,264 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>1</storyId>
+    <title>Implement Output File Generation</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-1-implement-output-file-generation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>all output JSON files generated with atomic writes</iWant>
+    <soThat>dashboards have reliable, complete data in multiple formats</soThat>
+    <tasks>
+      <task id="1">Define output model structs (FullOutput, SummaryOutput, OracleInfo, OutputMetadata)</task>
+      <task id="1.1">Create internal/models/output.go with required structs per tech spec</task>
+      <task id="1.2">Add JSON tags for version, oracle, metadata, summary, metrics, breakdown, protocols, historical</task>
+      <task id="1.3">Ensure SummaryOutput uses top_protocols and has no historical field</task>
+      <task id="2">Implement GenerateFullOutput function</task>
+      <task id="2.1">Create GenerateFullOutput(result *aggregator.AggregationResult, history []aggregator.Snapshot, cfg *config.Config)</task>
+      <task id="2.2">Populate Version = "1.0.0"</task>
+      <task id="2.3">Populate Oracle fields from config (Name, Website, Documentation)</task>
+      <task id="2.4">Populate Metadata (last_updated ISO 8601, data_source "DefiLlama API", update_frequency "2 hours", extractor_version "1.0.0")</task>
+      <task id="2.5">Populate Summary (total_value_secured, total_protocols, active_chains, categories)</task>
+      <task id="2.6">Populate Metrics (current_tvs, change_24h, change_7d, change_30d, growth metrics)</task>
+      <task id="2.7">Populate Breakdown (by_chain, by_category)</task>
+      <task id="2.8">Populate Protocols ranked list</task>
+      <task id="2.9">Populate Historical from history slice</task>
+      <task id="3">Implement GenerateSummaryOutput function</task>
+      <task id="3.1">Implement GenerateSummaryOutput(result *aggregator.AggregationResult, cfg *config.Config)</task>
+      <task id="3.2">Populate fields mirroring full output excluding historical</task>
+      <task id="3.3">Extract top 10 protocols by TVL into top_protocols</task>
+      <task id="4">Implement atomic WriteJSON function</task>
+      <task id="4.1">Implement WriteJSON(path string, data interface{}, indent bool)</task>
+      <task id="4.2">Create directory if missing via os.MkdirAll</task>
+      <task id="4.3">Use os.CreateTemp in same directory as target (ensures same filesystem for atomic rename)</task>
+      <task id="4.4">If indent=true: use json.MarshalIndent(data, &quot;&quot;, &quot;  &quot;) for 2-space indentation</task>
+      <task id="4.5">If indent=false: use json.Marshal(data) for compact/minified output</task>
+      <task id="4.6">Write bytes to temp file and close handle</task>
+      <task id="4.7">Use os.Rename(tmpPath, path) for atomic move</task>
+      <task id="4.8">On any error: clean up temp file with os.Remove(tmpPath) and return error</task>
+      <task id="5">Implement WriteAllOutputs function</task>
+      <task id="5.1">Implement WriteAllOutputs(outputDir string, full *models.FullOutput, summary *models.SummaryOutput) error</task>
+      <task id="5.2">Write full output (indented) to switchboard-oracle-data.json</task>
+      <task id="5.3">Write minified output (compact, no whitespace) to switchboard-oracle-data.min.json</task>
+      <task id="5.4">Verify minified output preserves the same data as full output</task>
+      <task id="5.5">Write summary output (indented) to switchboard-summary.json</task>
+      <task id="5.6">Return first error encountered (fail fast)</task>
+      <task id="6">Write unit tests</task>
+      <task id="6.1">Test GenerateFullOutput field population and history inclusion</task>
+      <task id="6.2">Test GenerateSummaryOutput excludes historical and limits top_protocols to 10</task>
+      <task id="6.3">Test WriteJSON with indent=true produces formatted JSON</task>
+      <task id="6.4">Test WriteJSON with indent=false produces compact JSON</task>
+      <task id="6.5">Test WriteJSON creates directory if missing</task>
+      <task id="6.6">Test WriteJSON cleans up temp file on write failure</task>
+      <task id="6.7">Test WriteAllOutputs creates all three files</task>
+      <task id="6.8">Test minified output file has no whitespace and matches full output data</task>
+      <task id="7">Verification (build, test, lint)</task>
+      <task id="7.1">go build ./...</task>
+      <task id="7.2">go test ./internal/storage/... ./internal/models/...</task>
+      <task id="7.3">make lint</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" title="Full Output JSON">
+      Given aggregation results and historical snapshots, when GenerateFullOutput is called, then a FullOutput struct is created with version, oracle, metadata, summary, metrics, breakdown, protocols, historical fields; JSON is human-readable with 2-space indentation; file is written to {output_dir}/switchboard-oracle-data.json
+    </criterion>
+    <criterion id="AC2" title="Minified Output JSON">
+      Given the same FullOutput data, when minified output is generated, then JSON is serialized without whitespace, preserves the same data as the full output, and file is written to {output_dir}/switchboard-oracle-data.min.json
+    </criterion>
+    <criterion id="AC3" title="Summary Output JSON">
+      Given aggregation results, when GenerateSummaryOutput is called, then SummaryOutput contains current snapshot only (version, oracle, metadata, summary, metrics, breakdown, top_protocols top 10), NO historical array; file is written to {output_dir}/switchboard-summary.json
+    </criterion>
+    <criterion id="AC4" title="Atomic File Writes">
+      Given output data, when WriteJSON is called, then data is written to a temp file in the target directory, renamed atomically, and the directory is created if missing; on failure, temp files are cleaned up and the original file remains untouched. Given full and summary output data, when WriteAllOutputs is called, then all three files (full formatted, minified, summary) are written using the same atomic-write guarantees and land in the output directory with their specified names.
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic 5 Technical Specification</title>
+        <section>Story 5.1, Data Models, APIs/Interfaces, JSON Schemas</section>
+        <snippet>Defines FullOutput, SummaryOutput, OracleInfo, OutputMetadata structs. JSON schemas as contracts. GenerateFullOutput and GenerateSummaryOutput signatures. WriteJSON and WriteAllOutputs interfaces.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-5-output-cli.md</path>
+        <title>Epic 5: Output and CLI</title>
+        <section>Story 5.1: Implement Output File Generation</section>
+        <snippet>AC definitions for full/minified/summary output generation, atomic writes, temp file + rename pattern.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR35-FR41: Output Generation</section>
+        <snippet>FR35: full output with history. FR36: minified output. FR37: summary output. FR38: atomic writes. FR39: create output dir. FR40: version/oracle/metadata. FR41: timestamps.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/implementation-patterns.md</path>
+        <title>Implementation Patterns</title>
+        <section>Atomic File Writes</section>
+        <snippet>Never write directly to target file. Use tmpPath, write and close, then os.Rename for atomic operation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>Package Layout</section>
+        <snippet>Models in internal/models/output.go. Writer in internal/storage/writer.go. Tests co-located as *_test.go.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>Output Models</section>
+        <snippet>FullOutput struct with Version, Oracle, Metadata, Summary, Metrics, Breakdown, Protocols, Historical fields.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Table-driven tests, *_test.go co-located, testdata/ for fixtures, coverage requirements for business-critical logic.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>internal/storage/writer.go</path>
+        <kind>storage</kind>
+        <symbol>WriteAtomic</symbol>
+        <lines>12-69</lines>
+        <reason>Existing atomic write helper: WriteAtomic(path, data, perm). REUSE this for WriteJSON implementation. Creates temp file, writes, syncs, chmod, rename, dir sync.</reason>
+      </file>
+      <file>
+        <path>internal/aggregator/models.go</path>
+        <kind>models</kind>
+        <symbol>AggregationResult, Snapshot, ChainBreakdown, CategoryBreakdown, AggregatedProtocol, ChangeMetrics</symbol>
+        <lines>1-72</lines>
+        <reason>Input data structures. GenerateFullOutput takes AggregationResult + []Snapshot. Contains TotalTVS, TotalProtocols, ActiveChains, Categories, ChainBreakdown, CategoryBreakdown, Protocols, ChangeMetrics.</reason>
+      </file>
+      <file>
+        <path>internal/config/config.go</path>
+        <kind>config</kind>
+        <symbol>Config, OracleConfig, OutputConfig</symbol>
+        <lines>14-53</lines>
+        <reason>OracleConfig has Name, Website, Documentation. OutputConfig has Directory, FullFile, MinFile, SummaryFile. Use for oracle info and file paths.</reason>
+      </file>
+      <file>
+        <path>internal/storage/state.go</path>
+        <kind>state</kind>
+        <symbol>StateManager, OutputFile</symbol>
+        <lines>29-172</lines>
+        <reason>StateManager.OutputFile() returns output file path. LoadHistory() loads existing snapshots from output. Use for integration.</reason>
+      </file>
+      <file>
+        <path>internal/storage/history.go</path>
+        <kind>history</kind>
+        <symbol>LoadFromOutput, CreateSnapshot</symbol>
+        <lines>1-120</lines>
+        <reason>LoadFromOutput extracts historical snapshots from output JSON. Shows output file structure expected: {historical: []Snapshot}.</reason>
+      </file>
+      <file>
+        <path>internal/models/doc.go</path>
+        <kind>models</kind>
+        <symbol>package models</symbol>
+        <lines>1-2</lines>
+        <reason>Target package for output.go. Package exists but only has doc.go - create output.go here.</reason>
+      </file>
+      <file>
+        <path>internal/storage/writer_test.go</path>
+        <kind>test</kind>
+        <symbol>TestWriteAtomic_*</symbol>
+        <lines>1-101</lines>
+        <reason>Test patterns: t.TempDir(), filepath.Join, os.ReadFile, os.Stat for perm, filepath.Glob for temp cleanup.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <ecosystem name="go" version="1.24.0">
+        <package name="golang.org/x/sync" version="v0.18.0">errgroup for parallel operations</package>
+        <package name="gopkg.in/yaml.v3" version="v3.0.1">YAML config parsing</package>
+        <package name="encoding/json" version="stdlib">JSON serialization (json.Marshal, json.MarshalIndent)</package>
+        <package name="log/slog" version="stdlib">Structured logging</package>
+        <package name="os" version="stdlib">File operations, CreateTemp, Rename, MkdirAll</package>
+        <package name="path/filepath" version="stdlib">Path manipulation</package>
+        <package name="time" version="stdlib">Timestamps, RFC3339 formatting</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-002">Use atomic file writes (temp + rename) for all output files to prevent corruption</constraint>
+    <constraint source="ADR-004">Use slog for structured logging throughout</constraint>
+    <constraint source="tech-spec">Version must be "1.0.0"</constraint>
+    <constraint source="tech-spec">Data source must be "DefiLlama API"</constraint>
+    <constraint source="tech-spec">Update frequency must be "2 hours"</constraint>
+    <constraint source="tech-spec">Extractor version must be "1.0.0"</constraint>
+    <constraint source="tech-spec">Full output file: switchboard-oracle-data.json</constraint>
+    <constraint source="tech-spec">Minified output file: switchboard-oracle-data.min.json</constraint>
+    <constraint source="tech-spec">Summary output file: switchboard-summary.json</constraint>
+    <constraint source="tech-spec">Summary uses top_protocols (max 10), not protocols</constraint>
+    <constraint source="tech-spec">Summary has NO historical array</constraint>
+    <constraint source="project-structure">New models go in internal/models/output.go</constraint>
+    <constraint source="project-structure">Writer functions extend internal/storage/writer.go</constraint>
+    <constraint source="FR40">Include version, oracle info, metadata in all outputs</constraint>
+    <constraint source="FR41">Include extraction timestamp in ISO 8601 format</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>GenerateFullOutput</name>
+      <kind>function</kind>
+      <signature>func GenerateFullOutput(result *aggregator.AggregationResult, history []aggregator.Snapshot, cfg *config.Config) *models.FullOutput</signature>
+      <path>internal/storage/writer.go</path>
+    </interface>
+    <interface>
+      <name>GenerateSummaryOutput</name>
+      <kind>function</kind>
+      <signature>func GenerateSummaryOutput(result *aggregator.AggregationResult, cfg *config.Config) *models.SummaryOutput</signature>
+      <path>internal/storage/writer.go</path>
+    </interface>
+    <interface>
+      <name>WriteJSON</name>
+      <kind>function</kind>
+      <signature>func WriteJSON(path string, data interface{}, indent bool) error</signature>
+      <path>internal/storage/writer.go</path>
+    </interface>
+    <interface>
+      <name>WriteAllOutputs</name>
+      <kind>function</kind>
+      <signature>func WriteAllOutputs(outputDir string, full *models.FullOutput, summary *models.SummaryOutput) error</signature>
+      <path>internal/storage/writer.go</path>
+    </interface>
+    <interface>
+      <name>WriteAtomic (existing)</name>
+      <kind>function</kind>
+      <signature>func WriteAtomic(path string, data []byte, perm os.FileMode) error</signature>
+      <path>internal/storage/writer.go</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Table-driven tests with multiple inputs/outputs per test function. Tests co-located with source as *_test.go. Use t.TempDir() for file operations. Follow existing patterns in writer_test.go: verify file content, permissions, temp file cleanup. Use testdata/ for fixtures. Coverage required for business-critical JSON generation logic.</standards>
+    <locations>
+      <location>internal/storage/writer_test.go (extend with WriteJSON, WriteAllOutputs tests)</location>
+      <location>internal/models/output_test.go (new file for output struct validation)</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1">Test GenerateFullOutput populates all required fields: version, oracle, metadata, summary, metrics, breakdown, protocols, historical</idea>
+      <idea acRef="AC1">Test GenerateFullOutput maps AggregationResult fields correctly to output struct</idea>
+      <idea acRef="AC1">Test full output includes complete history slice unchanged</idea>
+      <idea acRef="AC2">Test WriteJSON with indent=false produces compact JSON (no spaces, no newlines)</idea>
+      <idea acRef="AC2">Test minified output data matches full output data exactly</idea>
+      <idea acRef="AC3">Test GenerateSummaryOutput has no Historical field</idea>
+      <idea acRef="AC3">Test GenerateSummaryOutput limits TopProtocols to 10 items</idea>
+      <idea acRef="AC3">Test TopProtocols are sorted by TVL descending (top 10)</idea>
+      <idea acRef="AC4">Test WriteJSON with indent=true produces 2-space indentation</idea>
+      <idea acRef="AC4">Test WriteJSON creates directory if missing via os.MkdirAll</idea>
+      <idea acRef="AC4">Test WriteJSON cleans up temp file on write failure</idea>
+      <idea acRef="AC4">Test WriteJSON preserves original file on failure</idea>
+      <idea acRef="AC4">Test WriteJSON atomic rename (verify no temp files remain)</idea>
+      <idea acRef="AC1,AC2,AC3,AC4">Test WriteAllOutputs creates all three files with correct paths</idea>
+      <idea acRef="AC1,AC2,AC3,AC4">Test WriteAllOutputs file content: full is indented, min is compact, summary has no historical</idea>
+    </ideas>
+  </tests>
+</story-context>

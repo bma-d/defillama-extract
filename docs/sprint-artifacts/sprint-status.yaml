@@ -78,7 +78,7 @@ development_status:
 
   # Epic 5: Output & CLI (3 stories)
   epic-5: contexted
-  5-1-implement-full-output-json-generation: backlog
+  5-1-implement-output-file-generation: ready-for-dev
   5-2-implement-minified-output-json-generation: backlog
   5-3-implement-summary-output-json-generation: backlog
   5-4-implement-atomic-file-writer: backlog
