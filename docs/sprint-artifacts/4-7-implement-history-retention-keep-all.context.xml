@@ -1,0 +1,179 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>7</storyId>
+    <title>Implement History Retention (Keep All)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-7-implement-history-retention-keep-all.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>all historical snapshots retained without automatic pruning</iWant>
+    <soThat>complete history is available for analysis and no data is lost over time</soThat>
+    <tasks>
+      <task id="1" desc="Verify no pruning logic exists">
+        <subtask id="1.1">Review `internal/storage/history.go` - confirm `AppendSnapshot` only appends/replaces, never removes snapshots</subtask>
+        <subtask id="1.2">Review `internal/storage/history.go` - confirm `LoadFromOutput` does not filter or limit snapshots</subtask>
+        <subtask id="1.3">Search codebase for any "prune", "trim", "limit", "maxHistory", "retention" logic - verify none exists</subtask>
+        <subtask id="1.4">Confirm no snapshot removal code paths in any history-related functions</subtask>
+      </task>
+      <task id="2" desc="Add documentation comment for future pruning">
+        <subtask id="2.1">Add package-level doc comment to `internal/storage/history.go` noting: "MVP retains all historical snapshots without automatic pruning. Pruning may be added in a future version."</subtask>
+        <subtask id="2.2">Add comment to `AppendSnapshot` function noting retention policy</subtask>
+      </task>
+      <task id="3" desc="Write unit test verifying retention behavior">
+        <subtask id="3.1">Add test: `TestAppendSnapshot_RetainsAllHistory` - append to history with many snapshots, verify all retained</subtask>
+        <subtask id="3.2">Add test: verify AppendSnapshot with 100+ snapshots maintains all entries</subtask>
+        <subtask id="3.3">Verify test confirms no snapshot count reduction after any append operation</subtask>
+      </task>
+      <task id="4" desc="Verification">
+        <subtask id="4.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="4.2">Run `go test ./internal/storage/...` and verify all pass</subtask>
+        <subtask id="4.3">Run `make lint` and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given history with 1000 snapshots spanning 90+ days When a new snapshot is added Then all existing snapshots are retained And new snapshot is appended And no automatic pruning occurs</criterion>
+    <criterion id="AC2">Given MVP requirements When history management code is reviewed Then there is NO automatic pruning logic (FR33 - retain all) And a doc comment notes "pruning may be added in future version"</criterion>
+    <criterion id="AC3">Given existing `AppendSnapshot` function When code is reviewed Then it appends without removing any existing snapshots</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-4.md</path>
+        <title>Epic Technical Specification: State and History Management</title>
+        <section>AC-4.7: History Retention</section>
+        <snippet>No automatic pruning logic exists. All snapshots retained regardless of age. Code comment documents "pruning may be added in future version".</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-4-state-history-management.md</path>
+        <title>Epic 4: State and History Management</title>
+        <section>Story 4.7: Implement History Retention (Keep All)</section>
+        <snippet>MVP explicitly requires NO pruning per PRD FR33. Future: could add configurable retention window.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR33</section>
+        <snippet>Retain all historical snapshots (no automatic pruning) - acceptance risk for unbounded growth in MVP.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>Output Models</section>
+        <snippet>FullOutput struct includes Historical []Snapshot field for time-series data. State struct tracks LastUpdated, LastTVS for incremental updates.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests co-located in *_test.go files. Table-driven tests for multiple inputs/outputs. Test fixtures in testdata/ directory.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>internal/storage/history.go</path>
+        <kind>service</kind>
+        <symbol>AppendSnapshot</symbol>
+        <lines>93-115</lines>
+        <reason>Primary function to verify - must append/replace without pruning. Currently replaces duplicates or appends new, never removes.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/storage/history.go</path>
+        <kind>service</kind>
+        <symbol>LoadFromOutput</symbol>
+        <lines>50-88</lines>
+        <reason>History loading function - must load ALL snapshots without filtering or limiting.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/storage/history.go</path>
+        <kind>service</kind>
+        <symbol>CreateSnapshot</symbol>
+        <lines>22-44</lines>
+        <reason>Snapshot creation from AggregationResult - context for understanding snapshot structure.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/storage/history_test.go</path>
+        <kind>test</kind>
+        <symbol>TestAppendSnapshot_*</symbol>
+        <lines>224-324</lines>
+        <reason>Existing append tests to extend with retention verification tests.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/models.go</path>
+        <kind>model</kind>
+        <symbol>Snapshot</symbol>
+        <lines>41-48</lines>
+        <reason>Snapshot struct definition used by history functions.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <goVersion>1.24.0</goVersion>
+        <deps>
+          <dep name="golang.org/x/sync" version="v0.18.0" />
+          <dep name="gopkg.in/yaml.v3" version="v3.0.1" />
+        </deps>
+        <note>This story uses only Go standard library (encoding/json, log/slog, os, sort, time)</note>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="Dev Notes">Package Location: internal/storage/history.go - all changes scoped to internal/storage/</constraint>
+    <constraint source="Dev Notes">Story Nature: Primarily verification and documentation rather than new implementation</constraint>
+    <constraint source="Tech Spec">Existing AppendSnapshot (Story 4.6) already satisfies "keep all" - only appends or replaces, never removes</constraint>
+    <constraint source="FR33">System retains all historical snapshots (no automatic pruning)</constraint>
+    <constraint source="ADR-004">Use structured logging with slog</constraint>
+    <constraint source="ADR-003">Explicit error returns over exceptions</constraint>
+    <constraint source="Tech Spec Risk">Output file grows unbounded - accepted for MVP</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>AppendSnapshot</name>
+      <kind>function signature</kind>
+      <signature>func AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot, logger *slog.Logger) []aggregator.Snapshot</signature>
+      <path>internal/storage/history.go</path>
+    </interface>
+    <interface>
+      <name>LoadFromOutput</name>
+      <kind>function signature</kind>
+      <signature>func LoadFromOutput(outputPath string, logger *slog.Logger) ([]aggregator.Snapshot, error)</signature>
+      <path>internal/storage/history.go</path>
+    </interface>
+    <interface>
+      <name>CreateSnapshot</name>
+      <kind>function signature</kind>
+      <signature>func CreateSnapshot(result *aggregator.AggregationResult) aggregator.Snapshot</signature>
+      <path>internal/storage/history.go</path>
+    </interface>
+    <interface>
+      <name>Snapshot</name>
+      <kind>struct</kind>
+      <signature>type Snapshot struct { Timestamp int64; Date string; TVS float64; TVSByChain map[string]float64; ProtocolCount int; ChainCount int }</signature>
+      <path>internal/aggregator/models.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Follow Go table-driven tests pattern per architecture/testing-strategy.md. Use `aggregator.Snapshot{}` literals for test fixtures. Tests co-located in *_test.go files. Test with large snapshot counts (100+) to verify retention. Verify no snapshot count reduction after append operations.</standards>
+    <locations>
+      <location>internal/storage/history_test.go</location>
+      <location>internal/storage/testdata/</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1,AC3">TestAppendSnapshot_RetainsAllHistory - Create history with 100+ snapshots, append new snapshot, verify count is 101 (original + 1), no snapshots removed</idea>
+      <idea acRef="AC1">TestAppendSnapshot_LargeHistoryNoReduction - Build 1000 snapshots over 90+ day range, append new, verify all 1001 retained</idea>
+      <idea acRef="AC2">Code review verification - Grep for prune/trim/limit/maxHistory/retention keywords, confirm none exist in production code</idea>
+      <idea acRef="AC3">TestAppendSnapshot_DuplicateReplacesNotRemoves - Verify duplicate timestamp replacement does not reduce total count</idea>
+    </ideas>
+  </tests>
+</story-context>
