@@ -71,7 +71,7 @@ development_status:
   4-3-implement-atomic-state-file-updates: done
   4-4-implement-historical-snapshot-structure: done
   4-5-implement-history-loading-from-output-file: done
-  4-6-implement-snapshot-deduplication: ready-for-dev
+  4-6-implement-snapshot-deduplication: done
   4-7-implement-history-retention-keep-all: backlog
   4-8-build-state-manager-component: backlog
   epic-4-retrospective: optional

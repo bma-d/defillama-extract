@@ -220,3 +220,105 @@ func TestLoadFromOutput_CorruptedReturnsEmptyAndWarns(t *testing.T) {
 		t.Fatalf("expected WARN log for corrupted history, got %v", payload["level"])
 	}
 }
+
+func TestAppendSnapshot_EmptyHistoryAppends(t *testing.T) {
+	logger := newTestLogger(&bytes.Buffer{})
+
+	initial := []aggregator.Snapshot{}
+	snap := aggregator.Snapshot{Timestamp: 1700000000, TVS: 1.0}
+
+	got := AppendSnapshot(initial, snap, logger)
+
+	if len(got) != 1 {
+		t.Fatalf("expected 1 snapshot, got %d", len(got))
+	}
+	if got[0].Timestamp != snap.Timestamp || got[0].TVS != snap.TVS {
+		t.Fatalf("snapshot mismatch: %+v", got[0])
+	}
+}
+
+func TestAppendSnapshot_DuplicateReplacesAndLogs(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newTestLogger(buf)
+
+	initial := []aggregator.Snapshot{
+		{Timestamp: 1700000000, TVS: 1.0},
+		{Timestamp: 1700003600, TVS: 2.0},
+	}
+	replacement := aggregator.Snapshot{Timestamp: 1700000000, TVS: 3.0}
+
+	got := AppendSnapshot(initial, replacement, logger)
+
+	if len(got) != 2 {
+		t.Fatalf("expected length unchanged (2), got %d", len(got))
+	}
+	if got[0].TVS != 3.0 {
+		t.Fatalf("expected replacement TVS 3.0, got %.1f", got[0].TVS)
+	}
+
+	lines := bytes.Split(bytes.TrimSpace(buf.Bytes()), []byte("\n"))
+	if len(lines) == 0 {
+		t.Fatal("expected debug log for duplicate replacement")
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(lines[len(lines)-1], &payload); err != nil {
+		t.Fatalf("failed to parse log payload: %v", err)
+	}
+	if msg, ok := payload["msg"].(string); !ok || msg != "duplicate snapshot replaced" {
+		t.Fatalf("unexpected log message: %v", payload["msg"])
+	}
+	if lvl, ok := payload["level"].(string); !ok || lvl != "DEBUG" {
+		t.Fatalf("expected DEBUG level, got %v", payload["level"])
+	}
+	if ts, ok := payload["timestamp"].(float64); !ok || int64(ts) != replacement.Timestamp {
+		t.Fatalf("expected timestamp attribute %d, got %v", replacement.Timestamp, payload["timestamp"])
+	}
+}
+
+func TestAppendSnapshot_NewTimestampAppendsAndSorts(t *testing.T) {
+	logger := newTestLogger(&bytes.Buffer{})
+
+	initial := []aggregator.Snapshot{
+		{Timestamp: 1700003600, TVS: 2.0},
+	}
+	newer := aggregator.Snapshot{Timestamp: 1700007200, TVS: 3.0}
+	older := aggregator.Snapshot{Timestamp: 1700000000, TVS: 1.0}
+
+	got := AppendSnapshot(initial, newer, logger)
+	got = AppendSnapshot(got, older, logger)
+
+	if len(got) != 3 {
+		t.Fatalf("expected 3 snapshots, got %d", len(got))
+	}
+
+	expected := []int64{1700000000, 1700003600, 1700007200}
+	for i, ts := range expected {
+		if got[i].Timestamp != ts {
+			t.Fatalf("index %d timestamp mismatch: got %d want %d", i, got[i].Timestamp, ts)
+		}
+	}
+}
+
+func TestAppendSnapshot_MultipleAppendsMaintainSort(t *testing.T) {
+	logger := newTestLogger(&bytes.Buffer{})
+
+	history := []aggregator.Snapshot{}
+	inputs := []aggregator.Snapshot{
+		{Timestamp: 1700007200, TVS: 3},
+		{Timestamp: 1700000000, TVS: 1},
+		{Timestamp: 1700003600, TVS: 2},
+		{Timestamp: 1700010800, TVS: 4},
+	}
+
+	for _, s := range inputs {
+		history = AppendSnapshot(history, s, logger)
+	}
+
+	expected := []int64{1700000000, 1700003600, 1700007200, 1700010800}
+	for i, ts := range expected {
+		if history[i].Timestamp != ts {
+			t.Fatalf("history not sorted: index %d got %d want %d", i, history[i].Timestamp, ts)
+		}
+	}
+}

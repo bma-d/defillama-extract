@@ -1,6 +1,6 @@
 # Story 4.6: Implement Snapshot Deduplication
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,36 +22,36 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-4.md#AC-4.6] / [Source: do
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement AppendSnapshot function (AC: 1, 2, 3)
-  - [ ] 1.1: Add `AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot, logger *slog.Logger) []aggregator.Snapshot` to `internal/storage/history.go`
-  - [ ] 1.2: Iterate through existing history to find matching timestamp
-  - [ ] 1.3: If matching timestamp found, replace snapshot in place and log debug message
-  - [ ] 1.4: If no matching timestamp, append new snapshot to slice
-  - [ ] 1.5: Sort result by timestamp ascending using `sort.Slice`
-  - [ ] 1.6: Add doc comment explaining deduplication behavior and sort guarantee
+- [x] Task 1: Implement AppendSnapshot function (AC: 1, 2, 3)
+  - [x] 1.1: Add `AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot, logger *slog.Logger) []aggregator.Snapshot` to `internal/storage/history.go`
+  - [x] 1.2: Iterate through existing history to find matching timestamp
+  - [x] 1.3: If matching timestamp found, replace snapshot in place and log debug message
+  - [x] 1.4: If no matching timestamp, append new snapshot to slice
+  - [x] 1.5: Sort result by timestamp ascending using `sort.Slice`
+  - [x] 1.6: Add doc comment explaining deduplication behavior and sort guarantee
 
-- [ ] Task 2: Handle duplicate timestamp replacement (AC: 1, 4)
-  - [ ] 2.1: When duplicate found, update slice element in place: `history[i] = snapshot`
-  - [ ] 2.2: Log debug message: "duplicate snapshot replaced" with timestamp attribute
-  - [ ] 2.3: Return history (length unchanged)
+- [x] Task 2: Handle duplicate timestamp replacement (AC: 1, 4)
+  - [x] 2.1: When duplicate found, update slice element in place: `history[i] = snapshot`
+  - [x] 2.2: Log debug message: "duplicate snapshot replaced" with timestamp attribute
+  - [x] 2.3: Return history (length unchanged)
 
-- [ ] Task 3: Handle new timestamp append (AC: 2)
-  - [ ] 3.1: When no duplicate found, append snapshot: `history = append(history, snapshot)`
-  - [ ] 3.2: Sort slice by timestamp ascending
-  - [ ] 3.3: Return extended history
+- [x] Task 3: Handle new timestamp append (AC: 2)
+  - [x] 3.1: When no duplicate found, append snapshot: `history = append(history, snapshot)`
+  - [x] 3.2: Sort slice by timestamp ascending
+  - [x] 3.3: Return extended history
 
-- [ ] Task 4: Write unit tests for AppendSnapshot (AC: 1-4)
-  - [ ] 4.1: Test: empty history + new snapshot returns slice with 1 element
-  - [ ] 4.2: Test: existing history + duplicate timestamp replaces in place (length unchanged)
-  - [ ] 4.3: Test: existing history + new timestamp appends (length increases by 1)
-  - [ ] 4.4: Test: result is always sorted by timestamp ascending
-  - [ ] 4.5: Test: multiple appends maintain sorted order
-  - [ ] 4.6: Test: verify debug log emitted for duplicate replacement
+- [x] Task 4: Write unit tests for AppendSnapshot (AC: 1-4)
+  - [x] 4.1: Test: empty history + new snapshot returns slice with 1 element
+  - [x] 4.2: Test: existing history + duplicate timestamp replaces in place (length unchanged)
+  - [x] 4.3: Test: existing history + new timestamp appends (length increases by 1)
+  - [x] 4.4: Test: result is always sorted by timestamp ascending
+  - [x] 4.5: Test: multiple appends maintain sorted order
+  - [x] 4.6: Test: verify debug log emitted for duplicate replacement
 
-- [ ] Task 5: Verification (AC: all)
-  - [ ] 5.1: Run `go build ./...` and verify success
-  - [ ] 5.2: Run `go test ./internal/storage/...` and verify all pass
-  - [ ] 5.3: Run `make lint` and verify no errors
+- [x] Task 5: Verification (AC: all)
+  - [x] 5.1: Run `go build ./...` and verify success
+  - [x] 5.2: Run `go test ./internal/storage/...` and verify all pass
+  - [x] 5.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -194,15 +194,19 @@ func AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot,
 - OpenAI GPT-5 (BMAD SM persona)
 
 ### Debug Log References
-
-- Story drafted only; implementation pending, no execution logs yet.
+- Implemented AppendSnapshot with in-place dedup and sorted result; added debug log on replacement; preserved slog.Default fallback.
+- Added table-driven AppendSnapshot tests covering duplicate replacement, append, sort invariants, and log emission; reused newTestLogger for JSON log capture.
+- Validated via `go build ./...`, `go test ./internal/storage/...`, and `make lint`.
 
 ### Completion Notes List
-
-- Draft created from epic and tech spec sources; ready for development once validation fixes applied.
+- AC-1..4 satisfied: duplicate timestamps replace in place with debug log; unique timestamps append; history always sorted.
+- New unit tests ensure deduplication, append path, ordering across multiple appends, and logging behavior.
+- All storage tests, build, and lint pass locally on 2025-12-01.
 
 ### File List
-
+- internal/storage/history.go
+- internal/storage/history_test.go
+- docs/sprint-artifacts/sprint-status.yaml
 - docs/sprint-artifacts/4-6-implement-snapshot-deduplication.md
 
 ## Change Log
@@ -210,3 +214,58 @@ func AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot,
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-4 and tech-spec-epic-4.md |
+| 2025-12-01 | Amelia (Dev) | Implemented AppendSnapshot with deduplication + sorting; added unit tests; updated sprint status to review |
+| 2025-12-01 | Amelia (Dev Reviewer) | Senior Developer Review (AI) appended; outcome Approved |
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad
+- Date: 2025-12-01
+- Outcome: Approve — All ACs and completed tasks verified with evidence; no findings
+
+### Summary
+- AppendSnapshot meets deduplication, append, and sort guarantees; logging conforms to ADR-004; tests cover AC paths.
+
+### Key Findings
+- None (no High/Med/Low issues identified).
+
+### Acceptance Criteria Coverage
+
+| AC # | Description | Status | Evidence |
+|------|-------------|--------|----------|
+| AC-1 | Duplicate timestamp replaces existing snapshot; length unchanged | Implemented | internal/storage/history.go:98-105; internal/storage/history_test.go:244-276 |
+| AC-2 | Unique timestamp appends; length increases by 1 | Implemented | internal/storage/history.go:109-113; internal/storage/history_test.go:279-299 |
+| AC-3 | History returned sorted ascending after append/replace | Implemented | internal/storage/history.go:102-104,110-112; internal/storage/history_test.go:279-320 |
+| AC-4 | Debug log "duplicate snapshot replaced" with timestamp attribute | Implemented | internal/storage/history.go:101; internal/storage/history_test.go:259-276 |
+
+Summary: 4 / 4 ACs implemented.
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| Task 1: AppendSnapshot function with dedup + sort | Complete | Verified | internal/storage/history.go:90-114 |
+| Task 2: Duplicate replacement with debug log | Complete | Verified | internal/storage/history.go:98-105; history_test.go:244-276 |
+| Task 3: Append new timestamp path | Complete | Verified | internal/storage/history.go:109-113; history_test.go:279-300 |
+| Task 4: Unit tests for append/dedup/sort/logging | Complete | Verified | internal/storage/history_test.go:224-320 |
+| Task 5: Build/test/lint run | Complete | Verified | go build ./...; go test ./internal/storage/...; make lint (2025-12-01) |
+
+Summary: 5 / 5 completed tasks verified.
+
+### Test Coverage and Gaps
+- go test ./internal/storage/... (passes) covers duplicate replacement, append, ordering, log emission; no gaps relative to ACs.
+
+### Architectural Alignment
+- Uses slog debug log per ADR-004; maintains sorted invariant via sort.Slice; scope contained to internal/storage per project-structure.md.
+
+### Security Notes
+- No security-relevant changes; in-memory slice operations only.
+
+### Best-Practices and References
+- Go 1.24 module; logging via slog JSON handler; adheres to tech-spec-epic-4 AC-4.6 and testing-strategy.md table-driven tests.
+
+### Action Items
+
+**Code Changes Required:** None
+
+**Advisory Notes:** None

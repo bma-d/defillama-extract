@@ -86,3 +86,30 @@ func LoadFromOutput(outputPath string, logger *slog.Logger) ([]aggregator.Snapsh
 
 	return extract.Historical, nil
 }
+
+// AppendSnapshot adds a snapshot to history, replacing any existing snapshot
+// with the same timestamp (deduplication). The returned slice is always
+// sorted by timestamp ascending.
+func AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot, logger *slog.Logger) []aggregator.Snapshot {
+	if logger == nil {
+		logger = slog.Default()
+	}
+
+	for i := range history {
+		if history[i].Timestamp == snapshot.Timestamp {
+			history[i] = snapshot
+			logger.Debug("duplicate snapshot replaced", "timestamp", snapshot.Timestamp)
+			sort.Slice(history, func(i, j int) bool {
+				return history[i].Timestamp < history[j].Timestamp
+			})
+			return history
+		}
+	}
+
+	history = append(history, snapshot)
+	sort.Slice(history, func(i, j int) bool {
+		return history[i].Timestamp < history[j].Timestamp
+	})
+
+	return history
+}
