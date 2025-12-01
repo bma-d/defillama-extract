@@ -10,16 +10,19 @@
 
 > **MANDATORY:** Each story MUST include a **Smoke Test Guide** in Dev Notes (or explicitly mark "Smoke test: N/A" for internal-only functions). Build/test/lint alone do not verify runtime behavior. This requirement was established in the Epic 2+3 retrospective (2025-11-30).
 
+> **Note:** Stories consolidated from 10 to 3 via course correction (2025-11-30). Original fragmentation created unnecessary boundaries between tightly-coupled functionality.
+
 ---
 
-## Story 5.1: Implement Full Output JSON Generation
+## Story 5.1: Implement Output File Generation
 
 As a **developer**,
-I want **complete output JSON generated with all data and history**,
-So that **dashboards have all the information they need**.
+I want **all output JSON files generated with atomic writes**,
+So that **dashboards have reliable, complete data in multiple formats**.
 
 **Acceptance Criteria:**
 
+**AC1: Full Output JSON**
 **Given** aggregation results and historical snapshots
 **When** `GenerateFullOutput(result, history, config)` is called
 **Then** a `FullOutput` struct is created with:
@@ -31,175 +34,83 @@ So that **dashboards have all the information they need**.
   - `breakdown`: by_chain array, by_category array
   - `protocols`: ranked protocol list with all metadata
   - `historical`: complete snapshot history
-
-**Given** full output struct
-**When** serialized to JSON
-**Then** output is human-readable with 2-space indentation
+**And** JSON is human-readable with 2-space indentation
 **And** file is written to `{output_dir}/switchboard-oracle-data.json`
 
-**Prerequisites:** Story 3.7, Story 4.8
-
-**Technical Notes:**
-- Package: `internal/storage/writer.go`
-- Use `json.MarshalIndent(data, "", "  ")` for formatting
-- `FullOutput` struct in `internal/models/output.go`
-- Reference: FR35, FR40, FR41, data-architecture.md
-
----
-
-## Story 5.2: Implement Minified Output JSON Generation
-
-As a **developer**,
-I want **a minified version of the output JSON**,
-So that **file transfer size is minimized**.
-
-**Acceptance Criteria:**
-
+**AC2: Minified Output JSON**
 **Given** the same `FullOutput` data
 **When** minified output is generated
-**Then** JSON is serialized without whitespace or indentation
+**Then** JSON is serialized without whitespace
 **And** file is written to `{output_dir}/switchboard-oracle-data.min.json`
-**And** content is identical to full output (just formatting differs)
 
-**Given** full output is 500KB with formatting
-**When** minified output is generated
-**Then** minified size is significantly smaller (typically 60-70% of formatted size)
-
-**Prerequisites:** Story 5.1
-
-**Technical Notes:**
-- Package: `internal/storage/writer.go`
-- Use `json.Marshal()` (no indent) for minified
-- Write to separate file, same directory
-- Reference: FR36
-
----
-
-## Story 5.3: Implement Summary Output JSON Generation
-
-As a **developer**,
-I want **a lightweight summary JSON with current snapshot only**,
-So that **quick reads don't require loading full history**.
-
-**Acceptance Criteria:**
-
+**AC3: Summary Output JSON**
 **Given** aggregation results (no history needed)
 **When** `GenerateSummaryOutput(result, config)` is called
-**Then** a `SummaryOutput` struct is created with:
-  - `version`: "1.0.0"
-  - `oracle`: name, website, documentation URL
-  - `metadata`: last_updated, data_source
-  - `summary`: total_value_secured, total_protocols, active_chains, categories
-  - `metrics`: current snapshot metrics only
-  - `breakdown`: by_chain, by_category
-  - `top_protocols`: top 10 protocols by TVL (subset)
+**Then** `SummaryOutput` struct contains current snapshot only:
+  - `version`, `oracle`, `metadata`, `summary`, `metrics`, `breakdown`
+  - `top_protocols`: top 10 by TVL
   - NO `historical` array
+**And** file is written to `{output_dir}/switchboard-summary.json`
 
-**Given** summary output
-**When** written to file
-**Then** file is `{output_dir}/switchboard-summary.json`
-**And** file size is much smaller than full output
-
-**Prerequisites:** Story 5.1
-
-**Technical Notes:**
-- Package: `internal/storage/writer.go`
-- `SummaryOutput` struct - subset of FullOutput fields
-- Include top 10 protocols only to keep size small
-- Reference: FR37
-
----
-
-## Story 5.4: Implement Atomic File Writer
-
-As a **developer**,
-I want **all output files written atomically**,
-So that **partial writes don't corrupt output files**.
-
-**Acceptance Criteria:**
-
+**AC4: Atomic File Writes**
 **Given** output data to write
-**When** `WriteJSON(path string, data any)` is called
+**When** `WriteJSON(path, data)` is called
 **Then** data is written to temp file first (`{path}.tmp`)
-**And** temp file is renamed to target path
-**And** operation is atomic (readers never see partial content)
+**And** temp file is renamed to target path atomically
+**And** directory is created if missing (`os.MkdirAll`)
 
-**Given** output directory doesn't exist
-**When** `WriteJSON` is called
-**Then** directory is created with `os.MkdirAll()`
-**And** file is written successfully
-
-**Given** a write failure mid-operation
+**Given** write failure mid-operation
 **When** error occurs
-**Then** temp file is cleaned up
-**And** original file (if exists) is preserved
-**And** error is returned with context
+**Then** temp file is cleaned up, original preserved, error returned
 
-**Given** multiple output files to write
+**Given** all outputs ready
 **When** `WriteAllOutputs(full, minified, summary)` is called
 **Then** all three files are written atomically
-**And** if any write fails, error indicates which file failed
 
-**Prerequisites:** Story 1.1
+**Prerequisites:** Story 3.7, Story 4.7
 
 **Technical Notes:**
 - Package: `internal/storage/writer.go`
-- `Writer` struct with `NewWriter(outputDir)` constructor
-- Use `os.CreateTemp()` in same directory for atomic rename guarantee
-- Defer cleanup of temp files on error
-- Reference: FR38, FR39, implementation-patterns.md
+- Structs: `FullOutput`, `SummaryOutput` in `internal/models/output.go`
+- Use `json.MarshalIndent` for full, `json.Marshal` for minified
+- Use `os.CreateTemp()` in same dir for atomic rename guarantee
+- Reference: FR35, FR36, FR37, FR38, FR39, FR40, FR41
+
+**Smoke Test Guide:**
+1. Run extraction with valid data
+2. Verify all 3 files exist in output dir
+3. Verify full JSON is formatted, minified is compact
+4. Verify summary has no historical array
+5. Kill process mid-write, verify no corrupt files remain
 
 ---
 
-## Story 5.5: Implement CLI Flag Parsing
+## Story 5.2: Implement CLI and Single-Run Mode
 
 As an **operator**,
-I want **command-line flags for controlling execution**,
-So that **I can run the tool in different modes**.
+I want **command-line flags and single extraction mode with proper logging**,
+So that **I can run manual or cron-scheduled extractions**.
 
 **Acceptance Criteria:**
 
-**Given** CLI invocation with `--once`
+**AC1: CLI Flag Parsing**
+**Given** CLI invocation
 **When** application starts
-**Then** single extraction is performed and application exits
+**Then** the following flags are supported:
+  - `--once`: single extraction, then exit
+  - `--config /path/to/config.yaml`: custom config path
+  - `--dry-run`: fetch and process but don't write files
+  - `--version`: print version and exit
 
-**Given** CLI invocation with `--config /path/to/config.yaml`
+**Given** `--version` flag
 **When** application starts
-**Then** configuration is loaded from specified path
+**Then** prints "defillama-extract v1.0.0" and exits with code 0
 
-**Given** CLI invocation with `--dry-run`
-**When** extraction completes
-**Then** data is fetched and processed but NOT written to files
-**And** log indicates "dry-run mode, skipping file writes"
-
-**Given** CLI invocation with `--version`
+**Given** no flags
 **When** application starts
-**Then** version string is printed (e.g., "defillama-extract v1.0.0")
-**And** application exits with code 0
+**Then** daemon mode is activated (Story 5.3)
 
-**Given** CLI invocation with no flags
-**When** application starts
-**Then** daemon mode is activated with default config path
-
-**Prerequisites:** Story 1.2
-
-**Technical Notes:**
-- Package: `cmd/extractor/main.go`
-- Use `flag` package from standard library
-- Flags: `--once`, `--config`, `--dry-run`, `--version`
-- Store in `CLIOptions` struct
-- Reference: FR42, FR44, FR45, FR46
-
----
-
-## Story 5.6: Implement Single Extraction Mode
-
-As an **operator**,
-I want **to run a single extraction and exit**,
-So that **I can use cron or manual runs for scheduling**.
-
-**Acceptance Criteria:**
-
+**AC2: Single Extraction Mode**
 **Given** `--once` flag is set
 **When** application runs
 **Then** one complete extraction cycle executes:
@@ -208,173 +119,103 @@ So that **I can use cron or manual runs for scheduling**.
   3. Fetch API data
   4. Check if new data (skip if not)
   5. Aggregate data
-  6. Write outputs (unless dry-run)
+  6. Write outputs (unless --dry-run)
   7. Save state
   8. Exit
 
 **Given** successful extraction in `--once` mode
-**When** extraction completes
 **Then** exit code is 0
-**And** log: "extraction completed" with protocol_count, tvs, duration_ms
 
 **Given** extraction failure in `--once` mode
-**When** error occurs
-**Then** exit code is 1
-**And** error is logged with context
+**Then** exit code is 1 with error logged
 
 **Given** `--once` with no new data available
-**When** skip logic triggers
-**Then** exit code is 0 (not an error)
-**And** log: "no new data, skipping extraction"
+**Then** exit code is 0, log: "no new data, skipping extraction"
 
-**Prerequisites:** Story 5.5, Story 3.7, Story 4.8, Story 5.4
+**Given** `--dry-run` flag
+**When** extraction completes
+**Then** data is fetched and processed but NOT written
+**And** log: "dry-run mode, skipping file writes"
+
+**AC3: Extraction Cycle Logging**
+**Given** extraction cycle starts
+**Then** info log: "extraction started" with timestamp
+
+**Given** extraction completes successfully
+**Then** info log: "extraction completed" with:
+  - `duration_ms`, `protocol_count`, `tvs`, `chains`
+
+**Given** extraction is skipped
+**Then** info log: "extraction skipped, no new data" with `last_updated`
+
+**Given** extraction fails
+**Then** error log: "extraction failed" with `error`, `duration_ms`
+
+**Prerequisites:** Story 1.2, Story 1.4, Story 3.7, Story 4.7, Story 5.1
 
 **Technical Notes:**
 - Package: `cmd/extractor/main.go`
+- Use `flag` package from standard library
+- Store flags in `CLIOptions` struct
 - Create `runOnce(ctx, cfg)` function
-- Wire together: API client → Aggregator → StateManager → Writer
-- Reference: FR42, FR48
+- Use `slog` with structured attributes for all logs
+- Track timing with `time.Now()` at start
+- Reference: FR42, FR44, FR45, FR46, FR48, FR56
+
+**Smoke Test Guide:**
+1. `./extractor --version` → prints version, exits 0
+2. `./extractor --once --config ./config.yaml` → runs once, exits
+3. `./extractor --once --dry-run` → fetches but no files written
+4. Check logs contain duration_ms, protocol_count, tvs
+5. Run with stale data → logs "skipping", exits 0
 
 ---
 
-## Story 5.7: Implement Daemon Mode with Scheduler
+## Story 5.3: Implement Daemon Mode and Complete Main Entry Point
 
 As an **operator**,
-I want **the service to run continuously with scheduled extractions**,
-So that **data is automatically kept up to date**.
+I want **continuous daemon operation with graceful shutdown**,
+So that **data stays automatically updated in production**.
 
 **Acceptance Criteria:**
 
+**AC1: Daemon Mode with Scheduler**
 **Given** daemon mode (no `--once` flag) with `scheduler.interval: 2h`
 **When** application starts
 **Then** extraction runs on schedule every 2 hours
 **And** log: "daemon started, interval: 2h"
 
 **Given** `scheduler.start_immediately: true`
-**When** daemon starts
-**Then** first extraction runs immediately
-**And** subsequent extractions follow interval
+**Then** first extraction runs immediately, subsequent follow interval
 
 **Given** `scheduler.start_immediately: false`
-**When** daemon starts
 **Then** first extraction waits for interval
-**And** log: "waiting for first scheduled extraction"
 
-**Given** daemon is running
-**When** extraction cycle completes
-**Then** next extraction is scheduled
-**And** log: "next extraction at {timestamp}"
+**Given** extraction cycle completes in daemon mode
+**Then** log: "next extraction at {timestamp}"
 
 **Given** extraction fails in daemon mode
-**When** error occurs
-**Then** error is logged
-**And** daemon continues running (doesn't exit)
-**And** next extraction is scheduled normally
+**Then** error is logged, daemon continues running, next extraction scheduled normally
 
-**Prerequisites:** Story 5.6
-
-**Technical Notes:**
-- Package: `cmd/extractor/main.go`
-- Use `time.Ticker` for scheduling
-- Create `runDaemon(ctx, cfg)` function
-- Handle errors gracefully - log and continue
-- Reference: FR43
-
----
-
-## Story 5.8: Implement Graceful Shutdown
-
-As an **operator**,
-I want **graceful shutdown on SIGINT/SIGTERM**,
-So that **in-progress operations complete cleanly**.
-
-**Acceptance Criteria:**
-
-**Given** daemon is running an extraction cycle
-**When** SIGINT (Ctrl+C) is received
-**Then** current extraction is allowed to complete
+**AC2: Graceful Shutdown**
+**Given** daemon running an extraction
+**When** SIGINT/SIGTERM received
+**Then** current extraction completes
 **And** log: "shutdown signal received, finishing current extraction"
-**And** after completion, daemon exits cleanly with code 0
+**And** exits cleanly with code 0
 
-**Given** daemon is waiting for next scheduled extraction
-**When** SIGTERM is received
-**Then** wait is cancelled immediately
-**And** log: "shutdown signal received, exiting"
-**And** daemon exits cleanly with code 0
+**Given** daemon waiting for next extraction
+**When** SIGINT/SIGTERM received
+**Then** wait is cancelled immediately, exits with code 0
 
 **Given** `--once` mode with extraction in progress
-**When** SIGINT is received
-**Then** extraction is cancelled via context
-**And** partial results are NOT written
-**And** exit code is 1
+**When** SIGINT received
+**Then** extraction cancelled via context, partial results NOT written, exit code 1
 
-**Given** shutdown signal
-**When** processing
-**Then** signal is handled only once (no duplicate handling)
-
-**Prerequisites:** Story 5.7
-
-**Technical Notes:**
-- Package: `cmd/extractor/main.go`
-- Use `signal.NotifyContext()` for clean context cancellation
-- Listen for `os.Interrupt` and `syscall.SIGTERM`
-- Pass cancellable context to all operations
-- Reference: FR47
-
----
-
-## Story 5.9: Implement Extraction Cycle Logging
-
-As an **operator**,
-I want **extraction cycles logged with key metrics**,
-So that **I can monitor system health**.
-
-**Acceptance Criteria:**
-
-**Given** extraction cycle starts
-**When** processing begins
-**Then** info log: "extraction started" with timestamp
-
-**Given** extraction completes successfully
-**When** results are available
-**Then** info log: "extraction completed" with:
-  - `duration_ms`: total extraction time
-  - `protocol_count`: number of protocols found
-  - `tvs`: total value secured
-  - `chains`: number of active chains
-
-**Given** extraction is skipped (no new data)
-**When** skip occurs
-**Then** info log: "extraction skipped, no new data" with:
-  - `last_updated`: timestamp of existing data
-
-**Given** extraction fails
-**When** error occurs
-**Then** error log: "extraction failed" with:
-  - `error`: error message
-  - `duration_ms`: time until failure
-
-**Prerequisites:** Story 1.4, Story 5.6
-
-**Technical Notes:**
-- Use `slog` with structured attributes
-- Track start time with `time.Now()`, calculate duration at end
-- Include all relevant metrics in log attributes
-- Reference: FR48, FR56
-
----
-
-## Story 5.10: Build Complete Main Entry Point
-
-As a **developer**,
-I want **a complete main.go that wires everything together**,
-So that **the application is fully functional**.
-
-**Acceptance Criteria:**
-
+**AC3: Complete Main Entry Point**
 **Given** application starts
 **When** `main()` executes
-**Then** the following sequence occurs:
+**Then** sequence is:
   1. Parse CLI flags
   2. Handle `--version` (print and exit)
   3. Load configuration from file
@@ -387,20 +228,23 @@ So that **the application is fully functional**.
   10. Exit with appropriate code
 
 **Given** any initialization failure
-**When** error occurs during startup
-**Then** error is logged
-**And** application exits with code 1
+**Then** error logged, exit code 1
 
-**Given** successful run
-**When** application completes/terminates
-**Then** exit code reflects success (0) or failure (1)
-
-**Prerequisites:** All previous stories in Epic 5
+**Prerequisites:** Story 5.1, Story 5.2
 
 **Technical Notes:**
 - Package: `cmd/extractor/main.go`
-- Use dependency injection pattern per architecture
+- Use `time.Ticker` for scheduling
+- Use `signal.NotifyContext()` for clean context cancellation
+- Listen for `os.Interrupt` and `syscall.SIGTERM`
 - Wire: config → logger → client → aggregator → stateManager → writer → runner
-- Reference: 17-complete-maingo-implementation.md
+- Reference: FR43, FR47
+
+**Smoke Test Guide:**
+1. Run without `--once` → daemon starts, logs interval
+2. Wait for scheduled extraction → runs and logs next time
+3. Send SIGINT during extraction → completes, then exits 0
+4. Send SIGINT while waiting → exits immediately with 0
+5. Cause init failure (bad config) → exits 1 with error
 
 ---
