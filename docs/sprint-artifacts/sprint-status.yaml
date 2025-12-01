@@ -76,8 +76,8 @@ development_status:
   4-8-build-state-manager-component: done
   epic-4-retrospective: done
 
-  # Epic 5: Output & CLI (10 stories)
-  epic-5: backlog
+  # Epic 5: Output & CLI (3 stories)
+  epic-5: contexted
   5-1-implement-full-output-json-generation: backlog
   5-2-implement-minified-output-json-generation: backlog
   5-3-implement-summary-output-json-generation: backlog
