@@ -7,6 +7,11 @@
     <generatedAt>2025-12-01</generatedAt>
     <generator>BMAD Story Context Workflow</generator>
     <sourceStoryPath>docs/sprint-artifacts/5-1-implement-output-file-generation.md</sourceStoryPath>
+    <storyRevisionDate>2025-12-01</storyRevisionDate>
+    <referenceCounts>
+      <docs>7</docs>
+      <code>8</code>
+    </referenceCounts>
   </metadata>
 
   <story>
