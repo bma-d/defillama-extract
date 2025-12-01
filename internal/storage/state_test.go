@@ -9,6 +9,9 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/switchboard-xyz/defillama-extract/internal/aggregator"
 )
 
 func newTestLogger(buf *bytes.Buffer) *slog.Logger {
@@ -384,5 +387,275 @@ func TestStateJSONRoundTrip(t *testing.T) {
 
 	if !reflect.DeepEqual(original, restored) {
 		t.Fatalf("round-trip mismatch\ngot:  %+v\nwant: %+v", restored, original)
+	}
+}
+
+func TestUpdateState_PopulatesFields(t *testing.T) {
+	sm := NewStateManager(t.TempDir(), newTestLogger(&bytes.Buffer{}))
+	ts := int64(1700003600)
+	snapshots := []aggregator.Snapshot{
+		{Timestamp: 1700000000, TVS: 900000.0},
+		{Timestamp: 1700007200, TVS: 1100000.0},
+	}
+
+	state := sm.UpdateState("Switchboard", ts, 21, 1_000_000.5, snapshots)
+
+	if state.OracleName != "Switchboard" {
+		t.Fatalf("OracleName = %s, want Switchboard", state.OracleName)
+	}
+	if state.LastUpdated != ts {
+		t.Fatalf("LastUpdated = %d, want %d", state.LastUpdated, ts)
+	}
+	if state.LastUpdatedISO != time.Unix(ts, 0).UTC().Format(time.RFC3339) {
+		t.Fatalf("LastUpdatedISO = %s, want RFC3339", state.LastUpdatedISO)
+	}
+	if state.LastProtocolCount != 21 || state.LastTVS != 1_000_000.5 {
+		t.Fatalf("unexpected counts: %+v", state)
+	}
+	if state.SnapshotCount != 2 {
+		t.Fatalf("SnapshotCount = %d, want 2", state.SnapshotCount)
+	}
+	if state.OldestSnapshot != 1700000000 || state.NewestSnapshot != 1700007200 {
+		t.Fatalf("snapshot bounds = (%d,%d), want (1700000000,1700007200)", state.OldestSnapshot, state.NewestSnapshot)
+	}
+}
+
+func TestUpdateState_EmptySnapshots(t *testing.T) {
+	sm := NewStateManager(t.TempDir(), newTestLogger(&bytes.Buffer{}))
+
+	state := sm.UpdateState("Switchboard", 1700003600, 5, 10.0, nil)
+
+	if state.SnapshotCount != 0 {
+		t.Fatalf("SnapshotCount = %d, want 0", state.SnapshotCount)
+	}
+	if state.OldestSnapshot != 0 || state.NewestSnapshot != 0 {
+		t.Fatalf("snapshot bounds = (%d,%d), want (0,0)", state.OldestSnapshot, state.NewestSnapshot)
+	}
+}
+
+func TestStateManager_LoadHistory(t *testing.T) {
+	tmpDir := t.TempDir()
+	logger := newTestLogger(&bytes.Buffer{})
+	sm := NewStateManager(tmpDir, logger)
+
+	fixture := filepath.Join("testdata", "output_with_history.json")
+	data, err := os.ReadFile(fixture)
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	if err := os.WriteFile(sm.outputFile, data, 0o644); err != nil {
+		t.Fatalf("write output file: %v", err)
+	}
+
+	history, err := sm.LoadHistory()
+	if err != nil {
+		t.Fatalf("LoadHistory returned error: %v", err)
+	}
+	if len(history) != 3 {
+		t.Fatalf("history length = %d, want 3", len(history))
+	}
+	if history[0].Timestamp != 1700000000 || history[2].Timestamp != 1700007200 {
+		t.Fatalf("history bounds = (%d,%d), want (1700000000,1700007200)", history[0].Timestamp, history[2].Timestamp)
+	}
+}
+
+func TestStateManager_AppendSnapshot(t *testing.T) {
+	sm := NewStateManager(t.TempDir(), newTestLogger(&bytes.Buffer{}))
+
+	history := []aggregator.Snapshot{
+		{Timestamp: 1700000000, TVS: 900000.0},
+		{Timestamp: 1700003600, TVS: 1_000_000.0},
+	}
+
+	replaced := sm.AppendSnapshot(history, aggregator.Snapshot{Timestamp: 1700003600, TVS: 1_100_000.0})
+	if len(replaced) != 2 {
+		t.Fatalf("replaced length = %d, want 2", len(replaced))
+	}
+	if replaced[1].TVS != 1_100_000.0 {
+		t.Fatalf("duplicate replacement TVS = %f, want 1100000.0", replaced[1].TVS)
+	}
+
+	updated := sm.AppendSnapshot(replaced, aggregator.Snapshot{Timestamp: 1700007200, TVS: 1_200_000.0})
+	if len(updated) != 3 {
+		t.Fatalf("updated length = %d, want 3", len(updated))
+	}
+	if updated[2].Timestamp != 1700007200 {
+		t.Fatalf("new snapshot timestamp = %d, want 1700007200", updated[2].Timestamp)
+	}
+}
+
+func TestStateManager_OutputFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	sm := NewStateManager(tmpDir, newTestLogger(&bytes.Buffer{}))
+
+	want := filepath.Join(tmpDir, "switchboard-oracle-data.json")
+	if sm.OutputFile() != want {
+		t.Fatalf("OutputFile() = %s, want %s", sm.OutputFile(), want)
+	}
+}
+
+func TestStateManager_FullCycleIntegration(t *testing.T) {
+	tmpDir := t.TempDir()
+	logger := newTestLogger(&bytes.Buffer{})
+	sm := NewStateManager(tmpDir, logger)
+
+	state, err := sm.LoadState()
+	if err != nil {
+		t.Fatalf("LoadState returned error: %v", err)
+	}
+	if !sm.ShouldProcess(1700003600, state) {
+		t.Fatal("expected processing required on first run")
+	}
+
+	snapshots := []aggregator.Snapshot{
+		{Timestamp: 1700000000, TVS: 900000.0},
+		{Timestamp: 1700003600, TVS: 1_000_000.0},
+	}
+	updated := sm.UpdateState("Switchboard", 1700003600, 21, 1_000_000.0, snapshots)
+
+	if err := sm.SaveState(updated); err != nil {
+		t.Fatalf("SaveState returned error: %v", err)
+	}
+
+	reloaded, err := sm.LoadState()
+	if err != nil {
+		t.Fatalf("Reloading state failed: %v", err)
+	}
+	if reloaded.LastUpdated != 1700003600 || reloaded.SnapshotCount != 2 {
+		t.Fatalf("reloaded state mismatch: %+v", reloaded)
+	}
+	if reloaded.OldestSnapshot != 1700000000 || reloaded.NewestSnapshot != 1700003600 {
+		t.Fatalf("reloaded snapshot bounds = (%d,%d)", reloaded.OldestSnapshot, reloaded.NewestSnapshot)
+	}
+	if sm.ShouldProcess(1700003600, reloaded) {
+		t.Fatal("expected skip when timestamps equal")
+	}
+
+	history := sm.AppendSnapshot(nil, snapshots[0])
+	history = sm.AppendSnapshot(history, snapshots[1])
+	payload := map[string]any{"historical": history}
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatalf("marshal history: %v", err)
+	}
+	if err := WriteAtomic(sm.outputFile, jsonData, 0o644); err != nil {
+		t.Fatalf("write history: %v", err)
+	}
+
+	loadedHistory, err := sm.LoadHistory()
+	if err != nil {
+		t.Fatalf("LoadHistory returned error: %v", err)
+	}
+	if len(loadedHistory) != 2 {
+		t.Fatalf("loaded history length = %d, want 2", len(loadedHistory))
+	}
+	if loadedHistory[0].Timestamp != 1700000000 || loadedHistory[1].Timestamp != 1700003600 {
+		t.Fatalf("loaded history order incorrect: %+v", loadedHistory)
+	}
+}
+
+func TestStateManager_MultiCycleConsistency(t *testing.T) {
+	tmpDir := t.TempDir()
+	logger := newTestLogger(&bytes.Buffer{})
+	sm := NewStateManager(tmpDir, logger)
+
+	// Cycle 1
+	snapshots := []aggregator.Snapshot{
+		{Timestamp: 1700000000, TVS: 900000.0},
+		{Timestamp: 1700003600, TVS: 1_000_000.0},
+	}
+
+	state, err := sm.LoadState()
+	if err != nil {
+		t.Fatalf("LoadState returned error: %v", err)
+	}
+	if !sm.ShouldProcess(snapshots[1].Timestamp, state) {
+		t.Fatal("expected processing required on first cycle")
+	}
+
+	state = sm.UpdateState("Switchboard", snapshots[1].Timestamp, 21, 1_000_000.0, snapshots)
+	if err := sm.SaveState(state); err != nil {
+		t.Fatalf("SaveState (cycle 1) returned error: %v", err)
+	}
+
+	history := sm.AppendSnapshot(nil, snapshots[0])
+	history = sm.AppendSnapshot(history, snapshots[1])
+	payload := map[string]any{"historical": history}
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatalf("marshal history (cycle 1): %v", err)
+	}
+	if err := WriteAtomic(sm.outputFile, jsonData, 0o644); err != nil {
+		t.Fatalf("write history (cycle 1): %v", err)
+	}
+
+	reloadedState, err := sm.LoadState()
+	if err != nil {
+		t.Fatalf("Reloading state (cycle 1) failed: %v", err)
+	}
+	if reloadedState.LastUpdated != snapshots[1].Timestamp {
+		t.Fatalf("cycle 1 LastUpdated = %d, want %d", reloadedState.LastUpdated, snapshots[1].Timestamp)
+	}
+	if reloadedState.SnapshotCount != len(history) {
+		t.Fatalf("cycle 1 SnapshotCount = %d, want %d", reloadedState.SnapshotCount, len(history))
+	}
+
+	loadedHistory, err := sm.LoadHistory()
+	if err != nil {
+		t.Fatalf("LoadHistory (cycle 1) returned error: %v", err)
+	}
+	if len(loadedHistory) != 2 {
+		t.Fatalf("cycle 1 history length = %d, want 2", len(loadedHistory))
+	}
+
+	// Cycle 2
+	secondTS := int64(1700007200)
+	newSnapshot := aggregator.Snapshot{Timestamp: secondTS, TVS: 1_200_000.0}
+	if !sm.ShouldProcess(secondTS, reloadedState) {
+		t.Fatal("expected processing required on second cycle")
+	}
+
+	history = sm.AppendSnapshot(loadedHistory, newSnapshot)
+	state2 := sm.UpdateState("Switchboard", secondTS, 25, 1_200_000.0, history)
+	if err := sm.SaveState(state2); err != nil {
+		t.Fatalf("SaveState (cycle 2) returned error: %v", err)
+	}
+
+	payload2 := map[string]any{"historical": history}
+	jsonData2, err := json.Marshal(payload2)
+	if err != nil {
+		t.Fatalf("marshal history (cycle 2): %v", err)
+	}
+	if err := WriteAtomic(sm.outputFile, jsonData2, 0o644); err != nil {
+		t.Fatalf("write history (cycle 2): %v", err)
+	}
+
+	finalState, err := sm.LoadState()
+	if err != nil {
+		t.Fatalf("Reloading state (cycle 2) failed: %v", err)
+	}
+	if finalState.LastUpdated != secondTS {
+		t.Fatalf("cycle 2 LastUpdated = %d, want %d", finalState.LastUpdated, secondTS)
+	}
+	if finalState.SnapshotCount != len(history) {
+		t.Fatalf("cycle 2 SnapshotCount = %d, want %d", finalState.SnapshotCount, len(history))
+	}
+	if finalState.OldestSnapshot != history[0].Timestamp || finalState.NewestSnapshot != history[len(history)-1].Timestamp {
+		t.Fatalf("cycle 2 snapshot bounds = (%d,%d), want (%d,%d)", finalState.OldestSnapshot, finalState.NewestSnapshot, history[0].Timestamp, history[len(history)-1].Timestamp)
+	}
+
+	loadedHistory2, err := sm.LoadHistory()
+	if err != nil {
+		t.Fatalf("LoadHistory (cycle 2) returned error: %v", err)
+	}
+	if len(loadedHistory2) != 3 {
+		t.Fatalf("cycle 2 history length = %d, want 3", len(loadedHistory2))
+	}
+	if loadedHistory2[0].Timestamp != snapshots[0].Timestamp || loadedHistory2[2].Timestamp != newSnapshot.Timestamp {
+		t.Fatalf("cycle 2 history order incorrect: %+v", loadedHistory2)
+	}
+
+	if sm.ShouldProcess(secondTS, finalState) {
+		t.Fatal("expected skip when timestamps equal after second cycle")
 	}
 }

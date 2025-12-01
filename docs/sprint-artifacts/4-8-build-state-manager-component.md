@@ -1,6 +1,6 @@
 # Story 4.8: Build State Manager Component
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -34,37 +34,37 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-4.md#AC-4.8] / [Source: do
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `UpdateState` method to StateManager (AC: 3)
-  - [ ] 1.1: Implement `UpdateState(oracleName string, ts int64, count int, tvs float64, snapshots []Snapshot) *State` in `internal/storage/state.go`
-  - [ ] 1.2: Populate all State fields including `SnapshotCount`, `OldestSnapshot`, `NewestSnapshot` from snapshots slice
-  - [ ] 1.3: Format `LastUpdatedISO` as ISO 8601 using `time.Unix(ts, 0).UTC().Format(time.RFC3339)`
-  - [ ] 1.4: Handle edge case: empty snapshots slice (set snapshot metadata to 0)
+- [x] Task 1: Add `UpdateState` method to StateManager (AC: 3)
+  - [x] 1.1: Implement `UpdateState(oracleName string, ts int64, count int, tvs float64, snapshots []Snapshot) *State` in `internal/storage/state.go`
+  - [x] 1.2: Populate all State fields including `SnapshotCount`, `OldestSnapshot`, `NewestSnapshot` from snapshots slice
+  - [x] 1.3: Format `LastUpdatedISO` as ISO 8601 using `time.Unix(ts, 0).UTC().Format(time.RFC3339)`
+  - [x] 1.4: Handle edge case: empty snapshots slice (set snapshot metadata to 0)
 
-- [ ] Task 2: Add history accessor methods to StateManager (AC: 4)
-  - [ ] 2.1: Add `LoadHistory() ([]aggregator.Snapshot, error)` method that delegates to `LoadFromOutput(sm.outputFile, sm.logger)`
-  - [ ] 2.2: Add `AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot) []aggregator.Snapshot` method that delegates to package-level `AppendSnapshot`
-  - [ ] 2.3: Ensure StateManager provides unified interface for both state and history operations
+- [x] Task 2: Add history accessor methods to StateManager (AC: 4)
+  - [x] 2.1: Add `LoadHistory() ([]aggregator.Snapshot, error)` method that delegates to `LoadFromOutput(sm.outputFile, sm.logger)`
+  - [x] 2.2: Add `AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot) []aggregator.Snapshot` method that delegates to package-level `AppendSnapshot`
+  - [x] 2.3: Ensure StateManager provides unified interface for both state and history operations
 
-- [ ] Task 3: Add `OutputFile()` accessor method (AC: 1, 4)
-  - [ ] 3.1: Add `OutputFile() string` method to return the output file path for use by downstream consumers (Epic 5 writer)
+- [x] Task 3: Add `OutputFile()` accessor method (AC: 1, 4)
+  - [x] 3.1: Add `OutputFile() string` method to return the output file path for use by downstream consumers (Epic 5 writer)
 
-- [ ] Task 4: Write unit tests for new methods (AC: 1-5)
-  - [ ] 4.1: Test `UpdateState` with valid inputs - verify all fields populated correctly
-  - [ ] 4.2: Test `UpdateState` with empty snapshots slice - verify snapshot metadata is 0
-  - [ ] 4.3: Test `UpdateState` ISO 8601 timestamp formatting
-  - [ ] 4.4: Test `LoadHistory` delegation (uses existing LoadFromOutput tests)
-  - [ ] 4.5: Test `AppendSnapshot` delegation (uses existing tests)
-  - [ ] 4.6: Test `OutputFile` returns correct path
+- [x] Task 4: Write unit tests for new methods (AC: 1-5)
+  - [x] 4.1: Test `UpdateState` with valid inputs - verify all fields populated correctly
+  - [x] 4.2: Test `UpdateState` with empty snapshots slice - verify snapshot metadata is 0
+  - [x] 4.3: Test `UpdateState` ISO 8601 timestamp formatting
+  - [x] 4.4: Test `LoadHistory` delegation (uses existing LoadFromOutput tests)
+  - [x] 4.5: Test `AppendSnapshot` delegation (uses existing tests)
+  - [x] 4.6: Test `OutputFile` returns correct path
 
-- [ ] Task 5: Write integration test for full extraction cycle (AC: 5)
-  - [ ] 5.1: Test complete cycle: LoadState -> ShouldProcess -> (simulate extraction) -> UpdateState -> SaveState
-  - [ ] 5.2: Verify state file contains correct values after cycle
-  - [ ] 5.3: Verify state and history consistency after multiple cycles
+- [x] Task 5: Write integration test for full extraction cycle (AC: 5)
+  - [x] 5.1: Test complete cycle: LoadState -> ShouldProcess -> (simulate extraction) -> UpdateState -> SaveState
+  - [x] 5.2: Verify state file contains correct values after cycle
+  - [x] 5.3: Verify state and history consistency after multiple cycles
 
-- [ ] Task 6: Verification (AC: all)
-  - [ ] 6.1: Run `go build ./...` and verify success
-  - [ ] 6.2: Run `go test ./internal/storage/...` and verify all pass
-  - [ ] 6.3: Run `make lint` and verify no errors
+- [x] Task 6: Verification (AC: all)
+  - [x] 6.1: Run `go build ./...` and verify success
+  - [x] 6.2: Run `go test ./internal/storage/...` and verify all pass
+  - [x] 6.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -232,17 +232,165 @@ The following already exists in `internal/storage/history.go`:
 - docs/sprint-artifacts/4-8-build-state-manager-component.context.xml
 
 ### Agent Model Used
-
-{{agent_model_name_version}}
+Amelia (GPT-5)
 
 ### Debug Log References
 
+- Implemented AC3/AC4 methods in `internal/storage/state.go` (UpdateState, LoadHistory, AppendSnapshot, OutputFile)
+- Added unit and integration coverage for UpdateState, history delegation, output path accessor, and full cycle flow in `internal/storage/state_test.go`
+- Executed validations: `go build ./...`, `go test ./internal/storage/...`, `make lint`
+
 ### Completion Notes List
 
+- Added StateManager UpdateState with RFC3339 ISO formatting and snapshot metadata handling (AC3)
+- Added history/output accessors to unify API surface (AC1, AC4)
+- Expanded storage tests with delegation checks and full cycle integration; all storage tests passing (AC5)
+
 ### File List
+
+- internal/storage/state.go
+- internal/storage/state_test.go
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-12-01 | SM Agent (Bob) | Initial story draft created from epic-4 and tech-spec-epic-4.md |
+| 2025-12-01 | Amelia | Implemented StateManager update/history accessors and tests; build/test/lint passing |
+| 2025-12-01 | Amelia | Senior Developer Review (AI) outcome: Approved after adding multi-cycle integration test coverage |
+| 2025-12-01 | Amelia | Senior Developer Review (AI) outcome: Approved with no new findings; status moved to done |
+
+## Senior Developer Review (AI)
+Reviewer: BMad
+Date: 2025-12-01
+Outcome: Approve — all ACs satisfied with multi-cycle coverage added
+
+Summary
+- Multi-cycle integration test added; state/history consistency validated across successive runs.
+
+Key Findings
+- None.
+
+Acceptance Criteria Coverage
+| AC | Status | Evidence |
+|----|--------|----------|
+| AC1 | Implemented | internal/storage/state.go:37-49; internal/storage/state_test.go:21-35 |
+| AC2 | Implemented | internal/storage/state.go:51-136; internal/storage/state_test.go:155-255 |
+| AC3 | Implemented | internal/storage/state.go:139-156; internal/storage/state_test.go:393-434 |
+| AC4 | Implemented | internal/storage/state.go:159-167; internal/storage/state_test.go:436-485 |
+| AC5 | Implemented | internal/storage/state.go:82-104; internal/storage/state_test.go:497-555,558-641 |
+
+Task Completion Validation
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| 1.1 UpdateState implemented | [x] | Verified | internal/storage/state.go:139-156 |
+| 1.2 Populate State fields incl snapshot metadata | [x] | Verified | internal/storage/state.go:139-156 |
+| 1.3 ISO 8601 formatting | [x] | Verified | internal/storage/state.go:143-146; internal/storage/state_test.go:393-420 |
+| 1.4 Empty snapshots edge case | [x] | Verified | internal/storage/state.go:151-154; internal/storage/state_test.go:423-434 |
+| 2.1 LoadHistory accessor | [x] | Verified | internal/storage/state.go:159-162; internal/storage/state_test.go:436-459 |
+| 2.2 AppendSnapshot accessor | [x] | Verified | internal/storage/state.go:164-167; internal/storage/state_test.go:462-485 |
+| 2.3 Unified interface for state/history | [x] | Verified | internal/storage/state.go:159-171 |
+| 3.1 OutputFile accessor | [x] | Verified | internal/storage/state.go:169-171; internal/storage/state_test.go:487-495 |
+| 4.1 Test UpdateState valid inputs | [x] | Verified | internal/storage/state_test.go:393-420 |
+| 4.2 Test UpdateState empty snapshots | [x] | Verified | internal/storage/state_test.go:423-434 |
+| 4.3 Test UpdateState ISO formatting | [x] | Verified | internal/storage/state_test.go:393-420 |
+| 4.4 Test LoadHistory delegation | [x] | Verified | internal/storage/state_test.go:436-459 |
+| 4.5 Test AppendSnapshot delegation | [x] | Verified | internal/storage/state_test.go:462-485 |
+| 4.6 Test OutputFile accessor | [x] | Verified | internal/storage/state_test.go:487-495 |
+| 5.1 Integration: LoadState → ShouldProcess → UpdateState → SaveState | [x] | Verified | internal/storage/state_test.go:497-555 |
+| 5.2 Verify state file values after cycle | [x] | Verified | internal/storage/state_test.go:520-529 |
+| 5.3 Verify state/history consistency after multiple cycles | [x] | Verified | internal/storage/state_test.go:558-641 |
+| 6.1 Run `go build ./...` | [x] | Verified | Executed 2025-12-01 |
+| 6.2 Run `go test ./internal/storage/...` | [x] | Verified | Executed 2025-12-01 |
+| 6.3 Run `make lint` | [x] | Verified | Executed 2025-12-01 |
+
+Test Coverage and Gaps
+- go test ./internal/storage/... (pass, 2025-12-01)
+- go build ./... (pass, 2025-12-01)
+- make lint (pass, 2025-12-01)
+- No gaps remaining for ACs or declared tasks.
+
+Architectural Alignment
+- Atomic write pattern preserved (internal/storage/writer.go) per docs/architecture/implementation-patterns.md#atomic-file-writes.
+- Structured logging maintained per docs/architecture/architecture-decision-records-adrs.md#adr-004-structured-logging-with-slog.
+
+Security Notes
+- No new security surface; file I/O confined to configured outputDir.
+
+Best-Practices and References
+- Go 1.24 stdlib stack with slog; minimal deps (gopkg.in/yaml.v3). See docs/architecture/implementation-patterns.md and docs/architecture/architecture-decision-records-adrs.md.
+
+Action Items
+**Code Changes Required:**
+- None (all review findings resolved).
+
+**Advisory Notes:**
+- None.
+
+## Senior Developer Review (AI)
+Reviewer: BMad  
+Date: 2025-12-01  
+Outcome: Approve — all ACs and tasks verified; no new findings.
+
+Summary
+- Verified AC1–AC5 against code/tests; repository build, tests, and lint all pass (`go build ./...`, `go test ./...`, `make lint` on 2025-12-01).
+- Architecture reviewed via `docs/architecture/index.md` and linked shards (`project-structure.md`, `implementation-patterns.md`, tech spec).
+
+Key Findings
+- None.
+
+Acceptance Criteria Coverage (5/5 implemented)
+| AC | Description | Status | Evidence |
+|----|-------------|--------|----------|
+| AC1 | StateManager uses configured paths | Implemented | internal/storage/state.go:37-49; internal/storage/state_test.go:21-38 |
+| AC2 | LoadState/ShouldProcess enable cycle gating | Implemented | internal/storage/state.go:51-136; internal/storage/state_test.go:41-170,497-533 |
+| AC3 | UpdateState populates state metadata incl. ISO timestamp | Implemented | internal/storage/state.go:139-156; internal/storage/state_test.go:393-434 |
+| AC4 | History accessors exposed | Implemented | internal/storage/state.go:159-167; internal/storage/state_test.go:436-485 |
+| AC5 | State persists atomically and aligns with history across cycles | Implemented | internal/storage/state.go:82-104; internal/storage/state_test.go:497-555,557-660 |
+
+Task Completion Validation (20/20 verified, 0 questionable, 0 false completions)
+| Task/Subtask | Marked As | Verified As | Evidence |
+|--------------|-----------|-------------|----------|
+| 1.1 UpdateState implementation | [x] | Verified | internal/storage/state.go:139-156 |
+| 1.2 Snapshot metadata populated | [x] | Verified | internal/storage/state.go:151-154; internal/storage/state_test.go:393-434 |
+| 1.3 ISO 8601 formatting | [x] | Verified | internal/storage/state.go:145-146; internal/storage/state_test.go:393-420 |
+| 1.4 Empty snapshots edge case | [x] | Verified | internal/storage/state.go:151-154; internal/storage/state_test.go:423-434 |
+| 2.1 LoadHistory accessor | [x] | Verified | internal/storage/state.go:159-162; internal/storage/state_test.go:436-459 |
+| 2.2 AppendSnapshot accessor | [x] | Verified | internal/storage/state.go:164-167; internal/storage/state_test.go:462-485 |
+| 2.3 Unified state/history interface | [x] | Verified | internal/storage/state.go:159-171 |
+| 3.1 OutputFile accessor | [x] | Verified | internal/storage/state.go:169-171; internal/storage/state_test.go:487-495 |
+| 4.1 UpdateState valid inputs test | [x] | Verified | internal/storage/state_test.go:393-420 |
+| 4.2 UpdateState empty snapshots test | [x] | Verified | internal/storage/state_test.go:423-434 |
+| 4.3 UpdateState ISO formatting test | [x] | Verified | internal/storage/state_test.go:393-420 |
+| 4.4 LoadHistory delegation test | [x] | Verified | internal/storage/state_test.go:436-459 |
+| 4.5 AppendSnapshot delegation test | [x] | Verified | internal/storage/state_test.go:462-485 |
+| 4.6 OutputFile accessor test | [x] | Verified | internal/storage/state_test.go:487-495 |
+| 5.1 Full cycle integration test | [x] | Verified | internal/storage/state_test.go:497-555 |
+| 5.2 State values persisted after cycle | [x] | Verified | internal/storage/state_test.go:520-529 |
+| 5.3 Multi-cycle consistency test | [x] | Verified | internal/storage/state_test.go:557-660 |
+| 6.1 go build ./... | [x] | Verified | manual run 2025-12-01 |
+| 6.2 go test ./internal/storage/... | [x] | Verified | manual run 2025-12-01 |
+| 6.3 make lint | [x] | Verified | manual run 2025-12-01 |
+
+Test Coverage and Gaps
+- Commands run 2025-12-01: `go build ./...`, `go test ./...`, `make lint` — all passing.
+- No uncovered AC-related scenarios identified.
+
+Architectural Alignment
+- Uses atomic writes via `WriteAtomic` (state.go:82-104) per implementation patterns.
+- Maintains slog logging and path scoping to configured output directory.
+
+Security Notes
+- No new I/O surfaces beyond existing outputDir files; permissions 0644 maintained.
+
+Best-Practices and References
+- Go 1.24 toolchain (go.mod).
+- Patterns from `docs/architecture/implementation-patterns.md` and `testing-strategy.md` adhered to (table-driven tests, atomic writes).
+
+Action Items
+
+**Code Changes Required:**
+- None.
+
+**Advisory Notes:**
+- Note: Architecture references pulled from `docs/architecture/index.md` and linked shards.

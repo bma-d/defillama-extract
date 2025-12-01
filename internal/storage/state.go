@@ -7,6 +7,9 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
+
+	"github.com/switchboard-xyz/defillama-extract/internal/aggregator"
 )
 
 // State represents the last extraction state for incremental update tracking.
@@ -23,8 +26,7 @@ type State struct {
 	NewestSnapshot    int64   `json:"newest_snapshot"`
 }
 
-// StateManager handles loading state from disk. Additional state operations
-// (save, skip logic) are introduced in subsequent stories of the epic.
+// StateManager handles state and history operations for incremental extraction.
 type StateManager struct {
 	outputDir  string
 	stateFile  string
@@ -132,4 +134,39 @@ func (sm *StateManager) ShouldProcess(currentTS int64, state *State) bool {
 		)
 		return false
 	}
+}
+
+// UpdateState creates a new State populated from extraction outputs and history snapshots.
+// Snapshot metadata falls back to zero when no snapshots are supplied.
+func (sm *StateManager) UpdateState(oracleName string, ts int64, count int, tvs float64, snapshots []aggregator.Snapshot) *State {
+	state := &State{
+		OracleName:        oracleName,
+		LastUpdated:       ts,
+		LastUpdatedISO:    time.Unix(ts, 0).UTC().Format(time.RFC3339),
+		LastProtocolCount: count,
+		LastTVS:           tvs,
+		SnapshotCount:     len(snapshots),
+	}
+
+	if len(snapshots) > 0 {
+		state.OldestSnapshot = snapshots[0].Timestamp
+		state.NewestSnapshot = snapshots[len(snapshots)-1].Timestamp
+	}
+
+	return state
+}
+
+// LoadHistory returns historical snapshots via the configured output file.
+func (sm *StateManager) LoadHistory() ([]aggregator.Snapshot, error) {
+	return LoadFromOutput(sm.outputFile, sm.logger)
+}
+
+// AppendSnapshot delegates snapshot deduplication and ordering to the package-level helper.
+func (sm *StateManager) AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot) []aggregator.Snapshot {
+	return AppendSnapshot(history, snapshot, sm.logger)
+}
+
+// OutputFile exposes the configured output path for downstream consumers.
+func (sm *StateManager) OutputFile() string {
+	return sm.outputFile
 }
