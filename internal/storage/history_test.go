@@ -322,3 +322,63 @@ func TestAppendSnapshot_MultipleAppendsMaintainSort(t *testing.T) {
 		}
 	}
 }
+
+func TestAppendSnapshot_RetainsAllHistory(t *testing.T) {
+	logger := newTestLogger(&bytes.Buffer{})
+
+	const initialCount = 120
+	base := int64(1700000000)
+	history := make([]aggregator.Snapshot, 0, initialCount)
+
+	for i := 0; i < initialCount; i++ {
+		history = append(history, aggregator.Snapshot{
+			Timestamp: base + int64(i*3600),
+			TVS:       float64(i),
+		})
+	}
+
+	newSnapshot := aggregator.Snapshot{Timestamp: base + int64(initialCount*3600), TVS: 9999.0}
+	updated := AppendSnapshot(history, newSnapshot, logger)
+
+	if len(updated) != initialCount+1 {
+		t.Fatalf("expected %d snapshots after append, got %d", initialCount+1, len(updated))
+	}
+
+	if updated[len(updated)-1].Timestamp != newSnapshot.Timestamp {
+		t.Fatalf("expected newest snapshot at end with ts %d, got %d", newSnapshot.Timestamp, updated[len(updated)-1].Timestamp)
+	}
+
+	if updated[len(updated)-2].Timestamp != base+int64((initialCount-1)*3600) {
+		t.Fatalf("last original snapshot should be retained, got ts %d", updated[len(updated)-2].Timestamp)
+	}
+}
+
+func TestAppendSnapshot_LargeHistoryNoPruning(t *testing.T) {
+	logger := newTestLogger(&bytes.Buffer{})
+
+	const initialCount = 1000
+	base := int64(1700000000)
+	history := make([]aggregator.Snapshot, 0, initialCount)
+
+	for i := 0; i < initialCount; i++ {
+		history = append(history, aggregator.Snapshot{
+			Timestamp: base + int64(i*86400), // daily snapshots spanning 90+ days
+			TVS:       float64(i),
+		})
+	}
+
+	newSnapshot := aggregator.Snapshot{Timestamp: base + int64(initialCount*86400), TVS: 12345.0}
+	updated := AppendSnapshot(history, newSnapshot, logger)
+
+	if len(updated) != initialCount+1 {
+		t.Fatalf("expected %d snapshots after append, got %d", initialCount+1, len(updated))
+	}
+
+	if updated[0].Timestamp != base {
+		t.Fatalf("oldest snapshot should remain unchanged, got %d", updated[0].Timestamp)
+	}
+
+	if updated[len(updated)-1].Timestamp != newSnapshot.Timestamp {
+		t.Fatalf("expected new snapshot to be newest with ts %d, got %d", newSnapshot.Timestamp, updated[len(updated)-1].Timestamp)
+	}
+}

@@ -1,3 +1,7 @@
+// Package storage retains all historical snapshots without automatic pruning for the
+// MVP. History grows append-only to preserve complete time-series data, and any
+// future pruning or retention windows will be introduced explicitly in a later
+// version.
 package storage
 
 import (
@@ -88,8 +92,9 @@ func LoadFromOutput(outputPath string, logger *slog.Logger) ([]aggregator.Snapsh
 }
 
 // AppendSnapshot adds a snapshot to history, replacing any existing snapshot
-// with the same timestamp (deduplication). The returned slice is always
-// sorted by timestamp ascending.
+// with the same timestamp (deduplication). The slice is append-only—no pruning
+// or automatic retention limits are applied—so all snapshots are preserved.
+// The returned slice is always sorted by timestamp ascending.
 func AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot, logger *slog.Logger) []aggregator.Snapshot {
 	if logger == nil {
 		logger = slog.Default()

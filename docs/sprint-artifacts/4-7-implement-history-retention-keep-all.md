@@ -1,6 +1,6 @@
 # Story 4.7: Implement History Retention (Keep All)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,25 +20,25 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-4.md#AC-4.7] / [Source: do
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Verify no pruning logic exists (AC: 1, 2, 3)
-  - [ ] 1.1: Review `internal/storage/history.go` - confirm `AppendSnapshot` only appends/replaces, never removes snapshots
-  - [ ] 1.2: Review `internal/storage/history.go` - confirm `LoadFromOutput` does not filter or limit snapshots
-  - [ ] 1.3: Search codebase for any "prune", "trim", "limit", "maxHistory", "retention" logic - verify none exists
-  - [ ] 1.4: Confirm no snapshot removal code paths in any history-related functions
+- [x] Task 1: Verify no pruning logic exists (AC: 1, 2, 3)
+  - [x] 1.1: Review `internal/storage/history.go` - confirm `AppendSnapshot` only appends/replaces, never removes snapshots
+  - [x] 1.2: Review `internal/storage/history.go` - confirm `LoadFromOutput` does not filter or limit snapshots
+  - [x] 1.3: Search codebase for any "prune", "trim", "limit", "maxHistory", "retention" logic - verify none exists
+  - [x] 1.4: Confirm no snapshot removal code paths in any history-related functions
 
-- [ ] Task 2: Add documentation comment for future pruning (AC: 2)
-  - [ ] 2.1: Add package-level doc comment to `internal/storage/history.go` noting: "MVP retains all historical snapshots without automatic pruning. Pruning may be added in a future version."
-  - [ ] 2.2: Add comment to `AppendSnapshot` function noting retention policy
+- [x] Task 2: Add documentation comment for future pruning (AC: 2)
+  - [x] 2.1: Add package-level doc comment to `internal/storage/history.go` noting: "MVP retains all historical snapshots without automatic pruning. Pruning may be added in a future version."
+  - [x] 2.2: Add comment to `AppendSnapshot` function noting retention policy
 
-- [ ] Task 3: Write unit test verifying retention behavior (AC: 1, 3)
-  - [ ] 3.1: Add test: `TestAppendSnapshot_RetainsAllHistory` - append to history with many snapshots, verify all retained
-  - [ ] 3.2: Add test: verify AppendSnapshot with 100+ snapshots maintains all entries
-  - [ ] 3.3: Verify test confirms no snapshot count reduction after any append operation
+- [x] Task 3: Write unit test verifying retention behavior (AC: 1, 3)
+  - [x] 3.1: Add test: `TestAppendSnapshot_RetainsAllHistory` - append to history with many snapshots, verify all retained
+  - [x] 3.2: Add test: verify AppendSnapshot with 100+ snapshots maintains all entries
+  - [x] 3.3: Verify test confirms no snapshot count reduction after any append operation
 
-- [ ] Task 4: Verification (AC: all)
-  - [ ] 4.1: Run `go build ./...` and verify success
-  - [ ] 4.2: Run `go test ./internal/storage/...` and verify all pass
-  - [ ] 4.3: Run `make lint` and verify no errors
+- [x] Task 4: Verification (AC: all)
+  - [x] 4.1: Run `go build ./...` and verify success
+  - [x] 4.2: Run `go test ./internal/storage/...` and verify all pass
+  - [x] 4.3: Run `make lint` and verify no errors
 
 ## Dev Notes
 
@@ -170,12 +170,79 @@ package storage
 
 ### Debug Log References
 
+- Verified history functions: `LoadFromOutput` only parses and sorts snapshots; no filtering or removal paths observed (AC1, AC2, AC3).
+- Searched repo for pruning keywords; no production code performing retention limits found (AC2).
+- Implementation plan: add retention doc comments + large-history tests to lock behavior, then run build/test/lint.
+
 ### Completion Notes List
 
+- Added retention policy documentation to `internal/storage/history.go`, clarifying MVP keeps all snapshots and future pruning would be explicit (AC2).
+- Introduced large-history retention tests ensuring append operations never reduce history length across 100+ and 1000-snapshot scenarios (AC1, AC3).
+- All build, unit tests (`./internal/storage/...`), and lint checks pass.
+
 ### File List
+
+- internal/storage/history.go
+- internal/storage/history_test.go
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/4-7-implement-history-retention-keep-all.md
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-11-30 | SM Agent (Bob) | Initial story draft created from epic-4 and tech-spec-epic-4.md |
+| 2025-12-01 | Amelia (Dev Agent) | Documented retention policy, added retention tests, ran build/test/lint, moved story to review |
+| 2025-12-01 | Amelia (Dev Agent) | Senior Developer Review (AI) completed; outcome: Approved |
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad
+- Date: 2025-12-01
+- Outcome: Approve (no findings)
+
+### Summary
+- Retention behavior is explicitly documented and enforced; AppendSnapshot remains append-only with deduplication.
+- Tests cover large (1000+) snapshot histories and logging paths; build, tests, and lint all pass locally.
+
+### Key Findings
+- None (no High/Med/Low issues identified).
+
+### Acceptance Criteria Coverage
+| AC # | Description | Status | Evidence |
+|------|-------------|--------|----------|
+| AC1 | Retain all snapshots when adding new entries (no pruning) | Implemented | internal/storage/history.go:94-119; internal/storage/history_test.go:326-382 |
+| AC2 | No automatic pruning logic; doc comment notes future pruning | Implemented | internal/storage/history.go:1-4,94-119 |
+| AC3 | AppendSnapshot appends/replaces without removals | Implemented | internal/storage/history.go:94-119; internal/storage/history_test.go:279-324 |
+
+### Task Completion Validation
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| Task 1: Verify no pruning logic exists | Complete | Verified | internal/storage/history.go:50-119; `rg` for prune/trim/retention showed no functional hits |
+| Task 2: Add documentation comment for future pruning | Complete | Verified | internal/storage/history.go:1-4,94-97 |
+| Task 3: Write unit test verifying retention behavior | Complete | Verified | internal/storage/history_test.go:326-382 |
+| Task 4: Verification (build/test/lint) | Complete | Verified | Commands: `go build ./...`; `go test ./internal/storage/...`; `make lint` |
+
+### Test Coverage and Gaps
+- `go build ./...` (pass)
+- `go test ./internal/storage/...` (pass)
+- `make lint` (pass)
+- No additional gaps identified for this story scope.
+
+### Architectural Alignment
+- Matches Epic 4 tech spec: retention-only policy, no pruning hooks; history operations remain append-only.
+- Logging via `slog` preserved for history load/duplicate cases.
+
+### Security Notes
+- No new dependencies or I/O surfaces introduced; behavior remains read/write local files only.
+
+### Best-Practices and References
+- ADR-004 structured logging maintained.
+- Testing follows table-driven patterns per docs/architecture/testing-strategy.md.
+
+### Action Items
+**Code Changes Required:**
+- None.
+
+**Advisory Notes:**
+- Note: None.
