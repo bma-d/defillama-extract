@@ -1,0 +1,185 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>2</storyId>
+    <title>Implement CLI and Single-Run Mode</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-2-implement-cli-and-single-run-mode.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>operator</asA>
+    <iWant>command-line flags and single extraction mode with proper logging</iWant>
+    <soThat>I can run manual or cron-scheduled extractions</soThat>
+    <tasks>
+      <task id="1" name="Define CLIOptions struct">
+        <subtask id="1.1">Create CLIOptions struct in cmd/extractor/main.go with fields: Once bool, ConfigPath string, DryRun bool, Version bool</subtask>
+        <subtask id="1.2">Add ParseCLI() CLIOptions function using flag package</subtask>
+        <subtask id="1.3">Register flags: --once, --config (default "config.yaml"), --dry-run, --version</subtask>
+        <subtask id="1.4">Call flag.Parse() and populate struct</subtask>
+      </task>
+      <task id="2" name="Implement --version handling">
+        <subtask id="2.1">Define const Version = "1.0.0" at package level</subtask>
+        <subtask id="2.2">In main(), after parsing flags, check opts.Version</subtask>
+        <subtask id="2.3">If true: print "defillama-extract v1.0.0" to stdout and os.Exit(0)</subtask>
+      </task>
+      <task id="3" name="Implement RunOnce function">
+        <subtask id="3.1">Create RunOnce(ctx context.Context, cfg *config.Config, opts CLIOptions) error</subtask>
+        <subtask id="3.2">Create API client using api.NewClient(&amp;cfg.API, logger)</subtask>
+        <subtask id="3.3">Create aggregator using aggregator.NewAggregator(cfg.Oracle.Name)</subtask>
+        <subtask id="3.4">Create state manager using storage.NewStateManager(cfg.Output.Directory, logger)</subtask>
+        <subtask id="3.5">Load state via stateManager.LoadState()</subtask>
+        <subtask id="3.6">Fetch oracles and protocols in parallel using client.FetchAll(ctx)</subtask>
+        <subtask id="3.7">Check for new data: stateManager.ShouldProcess(result.OracleResponse timestamp, state)</subtask>
+        <subtask id="3.8">If no new data: log "no new data, skipping extraction" and return nil</subtask>
+        <subtask id="3.9">Run aggregation via aggregator.Aggregate(ctx, oracleResp, protocols, history)</subtask>
+        <subtask id="3.10">Load history via stateManager.LoadHistory()</subtask>
+        <subtask id="3.11">Generate outputs using storage.GenerateFullOutput() and storage.GenerateSummaryOutput()</subtask>
+        <subtask id="3.12">If NOT dry-run: write outputs via storage.WriteAllOutputs()</subtask>
+        <subtask id="3.13">If dry-run: log "dry-run mode, skipping file writes"</subtask>
+        <subtask id="3.14">Save state via stateManager.SaveState()</subtask>
+        <subtask id="3.15">Return nil on success, error on failure</subtask>
+      </task>
+      <task id="4" name="Implement extraction logging">
+        <subtask id="4.1">Record start time with time.Now() at extraction start</subtask>
+        <subtask id="4.2">Log INFO "extraction started" with timestamp at cycle start</subtask>
+        <subtask id="4.3">On success: calculate duration, log INFO "extraction completed" with duration_ms, protocol_count, tvs, chains</subtask>
+        <subtask id="4.4">On skip: log INFO "extraction skipped, no new data" with last_updated</subtask>
+        <subtask id="4.5">On error: log ERROR "extraction failed" with error, duration_ms</subtask>
+      </task>
+      <task id="5" name="Wire main() for single-run mode">
+        <subtask id="5.1">After version check, load config using config.Load(opts.ConfigPath)</subtask>
+        <subtask id="5.2">Config already applies env overrides internally (applyEnvOverrides called in Load)</subtask>
+        <subtask id="5.3">Validation already done in config.Load()</subtask>
+        <subtask id="5.4">Initialize slog logger using logging.Setup(cfg.Logging)</subtask>
+        <subtask id="5.5">If opts.Once: call RunOnce(ctx, cfg, opts)</subtask>
+        <subtask id="5.6">If RunOnce returns error: log error, os.Exit(1)</subtask>
+        <subtask id="5.7">If RunOnce returns nil: os.Exit(0)</subtask>
+        <subtask id="5.8">If NOT opts.Once: placeholder for daemon mode (Story 5.3)</subtask>
+      </task>
+      <task id="6" name="Write unit tests">
+        <subtask id="6.1">Test ParseCLI parses all flags correctly</subtask>
+        <subtask id="6.2">Test ParseCLI default values (ConfigPath="config.yaml", others=false)</subtask>
+        <subtask id="6.3">Test --version output format and exit</subtask>
+        <subtask id="6.4">Test RunOnce success path returns nil</subtask>
+        <subtask id="6.5">Test RunOnce with no new data returns nil (skip path)</subtask>
+        <subtask id="6.6">Test RunOnce dry-run mode skips file writes</subtask>
+        <subtask id="6.7">Test RunOnce failure returns error</subtask>
+        <subtask id="6.8">Test log messages contain required attributes</subtask>
+        <subtask id="6.9">Test default (no-flag) execution path drops into daemon stub</subtask>
+      </task>
+      <task id="7" name="Verification">
+        <subtask id="7.1">Run go build ./... and verify success</subtask>
+        <subtask id="7.2">Run go test ./cmd/extractor/... and verify all pass</subtask>
+        <subtask id="7.3">Run make lint and verify no errors</subtask>
+        <subtask id="7.4">Manual smoke test: ./extractor --version</subtask>
+        <subtask id="7.5">Manual smoke test: ./extractor --once --dry-run</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" title="CLI Flag Parsing (--once)">Given CLI invocation with --once flag, When application starts, Then single extraction mode is activated And application exits after one complete extraction cycle</criterion>
+    <criterion id="AC2" title="CLI Flag Parsing (--config)">Given CLI invocation with --config /path/to/config.yaml, When application starts, Then configuration is loaded from the specified path instead of default</criterion>
+    <criterion id="AC3" title="CLI Flag Parsing (--dry-run)">Given CLI invocation with --dry-run flag, When extraction completes, Then data is fetched and processed but NOT written to files And log message: "dry-run mode, skipping file writes"</criterion>
+    <criterion id="AC4" title="CLI Flag Parsing (--version)">Given CLI invocation with --version flag, When application starts, Then prints "defillama-extract v1.0.0" and exits with code 0</criterion>
+    <criterion id="AC5" title="Default Mode (No Flags)">Given no flags provided, When application starts, Then daemon mode is activated (handled by Story 5.3)</criterion>
+    <criterion id="AC6" title="Single Mode Sequence">Given --once flag is set, When application runs, Then one complete extraction cycle executes in order: 1. Load config, 2. Load state, 3. Fetch API data (oracles + protocols in parallel), 4. Check if new data available (compare timestamps), 5. If new data: Aggregate data, 6. Write outputs (unless --dry-run), 7. Save state, 8. Exit</criterion>
+    <criterion id="AC7" title="Single Mode Success Exit">Given successful extraction in --once mode, When extraction completes, Then exit code is 0</criterion>
+    <criterion id="AC8" title="Single Mode Failure Exit">Given extraction failure in --once mode, When error occurs, Then exit code is 1 with error logged</criterion>
+    <criterion id="AC9" title="No New Data Handling">Given --once mode with no new data available, When timestamp comparison shows stale data, Then exit code is 0 And log: "no new data, skipping extraction"</criterion>
+    <criterion id="AC10" title="Dry-Run No Writes">Given --dry-run flag, When extraction completes successfully, Then files are NOT written And log: "dry-run mode, skipping file writes"</criterion>
+    <criterion id="AC11" title="Log Extraction Started">Given extraction cycle begins, When processing starts, Then INFO log with timestamp: "extraction started"</criterion>
+    <criterion id="AC12" title="Log Extraction Completed">Given extraction completes successfully, When all operations finish, Then INFO log with attributes: duration_ms, protocol_count, tvs, chains</criterion>
+    <criterion id="AC13" title="Log Extraction Skipped">Given extraction is skipped (no new data), When skip decision is made, Then INFO log with last_updated timestamp</criterion>
+    <criterion id="AC14" title="Log Extraction Failed">Given extraction fails, When error occurs, Then ERROR log with: error, duration_ms</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-5.md" title="Epic 5 Tech Spec" section="Story 5.2: CLI and Single-Run Mode" snippet="Authoritative spec defining CLIOptions struct, RunOnce/RunDaemon interfaces, and single extraction cycle workflow sequence." />
+      <doc path="docs/epics/epic-5-output-cli.md" title="Epic 5: Output and CLI" section="Story 5.2" snippet="User story definition with acceptance criteria for CLI flags and single-run mode operation." />
+      <doc path="docs/prd.md" title="Product Requirements Document" section="CLI Tool Specific Requirements, FR42-FR48, FR56" snippet="Defines run-once mode (--once), daemon mode, --config, --dry-run, --version flags, and extraction cycle logging requirements." />
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="Architecture Decision Records" section="ADR-001, ADR-004" snippet="ADR-001: Use flag package (stdlib) for CLI parsing. ADR-004: Use log/slog for structured logging." />
+      <doc path="docs/architecture/implementation-patterns.md" title="Implementation Patterns" section="Dependency Injection, Context Propagation, Parallel Fetching" snippet="DI via constructor functions, context.Context as first param for I/O, errgroup for concurrent API calls." />
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization, Coverage Requirements" snippet="Table-driven tests co-located with source, httptest for mock servers, high coverage for business-critical logic." />
+    </docs>
+    <code>
+      <file path="cmd/extractor/main.go" kind="entry-point" symbol="main" lines="1-29" reason="Current main.go stub to be extended with CLI parsing, version handling, and RunOnce integration." />
+      <file path="internal/api/client.go" kind="service" symbol="Client, NewClient, FetchAll, FetchOracles, FetchProtocols" lines="26-330" reason="API client with parallel fetching via errgroup. RunOnce will use client.FetchAll(ctx) for data retrieval." />
+      <file path="internal/aggregator/aggregator.go" kind="service" symbol="Aggregator, NewAggregator, Aggregate" lines="1-96" reason="Aggregation pipeline. RunOnce calls aggregator.Aggregate(ctx, oracleResp, protocols, history) to process data." />
+      <file path="internal/storage/state.go" kind="service" symbol="StateManager, NewStateManager, LoadState, SaveState, ShouldProcess, UpdateState, LoadHistory" lines="1-172" reason="State management for incremental updates. RunOnce uses ShouldProcess for new data check, LoadState/SaveState for persistence." />
+      <file path="internal/storage/writer.go" kind="service" symbol="GenerateFullOutput, GenerateSummaryOutput, WriteAllOutputs, WriteJSON" lines="1-252" reason="Output generation and atomic file writing. RunOnce calls these to generate and persist JSON outputs." />
+      <file path="internal/config/config.go" kind="config" symbol="Config, Load, Validate" lines="1-185" reason="Configuration loading with YAML parsing, env overrides, and validation. main() uses config.Load(opts.ConfigPath)." />
+      <file path="internal/logging/logging.go" kind="utility" symbol="Setup, SetupWithWriter, ParseLevel" lines="1-45" reason="Structured logging setup. main() uses logging.Setup(cfg.Logging) to initialize slog." />
+      <file path="internal/models/output.go" kind="model" symbol="FullOutput, SummaryOutput, OracleInfo, OutputMetadata, Summary, Metrics, Breakdown" lines="1-65" reason="Output model structs consumed by storage.GenerateFullOutput and storage.GenerateSummaryOutput." />
+    </code>
+    <dependencies>
+      <go version="1.24.0">
+        <module name="golang.org/x/sync" version="v0.18.0" purpose="errgroup for parallel API fetching" />
+        <module name="gopkg.in/yaml.v3" version="v3.0.1" purpose="YAML config file parsing" />
+      </go>
+      <stdlib>
+        <package name="flag" purpose="CLI flag parsing per ADR-001" />
+        <package name="context" purpose="Cancellation and timeout propagation" />
+        <package name="log/slog" purpose="Structured logging per ADR-004" />
+        <package name="time" purpose="Duration tracking, time.Now() for extraction timing" />
+        <package name="os" purpose="Exit codes, signal handling" />
+        <package name="fmt" purpose="Formatted output for --version" />
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-001">Use flag package from stdlib for CLI parsing. Do NOT use Cobra, Viper, or other CLI frameworks.</constraint>
+    <constraint source="ADR-004">Use log/slog for all logging. JSON format for daemon mode, text format for development.</constraint>
+    <constraint source="ADR-002">All file writes must be atomic (temp file + rename). Use storage.WriteAtomic or storage.WriteJSON.</constraint>
+    <constraint source="ADR-005">Minimal external dependencies. Only golang.org/x/sync and gopkg.in/yaml.v3 are allowed.</constraint>
+    <constraint source="Tech Spec">Config default for --config flag is "config.yaml" (not "configs/config.yaml" as in current stub).</constraint>
+    <constraint source="Story 5.1">Output functions from storage/writer.go are available: GenerateFullOutput, GenerateSummaryOutput, WriteAllOutputs.</constraint>
+    <constraint source="FR27">When no new data available, exit code is 0 (success), not error.</constraint>
+    <constraint source="FR47">Graceful shutdown handled in Story 5.3, but RunOnce should respect context cancellation.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="api.NewClient" kind="constructor" signature="func NewClient(cfg *config.APIConfig, logger *slog.Logger) *Client" path="internal/api/client.go" />
+    <interface name="api.Client.FetchAll" kind="method" signature="func (c *Client) FetchAll(ctx context.Context) (*FetchResult, error)" path="internal/api/client.go" />
+    <interface name="aggregator.NewAggregator" kind="constructor" signature="func NewAggregator(oracleName string) *Aggregator" path="internal/aggregator/aggregator.go" />
+    <interface name="aggregator.Aggregator.Aggregate" kind="method" signature="func (a *Aggregator) Aggregate(ctx context.Context, oracleResp *api.OracleAPIResponse, protocols []api.Protocol, history []Snapshot) *AggregationResult" path="internal/aggregator/aggregator.go" />
+    <interface name="storage.NewStateManager" kind="constructor" signature="func NewStateManager(outputDir string, logger *slog.Logger) *StateManager" path="internal/storage/state.go" />
+    <interface name="storage.StateManager.LoadState" kind="method" signature="func (sm *StateManager) LoadState() (*State, error)" path="internal/storage/state.go" />
+    <interface name="storage.StateManager.SaveState" kind="method" signature="func (sm *StateManager) SaveState(state *State) error" path="internal/storage/state.go" />
+    <interface name="storage.StateManager.ShouldProcess" kind="method" signature="func (sm *StateManager) ShouldProcess(currentTS int64, state *State) bool" path="internal/storage/state.go" />
+    <interface name="storage.StateManager.UpdateState" kind="method" signature="func (sm *StateManager) UpdateState(oracleName string, ts int64, count int, tvs float64, snapshots []aggregator.Snapshot) *State" path="internal/storage/state.go" />
+    <interface name="storage.StateManager.LoadHistory" kind="method" signature="func (sm *StateManager) LoadHistory() ([]aggregator.Snapshot, error)" path="internal/storage/state.go" />
+    <interface name="storage.GenerateFullOutput" kind="function" signature="func GenerateFullOutput(result *aggregator.AggregationResult, history []aggregator.Snapshot, cfg *config.Config) *models.FullOutput" path="internal/storage/writer.go" />
+    <interface name="storage.GenerateSummaryOutput" kind="function" signature="func GenerateSummaryOutput(result *aggregator.AggregationResult, cfg *config.Config) *models.SummaryOutput" path="internal/storage/writer.go" />
+    <interface name="storage.WriteAllOutputs" kind="function" signature="func WriteAllOutputs(outputDir string, cfg *config.Config, full *models.FullOutput, summary *models.SummaryOutput) error" path="internal/storage/writer.go" />
+    <interface name="config.Load" kind="function" signature="func Load(path string) (*Config, error)" path="internal/config/config.go" />
+    <interface name="logging.Setup" kind="function" signature="func Setup(cfg config.LoggingConfig) *slog.Logger" path="internal/logging/logging.go" />
+  </interfaces>
+
+  <tests>
+    <standards>Table-driven tests using Go testing package. Tests co-located with source files (*_test.go). Use httptest.Server for HTTP mocking. Use slog.Default() fallback for nil logger in tests. Assert log output contains required structured attributes. Mock external dependencies (API client) for RunOnce unit tests.</standards>
+    <locations>
+      <location>cmd/extractor/main_test.go</location>
+      <location>internal/api/*_test.go</location>
+      <location>internal/aggregator/*_test.go</location>
+      <location>internal/storage/*_test.go</location>
+      <location>internal/config/*_test.go</location>
+      <location>internal/logging/*_test.go</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1,AC2,AC3,AC4">Test ParseCLI(): verify flag parsing for --once, --config, --dry-run, --version with various combinations</idea>
+      <idea ac="AC4">Test --version: capture stdout, verify "defillama-extract v1.0.0" format</idea>
+      <idea ac="AC6,AC7">Test RunOnce success: mock API returning valid data, verify returns nil, verify state saved</idea>
+      <idea ac="AC9,AC13">Test RunOnce skip: mock state with recent timestamp, verify returns nil without processing</idea>
+      <idea ac="AC10">Test RunOnce dry-run: verify WriteAllOutputs NOT called, verify log message</idea>
+      <idea ac="AC8,AC14">Test RunOnce failure: mock API error, verify returns error, verify ERROR log</idea>
+      <idea ac="AC11,AC12">Test extraction logging: capture slog output, verify "extraction started" and "extraction completed" with duration_ms, protocol_count, tvs, chains attributes</idea>
+      <idea ac="AC5">Test default mode: verify daemon placeholder reached when --once not set</idea>
+    </ideas>
+  </tests>
+</story-context>

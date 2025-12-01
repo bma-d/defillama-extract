@@ -276,7 +276,7 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.2]
 
 ### Context Reference
 
-- (not yet generated; run *create-story-context to produce XML and add here)
+- docs/sprint-artifacts/5-2-implement-cli-and-single-run-mode.context.xml
 
 ### Agent Model Used
 
@@ -301,3 +301,4 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.2]
 |------|--------|--------|
 | 2025-12-01 | SM Agent (Bob) | Initial story draft created from epic-5 and tech-spec-epic-5.md |
 | 2025-12-01 | SM Agent (Bob) | Initialized Dev Agent Record after validation |
+| 2025-12-01 | SM Agent (Bob) | Generated story context XML and marked ready-for-dev |
