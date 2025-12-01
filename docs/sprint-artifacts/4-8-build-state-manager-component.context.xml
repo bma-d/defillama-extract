@@ -1,0 +1,173 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>8</storyId>
+    <title>Build State Manager Component</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/4-8-build-state-manager-component.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a unified StateManager that coordinates all state and history operations</iWant>
+    <soThat>I have a clean, consistent interface for managing incremental updates during extraction cycles</soThat>
+    <tasks>
+      <task id="1" name="Add UpdateState method to StateManager">
+        <subtask id="1.1">Implement UpdateState(oracleName string, ts int64, count int, tvs float64, snapshots []Snapshot) *State in internal/storage/state.go</subtask>
+        <subtask id="1.2">Populate all State fields including SnapshotCount, OldestSnapshot, NewestSnapshot from snapshots slice</subtask>
+        <subtask id="1.3">Format LastUpdatedISO as ISO 8601 using time.Unix(ts, 0).UTC().Format(time.RFC3339)</subtask>
+        <subtask id="1.4">Handle edge case: empty snapshots slice (set snapshot metadata to 0)</subtask>
+      </task>
+      <task id="2" name="Add history accessor methods to StateManager">
+        <subtask id="2.1">Add LoadHistory() ([]aggregator.Snapshot, error) method that delegates to LoadFromOutput(sm.outputFile, sm.logger)</subtask>
+        <subtask id="2.2">Add AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot) []aggregator.Snapshot method that delegates to package-level AppendSnapshot</subtask>
+        <subtask id="2.3">Ensure StateManager provides unified interface for both state and history operations</subtask>
+      </task>
+      <task id="3" name="Add OutputFile() accessor method">
+        <subtask id="3.1">Add OutputFile() string method to return the output file path for use by downstream consumers (Epic 5 writer)</subtask>
+      </task>
+      <task id="4" name="Write unit tests for new methods">
+        <subtask id="4.1">Test UpdateState with valid inputs - verify all fields populated correctly</subtask>
+        <subtask id="4.2">Test UpdateState with empty snapshots slice - verify snapshot metadata is 0</subtask>
+        <subtask id="4.3">Test UpdateState ISO 8601 timestamp formatting</subtask>
+        <subtask id="4.4">Test LoadHistory delegation (uses existing LoadFromOutput tests)</subtask>
+        <subtask id="4.5">Test AppendSnapshot delegation (uses existing tests)</subtask>
+        <subtask id="4.6">Test OutputFile returns correct path</subtask>
+      </task>
+      <task id="5" name="Write integration test for full extraction cycle">
+        <subtask id="5.1">Test complete cycle: LoadState -> ShouldProcess -> (simulate extraction) -> UpdateState -> SaveState</subtask>
+        <subtask id="5.2">Verify state file contains correct values after cycle</subtask>
+        <subtask id="5.3">Verify state and history consistency after multiple cycles</subtask>
+      </task>
+      <task id="6" name="Verification">
+        <subtask id="6.1">Run go build ./... and verify success</subtask>
+        <subtask id="6.2">Run go test ./internal/storage/... and verify all pass</subtask>
+        <subtask id="6.3">Run make lint and verify no errors</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Given configuration with output directory When NewStateManager(outputDir, logger) is called Then a StateManager is created with paths configured: State file: {outputDir}/state.json, Output file: {outputDir}/switchboard-oracle-data.json</criterion>
+    <criterion id="AC2">Given a StateManager instance When extraction cycle starts Then LoadState() returns current state And state can be used with ShouldProcess(timestamp) to determine if processing needed</criterion>
+    <criterion id="AC3">Given a successful extraction producing an AggregationResult When UpdateState(oracleName, timestamp, count, tvs, snapshots) is called Then a new *State is returned with all fields populated: OracleName, LastUpdated, LastUpdatedISO (ISO 8601), LastProtocolCount, LastTVS, SnapshotCount, OldestSnapshot, NewestSnapshot</criterion>
+    <criterion id="AC4">Given a StateManager instance When history operations are needed Then LoadFromOutput and AppendSnapshot are available via HistoryManager methods or StateManager methods</criterion>
+    <criterion id="AC5">Given a complete extraction cycle When SaveState(state) is called Then state is persisted atomically And state and history are consistent</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="FR25-FR34" snippet="Covers incremental updates (FR25-FR29) and historical data management (FR30-FR34) requirements for state tracking and snapshot history." />
+      <doc path="docs/epics/epic-4-state-history-management.md" title="Epic 4: State and History Management" section="Story 4.8" snippet="Defines StateManager as unified component handling all state operations for incremental updates with clean interface." />
+      <doc path="docs/sprint-artifacts/tech-spec-epic-4.md" title="Epic 4 Technical Specification" section="AC-4.8, Services and Modules" snippet="Authoritative acceptance criteria for StateManager including UpdateState signature, history accessor methods, and unified interface design." />
+      <doc path="docs/architecture/project-structure.md" title="Project Structure" section="internal/storage/" snippet="Defines storage package layout: state.go, state_test.go, history.go, history_test.go, writer.go" />
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization" snippet="Table-driven tests pattern, fixtures in testdata/, coverage requirements for error paths and business logic." />
+      <doc path="docs/architecture/implementation-patterns.md" title="Implementation Patterns" section="Atomic File Writes, Dependency Injection" snippet="Use temp file + rename for atomic writes; constructor functions for explicit dependencies." />
+    </docs>
+    <code>
+      <file path="internal/storage/state.go" kind="module" symbol="StateManager" lines="26-135" reason="Primary file to modify - contains StateManager struct, NewStateManager constructor, LoadState, SaveState, ShouldProcess. Needs UpdateState, LoadHistory, AppendSnapshot, OutputFile methods added." />
+      <file path="internal/storage/state_test.go" kind="test" symbol="TestStateManager_*" lines="1-389" reason="Test file for StateManager - add tests for UpdateState, LoadHistory, AppendSnapshot delegation, OutputFile accessor, and integration cycle test." />
+      <file path="internal/storage/history.go" kind="module" symbol="LoadFromOutput, AppendSnapshot, CreateSnapshot" lines="1-120" reason="Package-level history functions that StateManager accessor methods will delegate to. Already implemented in Stories 4.4-4.7." />
+      <file path="internal/storage/history_test.go" kind="test" symbol="Test*" lines="1-385" reason="Existing tests for history functions - verify delegation works correctly." />
+      <file path="internal/aggregator/models.go" kind="model" symbol="Snapshot, AggregationResult" lines="40-72" reason="Data models used by StateManager: Snapshot for history, AggregationResult as input source for UpdateState." />
+      <file path="internal/storage/writer.go" kind="utility" symbol="WriteAtomic" reason="Atomic file writer used by SaveState - already implemented." />
+    </code>
+    <dependencies>
+      <go>
+        <dependency name="encoding/json" version="stdlib" purpose="JSON marshaling for state persistence" />
+        <dependency name="log/slog" version="stdlib" purpose="Structured logging per ADR-004" />
+        <dependency name="os" version="stdlib" purpose="File I/O operations" />
+        <dependency name="path/filepath" version="stdlib" purpose="Path construction" />
+        <dependency name="time" version="stdlib" purpose="RFC3339 timestamp formatting for LastUpdatedISO" />
+        <dependency name="golang.org/x/sync" version="v0.18.0" purpose="errgroup for parallel operations (Epic 2)" />
+        <dependency name="gopkg.in/yaml.v3" version="v3.0.1" purpose="YAML config parsing (Epic 1)" />
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">All changes scoped to internal/storage/ package per project structure</constraint>
+    <constraint type="dependency">Use only Go standard library - no new external dependencies required</constraint>
+    <constraint type="pattern">Constructor functions for explicit dependencies (NewStateManager pattern)</constraint>
+    <constraint type="pattern">Atomic file writes via temp file + os.Rename (POSIX atomic on same filesystem)</constraint>
+    <constraint type="pattern">Structured logging with slog per ADR-004</constraint>
+    <constraint type="pattern">Explicit error returns over exceptions per ADR-003</constraint>
+    <constraint type="pattern">Use aggregator.Snapshot from internal/aggregator/models.go (not a new type)</constraint>
+    <constraint type="pattern">slog.Default() fallback for nil logger in constructor</constraint>
+    <constraint type="testing">Table-driven tests with fixtures in testdata/</constraint>
+    <constraint type="testing">Test edge cases: empty snapshots, nil inputs</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="StateManager" kind="struct" path="internal/storage/state.go">
+      <field>outputDir string</field>
+      <field>stateFile string</field>
+      <field>outputFile string</field>
+      <field>logger *slog.Logger</field>
+    </interface>
+    <interface name="NewStateManager" kind="constructor" path="internal/storage/state.go">
+      <signature>func NewStateManager(outputDir string, logger *slog.Logger) *StateManager</signature>
+    </interface>
+    <interface name="LoadState" kind="method" path="internal/storage/state.go">
+      <signature>func (sm *StateManager) LoadState() (*State, error)</signature>
+      <note>Existing - loads state from disk, zero-value if missing/corrupted</note>
+    </interface>
+    <interface name="SaveState" kind="method" path="internal/storage/state.go">
+      <signature>func (sm *StateManager) SaveState(state *State) error</signature>
+      <note>Existing - atomic save to state.json</note>
+    </interface>
+    <interface name="ShouldProcess" kind="method" path="internal/storage/state.go">
+      <signature>func (sm *StateManager) ShouldProcess(currentTS int64, state *State) bool</signature>
+      <note>Existing - determines if new data available</note>
+    </interface>
+    <interface name="UpdateState" kind="method" path="internal/storage/state.go">
+      <signature>func (sm *StateManager) UpdateState(oracleName string, ts int64, count int, tvs float64, snapshots []aggregator.Snapshot) *State</signature>
+      <note>TO ADD - creates updated state from extraction results</note>
+    </interface>
+    <interface name="LoadHistory" kind="method" path="internal/storage/state.go">
+      <signature>func (sm *StateManager) LoadHistory() ([]aggregator.Snapshot, error)</signature>
+      <note>TO ADD - delegates to LoadFromOutput(sm.outputFile, sm.logger)</note>
+    </interface>
+    <interface name="AppendSnapshot" kind="method" path="internal/storage/state.go">
+      <signature>func (sm *StateManager) AppendSnapshot(history []aggregator.Snapshot, snapshot aggregator.Snapshot) []aggregator.Snapshot</signature>
+      <note>TO ADD - delegates to package-level AppendSnapshot</note>
+    </interface>
+    <interface name="OutputFile" kind="method" path="internal/storage/state.go">
+      <signature>func (sm *StateManager) OutputFile() string</signature>
+      <note>TO ADD - returns sm.outputFile for downstream consumers</note>
+    </interface>
+    <interface name="State" kind="struct" path="internal/storage/state.go">
+      <field>OracleName string json:"oracle_name"</field>
+      <field>LastUpdated int64 json:"last_updated"</field>
+      <field>LastUpdatedISO string json:"last_updated_iso"</field>
+      <field>LastProtocolCount int json:"last_protocol_count"</field>
+      <field>LastTVS float64 json:"last_tvs"</field>
+      <field>SnapshotCount int json:"snapshot_count"</field>
+      <field>OldestSnapshot int64 json:"oldest_snapshot"</field>
+      <field>NewestSnapshot int64 json:"newest_snapshot"</field>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Go table-driven tests pattern per testing-strategy.md. Use *testing.T and t.Run for subtests. Tests co-located as *_test.go files. Use slog with bytes.Buffer for log capture verification. Test fixtures in testdata/ directory. Coverage requirements: 90%+ line coverage for state.go and history.go, all error paths tested.
+    </standards>
+    <locations>
+      <location>internal/storage/state_test.go</location>
+      <location>internal/storage/history_test.go</location>
+      <location>internal/storage/testdata/</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC3" name="TestUpdateState_ValidInputs">Table-driven test with valid inputs verifying all State fields are populated correctly including OracleName, LastUpdated, LastUpdatedISO, LastProtocolCount, LastTVS, SnapshotCount, OldestSnapshot, NewestSnapshot</idea>
+      <idea acRef="AC3" name="TestUpdateState_EmptySnapshots">Test UpdateState with empty snapshots slice - verify SnapshotCount=0, OldestSnapshot=0, NewestSnapshot=0</idea>
+      <idea acRef="AC3" name="TestUpdateState_ISOFormatting">Test that LastUpdatedISO is formatted as RFC3339 (e.g., "2023-11-14T22:13:20Z")</idea>
+      <idea acRef="AC4" name="TestStateManager_LoadHistory">Test LoadHistory() method delegates correctly to LoadFromOutput with correct path and logger</idea>
+      <idea acRef="AC4" name="TestStateManager_AppendSnapshot">Test AppendSnapshot() method delegates correctly to package-level AppendSnapshot</idea>
+      <idea acRef="AC1" name="TestStateManager_OutputFile">Test OutputFile() returns correct path: {outputDir}/switchboard-oracle-data.json</idea>
+      <idea acRef="AC5" name="TestStateManager_FullCycle">Integration test: LoadState -> ShouldProcess -> UpdateState -> SaveState -> reload and verify consistency</idea>
+      <idea acRef="AC5" name="TestStateManager_MultipleCycles">Test multiple extraction cycles maintain state and history consistency</idea>
+    </ideas>
+  </tests>
+</story-context>
