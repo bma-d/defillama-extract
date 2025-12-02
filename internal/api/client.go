@@ -263,14 +263,14 @@ func (c *Client) FetchOracles(ctx context.Context) (*OracleAPIResponse, error) {
 
 // FetchProtocols retrieves protocol metadata from DefiLlama /lite/protocols2 endpoint.
 func (c *Client) FetchProtocols(ctx context.Context) ([]Protocol, error) {
-	var protocols []Protocol
+	var protocols protocolList
 	if err := c.doWithRetry(ctx, func(ctx context.Context) error {
 		return c.doRequest(ctx, c.protocolsURL, &protocols)
 	}); err != nil {
 		return nil, fmt.Errorf("fetch protocols: %w", err)
 	}
 
-	return protocols, nil
+	return []Protocol(protocols), nil
 }
 
 // FetchAll retrieves oracle and protocol data concurrently using errgroup.

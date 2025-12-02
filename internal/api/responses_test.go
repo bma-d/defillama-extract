@@ -100,3 +100,24 @@ func TestProtocol_UnmarshalMissingFields(t *testing.T) {
 		t.Fatalf("expected zero values for optional fields, got %+v", p)
 	}
 }
+
+func TestProtocolList_UnmarshalEnvelope(t *testing.T) {
+	data := []byte(`{
+		"protocols": [
+			{"id": "one", "name": "One", "slug": "one", "category": "Lending"},
+			{"id": "two", "name": "Two", "slug": "two", "category": "DEX", "oracle": "Switchboard"}
+		]
+	}`)
+
+	var list protocolList
+	if err := json.Unmarshal(data, &list); err != nil {
+		t.Fatalf("unexpected error decoding envelope: %v", err)
+	}
+
+	if len(list) != 2 {
+		t.Fatalf("expected 2 protocols, got %d", len(list))
+	}
+	if list[1].Oracle != "Switchboard" || list[1].Category != "DEX" {
+		t.Fatalf("unexpected decoded protocol: %+v", list[1])
+	}
+}

@@ -519,6 +519,11 @@ Signal received while waiting:
 
 - [x] [Story 5.1][High] Ensure output writers respect `cfg.Output.FullFile/MinFile/SummaryFile` so configurable filenames take effect rather than the current constants.
 - [x] [Story 5.1][Medium] Populate `metadata.update_frequency` from `cfg.Scheduler.Interval` so outputs reflect the actual configured cadence instead of the fixed "2 hours" literal.
+- [x] [Story 5.2][High] Keep `--dry-run` executions from persisting state/history so real runs are not skipped when timestamps match (`cmd/extractor/main.go:136-149`).
+- [x] [Story 5.2][Medium] Surface CLI flag parse errors per ADR-001 so typos cannot silently drop valid flags (`cmd/extractor/main.go:33-46`, `cmd/extractor/main_test.go:119-133,269-283`).
+- [x] [Story 5.2][Medium] Add regression tests for the DefiLlama `protocols` envelope handled by `protocolList` (`internal/api/responses.go:30-58`, `internal/api/responses_test.go:104-122`).
+- [ ] [Story 5.2][High] Implement default daemon execution so running without flags enters the scheduler instead of exiting immediately (`cmd/extractor/main.go:187-190`).
+- [ ] [Story 5.2][Med] Keep daemon start_immediately failures from exiting the process; log the error and wait for the next interval instead (`cmd/extractor/main.go:222-225`).
 
 ---
 

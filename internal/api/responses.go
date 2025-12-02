@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -24,6 +25,36 @@ type Protocol struct {
 	Oracles  []string `json:"oracles,omitempty"`
 	Oracle   string   `json:"oracle,omitempty"`
 	URL      string   `json:"url,omitempty"`
+}
+
+// protocolList flexibly unmarshals either a bare array or an envelope containing
+// a top-level "protocols" field. The DefiLlama endpoint has shipped both shapes
+// historically, so decoding must tolerate either form.
+type protocolList []Protocol
+
+func (p *protocolList) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	if data[0] == '{' {
+		var envelope struct {
+			Protocols []Protocol `json:"protocols"`
+		}
+		if err := json.Unmarshal(data, &envelope); err != nil {
+			return err
+		}
+		*p = envelope.Protocols
+		return nil
+	}
+
+	var arr []Protocol
+	if err := json.Unmarshal(data, &arr); err != nil {
+		return err
+	}
+
+	*p = arr
+	return nil
 }
 
 // FetchResult aggregates oracle and protocol responses from parallel fetch operations.

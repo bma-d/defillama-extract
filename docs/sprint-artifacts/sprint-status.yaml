@@ -79,6 +79,6 @@ development_status:
   # Epic 5: Output & CLI (3 stories - consolidated per sprint-change-proposal-2025-11-30)
   epic-5: contexted
   5-1-implement-output-file-generation: done            # Full/minified/summary + atomic writes (was 5.1-5.4)
-  5-2-implement-cli-and-single-run-mode: ready-for-dev  # CLI flags + single-run + logging (was 5.5+5.6+5.9)
+  5-2-implement-cli-and-single-run-mode: done    # CLI flags + single-run + logging (was 5.5+5.6+5.9)
   5-3-implement-daemon-mode: backlog                    # Daemon + graceful shutdown + main (was 5.7+5.8+5.10)
   epic-5-retrospective: optional

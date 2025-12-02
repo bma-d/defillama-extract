@@ -10,5 +10,10 @@ Routing guidance:
 
 | Date | Story | Epic | Type | Severity | Owner | Status | Notes |
 | ---- | ----- | ---- | ---- | -------- | ----- | ------ | ----- |
+| 2025-12-02 | 5-2-implement-cli-and-single-run-mode | 5 | Bug | Med | TBD | Open | Daemon start_immediately failures still exit instead of logging and waiting for the next interval; update `runDaemonWithDeps` to continue scheduling (cmd/extractor/main.go:222-225). |
 | 2025-12-01 | 5-1-implement-output-file-generation | 5 | Bug | High | TBD | Closed | Writer now honors cfg.Output.{FullFile,MinFile,SummaryFile}; tests assert custom filenames (internal/storage/writer.go, internal/storage/writer_test.go). |
 | 2025-12-01 | 5-1-implement-output-file-generation | 5 | Bug | Medium | TBD | Closed | metadata.update_frequency now mirrors cfg.Scheduler.Interval with defaults; tests cover scheduler interval string (internal/storage/writer.go, internal/storage/writer_test.go). |
+| 2025-12-01 | 5-2-implement-cli-and-single-run-mode | 5 | Bug | High | TBD | Closed | `--dry-run` no longer persists state/history; guarded in `cmd/extractor/main.go:136-149` and covered by `cmd/extractor/main_test.go:229-266`. |
+| 2025-12-01 | 5-2-implement-cli-and-single-run-mode | 5 | Bug | Medium | TBD | Closed | CLI parse errors now bubble up with exit code 2 and tests in `cmd/extractor/main_test.go:119-133,269-283`. |
+| 2025-12-01 | 5-2-implement-cli-and-single-run-mode | 5 | Test Gap | Medium | TBD | Closed | `internal/api/responses_test.go:104-122` covers the `protocols` envelope regression handled by `internal/api/responses.go:30-58`. |
+| 2025-12-01 | 5-2-implement-cli-and-single-run-mode | 5 | Bug | High | TBD | Closed | Default execution without flags now starts daemon ticker with signal-aware context; covered by `runDaemonWithDeps` and tests (`cmd/extractor/main.go`, `cmd/extractor/main_test.go:250-310`). |
