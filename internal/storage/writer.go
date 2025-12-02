@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -156,7 +157,15 @@ func WriteJSON(path string, data interface{}, indent bool) error {
 }
 
 // WriteAllOutputs writes full (indented), minified (compact), and summary outputs atomically.
-func WriteAllOutputs(outputDir string, cfg *config.Config, full *models.FullOutput, summary *models.SummaryOutput) error {
+// All writes are gated by the provided context; if the context is cancelled, no files are persisted.
+func WriteAllOutputs(ctx context.Context, outputDir string, cfg *config.Config, full *models.FullOutput, summary *models.SummaryOutput) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	if cfg == nil {
 		cfg = &config.Config{}
 	}
@@ -172,17 +181,47 @@ func WriteAllOutputs(outputDir string, cfg *config.Config, full *models.FullOutp
 	summaryFile := resolveFileName(cfg.Output.SummaryFile, summaryOutputFileName)
 
 	fullPath := filepath.Join(outputDir, fullFile)
-	if err := WriteJSON(fullPath, full, true); err != nil {
-		return err
-	}
-
 	minifiedPath := filepath.Join(outputDir, minFile)
-	if err := WriteJSON(minifiedPath, full, false); err != nil {
+	summaryPath := filepath.Join(outputDir, summaryFile)
+
+	written := []string{}
+	cleanup := func() {
+		for i := len(written) - 1; i >= 0; i-- {
+			_ = os.Remove(written[i])
+		}
+	}
+
+	write := func(path string, data interface{}, indent bool) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		if err := WriteJSON(path, data, indent); err != nil {
+			return err
+		}
+
+		written = append(written, path)
+
+		if err := ctx.Err(); err != nil {
+			cleanup()
+			return err
+		}
+
+		return nil
+	}
+
+	if err := write(fullPath, full, true); err != nil {
+		cleanup()
 		return err
 	}
 
-	summaryPath := filepath.Join(outputDir, summaryFile)
-	if err := WriteJSON(summaryPath, summary, true); err != nil {
+	if err := write(minifiedPath, full, false); err != nil {
+		cleanup()
+		return err
+	}
+
+	if err := write(summaryPath, summary, true); err != nil {
+		cleanup()
 		return err
 	}
 

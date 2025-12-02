@@ -71,7 +71,7 @@ type runDeps struct {
 	sm              stateManager
 	generateFull    func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput
 	generateSummary func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput
-	writeOutputs    func(string, *config.Config, *models.FullOutput, *models.SummaryOutput) error
+	writeOutputs    func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error
 	now             func() time.Time
 	logger          *slog.Logger
 }
@@ -102,12 +102,28 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 		logger = slog.Default()
 	}
 
+	checkCtx := func(stage string) error {
+		if err := ctx.Err(); err != nil {
+			logger.Info("extraction cancelled", "stage", stage, "error", err)
+			return err
+		}
+		return nil
+	}
+
 	start := d.now()
 	logger.Info("extraction started", "timestamp", start.Format(time.RFC3339))
+
+	if err := checkCtx("start"); err != nil {
+		return err
+	}
 
 	state, err := d.sm.LoadState()
 	if err != nil {
 		logger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
+		return err
+	}
+
+	if err := checkCtx("after_load_state"); err != nil {
 		return err
 	}
 
@@ -117,9 +133,17 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 		return err
 	}
 
+	if err := checkCtx("after_fetch"); err != nil {
+		return err
+	}
+
 	history, err := d.sm.LoadHistory()
 	if err != nil {
 		logger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
+		return err
+	}
+
+	if err := checkCtx("after_load_history"); err != nil {
 		return err
 	}
 
@@ -133,23 +157,52 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 		return nil
 	}
 
+	if err := checkCtx("before_snapshot"); err != nil {
+		return err
+	}
+
 	snapshot := storage.CreateSnapshot(aggResult)
 	history = d.sm.AppendSnapshot(history, snapshot)
 
 	if opts.DryRun {
 		logger.Info("dry-run mode, skipping file writes")
 	} else {
+		if err := checkCtx("before_writes"); err != nil {
+			return err
+		}
+
 		full := d.generateFull(aggResult, history, cfg)
 		summary := d.generateSummary(aggResult, cfg)
 
-		if err := d.writeOutputs(cfg.Output.Directory, cfg, full, summary); err != nil {
+		if err := checkCtx("after_generate_outputs"); err != nil {
+			return err
+		}
+
+		if err := checkCtx("before_write_outputs"); err != nil {
+			return err
+		}
+
+		if err := d.writeOutputs(ctx, cfg.Output.Directory, cfg, full, summary); err != nil {
 			logger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
 			return err
 		}
 
+		if err := checkCtx("after_write_outputs"); err != nil {
+			return err
+		}
+
 		newState := d.sm.UpdateState(cfg.Oracle.Name, aggResult.Timestamp, aggResult.TotalProtocols, aggResult.TotalTVS, history)
+
+		if err := checkCtx("before_save_state"); err != nil {
+			return err
+		}
+
 		if err := d.sm.SaveState(newState); err != nil {
 			logger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
+			return err
+		}
+
+		if err := checkCtx("after_save_state"); err != nil {
 			return err
 		}
 	}
@@ -161,7 +214,7 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 		"chains", len(aggResult.ActiveChains),
 	)
 
-	return nil
+	return checkCtx("complete")
 }
 
 type ticker interface {
@@ -214,14 +267,25 @@ func runDaemonWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions,
 		return fmt.Errorf("invalid scheduler interval: %s", cfg.Scheduler.Interval)
 	}
 
-	logger.Info("daemon started", "interval", cfg.Scheduler.Interval.String(), "start_immediately", cfg.Scheduler.StartImmediately)
+	logger.Info(fmt.Sprintf("daemon started, interval: %s", cfg.Scheduler.Interval), "interval", cfg.Scheduler.Interval, "start_immediately", cfg.Scheduler.StartImmediately)
 
 	t := makeTicker(cfg.Scheduler.Interval)
 	defer t.Stop()
 
+	nextExtraction := func(reference time.Time) time.Time {
+		return reference.Add(cfg.Scheduler.Interval)
+	}
+
 	if cfg.Scheduler.StartImmediately {
-		if err := runOnceFn(ctx, cfg, opts, logger); err != nil {
-			logger.Error("start_immediately run failed", "error", err)
+		runErr := runOnceFn(ctx, cfg, opts, logger)
+		if runErr != nil {
+			logger.Error("start_immediately run failed", "error", runErr)
+		}
+		logger.Info("next extraction at", "time", nextExtraction(now()).Format(time.RFC3339))
+
+		if ctx.Err() != nil {
+			logger.Info("shutdown signal received, finishing current extraction")
+			return nil
 		}
 	}
 
@@ -230,12 +294,18 @@ func runDaemonWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions,
 		case <-ctx.Done():
 			logger.Info("shutdown signal received, exiting daemon")
 			return nil
-		case <-t.Chan():
-			if err := runOnceFn(ctx, cfg, opts, logger); err != nil {
-				logger.Error("daemon cycle failed", "error", err)
-				continue
+		case tickTime := <-t.Chan():
+			runErr := runOnceFn(ctx, cfg, opts, logger)
+			if runErr != nil {
+				logger.Error("daemon cycle failed", "error", runErr)
 			}
-			logger.Info("daemon cycle completed", "next_run_at", now().Add(cfg.Scheduler.Interval).Format(time.RFC3339))
+
+			logger.Info("next extraction at", "time", nextExtraction(tickTime).Format(time.RFC3339))
+
+			if ctx.Err() != nil {
+				logger.Info("shutdown signal received, finishing current extraction")
+				return nil
+			}
 		}
 	}
 }
@@ -280,7 +350,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 
-	if err := RunOnce(context.Background(), cfg, opts, logger); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	if err := RunOnce(ctx, cfg, opts, logger); err != nil {
 		logger.Error("extraction failed", "error", err)
 		return 1
 	}

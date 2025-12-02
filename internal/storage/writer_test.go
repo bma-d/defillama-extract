@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -192,7 +194,7 @@ func TestWriteAllOutputs_WritesAllFilesAndMatchesData(t *testing.T) {
 	full := GenerateFullOutput(result, history, cfg)
 	summary := GenerateSummaryOutput(result, cfg)
 
-	if err := WriteAllOutputs(dir, cfg, full, summary); err != nil {
+	if err := WriteAllOutputs(context.Background(), dir, cfg, full, summary); err != nil {
 		t.Fatalf("WriteAllOutputs error: %v", err)
 	}
 
@@ -241,7 +243,7 @@ func TestWriteAllOutputs_RespectsConfigFilenames(t *testing.T) {
 	full := GenerateFullOutput(sampleAggregationResult(), nil, cfg)
 	summary := GenerateSummaryOutput(sampleAggregationResult(), cfg)
 
-	if err := WriteAllOutputs(dir, cfg, full, summary); err != nil {
+	if err := WriteAllOutputs(context.Background(), dir, cfg, full, summary); err != nil {
 		t.Fatalf("WriteAllOutputs error: %v", err)
 	}
 
@@ -266,6 +268,33 @@ func TestWriteAllOutputs_RespectsConfigFilenames(t *testing.T) {
 	for _, p := range defaultPaths {
 		if _, err := os.Stat(p); !os.IsNotExist(err) {
 			t.Fatalf("expected default path not used: %s", p)
+		}
+	}
+}
+
+func TestWriteAllOutputs_CancelsBeforeWritesAndLeavesNoFiles(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	dir := t.TempDir()
+	cfg := sampleConfig()
+	full := GenerateFullOutput(sampleAggregationResult(), nil, cfg)
+	summary := GenerateSummaryOutput(sampleAggregationResult(), cfg)
+
+	err := WriteAllOutputs(ctx, dir, cfg, full, summary)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context cancellation, got %v", err)
+	}
+
+	paths := []string{
+		filepath.Join(dir, resolveFileName(cfg.Output.FullFile, fullOutputFileName)),
+		filepath.Join(dir, resolveFileName(cfg.Output.MinFile, minifiedOutputFileName)),
+		filepath.Join(dir, resolveFileName(cfg.Output.SummaryFile, summaryOutputFileName)),
+	}
+
+	for _, p := range paths {
+		if _, statErr := os.Stat(p); !os.IsNotExist(statErr) {
+			t.Fatalf("expected no file written on cancel: %s", p)
 		}
 	}
 }

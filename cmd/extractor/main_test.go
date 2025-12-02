@@ -5,7 +5,11 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"os"
+	"os/signal"
+	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -42,6 +46,7 @@ type stubState struct {
 	savedState    *storage.State
 	saveErr       error
 	appendHistory []aggregator.Snapshot
+	saveStateHook func(*storage.State) error
 }
 
 func (s *stubState) LoadState() (*storage.State, error) {
@@ -67,6 +72,11 @@ func (s *stubState) UpdateState(oracleName string, ts int64, count int, tvs floa
 
 func (s *stubState) SaveState(state *storage.State) error {
 	s.savedState = state
+	if s.saveStateHook != nil {
+		if err := s.saveStateHook(state); err != nil {
+			return err
+		}
+	}
 	return s.saveErr
 }
 
@@ -165,7 +175,7 @@ func TestRunOnceSuccess(t *testing.T) {
 			summaryCalled = true
 			return &models.SummaryOutput{}
 		},
-		writeOutputs: func(string, *config.Config, *models.FullOutput, *models.SummaryOutput) error {
+		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
 			wroteOutputs = true
 			return nil
 		},
@@ -206,7 +216,7 @@ func TestRunOnceSkipsWhenNoNewData(t *testing.T) {
 			t.Fatalf("generateSummary should not be called")
 			return nil
 		},
-		writeOutputs: func(string, *config.Config, *models.FullOutput, *models.SummaryOutput) error {
+		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
 			t.Fatalf("writeOutputs should not be called")
 			return nil
 		},
@@ -240,7 +250,7 @@ func TestRunOnceDryRunSkipsWrites(t *testing.T) {
 		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
 			return &models.SummaryOutput{}
 		},
-		writeOutputs: func(string, *config.Config, *models.FullOutput, *models.SummaryOutput) error {
+		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
 			wroteOutputs = true
 			return nil
 		},
@@ -294,7 +304,7 @@ func TestRunOncePropagatesWriteError(t *testing.T) {
 		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
 			return &models.SummaryOutput{}
 		},
-		writeOutputs: func(string, *config.Config, *models.FullOutput, *models.SummaryOutput) error {
+		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
 			return errors.New("write failed")
 		},
 		now:    func() time.Time { return time.Unix(0, 0) },
@@ -360,8 +370,8 @@ func TestRunDaemonWithDepsRunsOnTickAndStopsOnCancel(t *testing.T) {
 	if runCount != 1 {
 		t.Fatalf("expected runOnce called once, got %d", runCount)
 	}
-	if !strings.Contains(buf.String(), "daemon cycle completed") {
-		t.Fatalf("expected completion log, got %s", buf.String())
+	if !strings.Contains(buf.String(), "next extraction at") {
+		t.Fatalf("expected next extraction log, got %s", buf.String())
 	}
 }
 
@@ -371,6 +381,7 @@ func TestRunDaemonWithDepsContinuesAfterStartImmediatelyFailure(t *testing.T) {
 	cfg.Scheduler.StartImmediately = true
 
 	tickCh := make(chan time.Time, 1)
+	runCalled := make(chan struct{}, 2)
 
 	var runCount int
 	buf := &bytes.Buffer{}
@@ -379,6 +390,7 @@ func TestRunDaemonWithDepsContinuesAfterStartImmediatelyFailure(t *testing.T) {
 	deps := daemonDeps{
 		runOnce: func(context.Context, *config.Config, CLIOptions, *slog.Logger) error {
 			runCount++
+			runCalled <- struct{}{}
 			if runCount == 1 {
 				return errors.New("boom")
 			}
@@ -400,7 +412,9 @@ func TestRunDaemonWithDepsContinuesAfterStartImmediatelyFailure(t *testing.T) {
 		close(done)
 	}()
 
+	<-runCalled // start_immediately
 	tickCh <- time.Unix(1, 0)
+	<-runCalled // tick run
 	cancel()
 
 	<-done
@@ -411,7 +425,470 @@ func TestRunDaemonWithDepsContinuesAfterStartImmediatelyFailure(t *testing.T) {
 	if !strings.Contains(buf.String(), "start_immediately run failed") {
 		t.Fatalf("expected start failure log, got %s", buf.String())
 	}
-	if !strings.Contains(buf.String(), "daemon cycle completed") {
-		t.Fatalf("expected daemon cycle completion log, got %s", buf.String())
+	if !strings.Contains(buf.String(), "next extraction at") {
+		t.Fatalf("expected next extraction log, got %s", buf.String())
+	}
+}
+
+func TestRunDaemonLogsNextExtractionAfterFailure(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Scheduler.Interval = time.Second
+
+	tickCh := make(chan time.Time, 1)
+	runCalled := make(chan struct{}, 1)
+	buf := &bytes.Buffer{}
+	logger := newLogger(buf)
+
+	deps := daemonDeps{
+		runOnce: func(context.Context, *config.Config, CLIOptions, *slog.Logger) error {
+			runCalled <- struct{}{}
+			return errors.New("boom")
+		},
+		makeTicker: func(time.Duration) ticker { return &stubTicker{ch: tickCh} },
+		now:        func() time.Time { return time.Unix(0, 0) },
+		logger:     logger,
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan struct{})
+	go func() {
+		_ = runDaemonWithDeps(ctx, cfg, CLIOptions{}, deps)
+		close(done)
+	}()
+
+	tickCh <- time.Unix(10, 0)
+	<-runCalled
+	cancel()
+	<-done
+
+	if !strings.Contains(buf.String(), "daemon cycle failed") {
+		t.Fatalf("expected failure log, got %s", buf.String())
+	}
+	if !strings.Contains(buf.String(), "next extraction at") {
+		t.Fatalf("expected next extraction log even after failure, got %s", buf.String())
+	}
+}
+
+func TestRunDaemonShutdownDuringExtractionFinishesCurrentRun(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Scheduler.Interval = time.Second
+
+	tickCh := make(chan time.Time, 1)
+	runStarted := make(chan struct{})
+	release := make(chan struct{})
+
+	buf := &bytes.Buffer{}
+	logger := newLogger(buf)
+
+	deps := daemonDeps{
+		runOnce: func(context.Context, *config.Config, CLIOptions, *slog.Logger) error {
+			close(runStarted)
+			<-release
+			return nil
+		},
+		makeTicker: func(time.Duration) ticker { return &stubTicker{ch: tickCh} },
+		now:        func() time.Time { return time.Unix(0, 0) },
+		logger:     logger,
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		_ = runDaemonWithDeps(ctx, cfg, CLIOptions{}, deps)
+		close(done)
+	}()
+
+	tickCh <- time.Unix(5, 0)
+	<-runStarted
+	cancel()
+	close(release)
+	<-done
+
+	if !strings.Contains(buf.String(), "shutdown signal received, finishing current extraction") {
+		t.Fatalf("expected finishing log, got %s", buf.String())
+	}
+}
+
+func TestRunOnceWithCanceledContextSkipsWrites(t *testing.T) {
+	cfg := baseConfig()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	wroteOutputs := false
+	deps := runDeps{
+		client: stubClient{res: &api.FetchResult{}},
+		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 1}},
+		sm:     &stubState{state: &storage.State{}, shouldProcess: true},
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+			wroteOutputs = true
+			return &models.FullOutput{}
+		},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			wroteOutputs = true
+			return &models.SummaryOutput{}
+		},
+		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
+			wroteOutputs = true
+			return nil
+		},
+		now:    func() time.Time { return time.Unix(0, 0) },
+		logger: newLogger(&bytes.Buffer{}),
+	}
+
+	if err := runOnceWithDeps(ctx, cfg, CLIOptions{}, deps); err == nil {
+		t.Fatalf("expected cancellation error")
+	}
+
+	if wroteOutputs {
+		t.Fatalf("expected writes to be skipped on cancellation")
+	}
+}
+
+func TestRunOnceCancellationDuringProcessingSkipsWrites(t *testing.T) {
+	cfg := baseConfig()
+	ctx, cancel := context.WithCancel(context.Background())
+
+	wroteOutputs := false
+	savedState := false
+
+	state := &stubState{
+		state:         &storage.State{},
+		shouldProcess: true,
+		saveStateHook: func(*storage.State) error {
+			savedState = true
+			return nil
+		},
+	}
+	deps := runDeps{
+		client: stubClient{res: &api.FetchResult{OracleResponse: &api.OracleAPIResponse{}, Protocols: []api.Protocol{}}},
+		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 10, TotalProtocols: 1}},
+		sm:     state,
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+			cancel()
+			return &models.FullOutput{}
+		},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			return &models.SummaryOutput{}
+		},
+		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
+			wroteOutputs = true
+			return nil
+		},
+		now:    func() time.Time { return time.Unix(0, 0) },
+		logger: newLogger(&bytes.Buffer{}),
+	}
+
+	err := runOnceWithDeps(ctx, cfg, CLIOptions{}, deps)
+
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context cancellation, got %v", err)
+	}
+	if wroteOutputs {
+		t.Fatalf("expected writes to be skipped when context cancels during processing")
+	}
+	if savedState {
+		t.Fatalf("expected state save to be skipped on cancellation")
+	}
+}
+
+func TestRunOnceCancellationDuringWriteOutputsLeavesNoFiles(t *testing.T) {
+	cfg := baseConfig()
+	dir := t.TempDir()
+	cfg.Output.Directory = dir
+	cfg.Output.FullFile = "full.json"
+	cfg.Output.MinFile = "min.json"
+	cfg.Output.SummaryFile = "summary.json"
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	state := &stubState{state: &storage.State{}, shouldProcess: true}
+	full := &models.FullOutput{Version: "v1", Metadata: models.OutputMetadata{LastUpdated: time.Now().Format(time.RFC3339)}}
+	summary := &models.SummaryOutput{Version: "v1", Metadata: models.OutputMetadata{LastUpdated: time.Now().Format(time.RFC3339)}}
+
+	deps := runDeps{
+		client: stubClient{res: &api.FetchResult{OracleResponse: &api.OracleAPIResponse{}, Protocols: []api.Protocol{}}},
+		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 50, TotalProtocols: 1}},
+		sm:     state,
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+			return full
+		},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			return summary
+		},
+		writeOutputs: func(ctx context.Context, outputDir string, cfg *config.Config, full *models.FullOutput, summary *models.SummaryOutput) error {
+			cancel()
+			return storage.WriteAllOutputs(ctx, outputDir, cfg, full, summary)
+		},
+		now:    func() time.Time { return time.Unix(0, 0) },
+		logger: newLogger(&bytes.Buffer{}),
+	}
+
+	err := runOnceWithDeps(ctx, cfg, CLIOptions{}, deps)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected cancellation error, got %v", err)
+	}
+
+	for _, name := range []string{cfg.Output.FullFile, cfg.Output.MinFile, cfg.Output.SummaryFile} {
+		if _, statErr := os.Stat(filepath.Join(dir, name)); !os.IsNotExist(statErr) {
+			t.Fatalf("expected no file written on cancel: %s", name)
+		}
+	}
+
+	if state.savedState != nil {
+		t.Fatalf("expected state not to be saved after cancellation")
+	}
+}
+
+func TestRunDaemonWithDepsStartImmediatelyThenTickHonorsContext(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Scheduler.Interval = time.Second
+	cfg.Scheduler.StartImmediately = true
+
+	tickCh := make(chan time.Time, 1)
+	runCalled := make(chan struct{}, 2)
+
+	buf := &bytes.Buffer{}
+	logger := newLogger(buf)
+
+	var runCount int
+	deps := daemonDeps{
+		runOnce: func(context.Context, *config.Config, CLIOptions, *slog.Logger) error {
+			runCount++
+			runCalled <- struct{}{}
+			return nil
+		},
+		makeTicker: func(time.Duration) ticker { return &stubTicker{ch: tickCh} },
+		now:        func() time.Time { return time.Unix(0, 0) },
+		logger:     logger,
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan struct{})
+	go func() {
+		_ = runDaemonWithDeps(ctx, cfg, CLIOptions{}, deps)
+		close(done)
+	}()
+
+	<-runCalled // start_immediately
+
+	tickCh <- time.Unix(1, 0)
+	<-runCalled // first tick
+
+	cancel()
+	<-done
+
+	if runCount != 2 {
+		t.Fatalf("expected 2 runs (immediate + tick), got %d", runCount)
+	}
+	if !strings.Contains(buf.String(), "daemon started") {
+		t.Fatalf("expected daemon start log, got %s", buf.String())
+	}
+	if !strings.Contains(buf.String(), "next extraction at") {
+		t.Fatalf("expected next extraction log, got %s", buf.String())
+	}
+}
+
+func TestRunDaemonWithDepsCancelsWhileWaiting(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Scheduler.Interval = time.Second
+
+	tickCh := make(chan time.Time)
+	var runCount int
+
+	deps := daemonDeps{
+		runOnce: func(context.Context, *config.Config, CLIOptions, *slog.Logger) error {
+			runCount++
+			return nil
+		},
+		makeTicker: func(time.Duration) ticker { return &stubTicker{ch: tickCh} },
+		now:        func() time.Time { return time.Unix(0, 0) },
+		logger:     newLogger(&bytes.Buffer{}),
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		_ = runDaemonWithDeps(ctx, cfg, CLIOptions{}, deps)
+		close(done)
+	}()
+
+	cancel()
+	<-done
+
+	if runCount != 0 {
+		t.Fatalf("expected no runs when cancelled while waiting, got %d", runCount)
+	}
+}
+
+func TestRunOnceCancellationBetweenOutputsAndWritesSkipsSideEffects(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cfg := baseConfig()
+
+	wroteOutputs := false
+	savedState := false
+
+	deps := runDeps{
+		client: stubClient{res: &api.FetchResult{}},
+		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 5, TotalProtocols: 1}},
+		sm: &stubState{
+			state:         &storage.State{},
+			shouldProcess: true,
+			saveStateHook: func(*storage.State) error {
+				savedState = true
+				return nil
+			},
+		},
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+			return &models.FullOutput{}
+		},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			cancel() // cancel after outputs produced, before writes
+			return &models.SummaryOutput{}
+		},
+		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
+			wroteOutputs = true
+			return nil
+		},
+		now:    func() time.Time { return time.Unix(0, 0) },
+		logger: newLogger(&bytes.Buffer{}),
+	}
+
+	err := runOnceWithDeps(ctx, cfg, CLIOptions{}, deps)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected cancellation error, got %v", err)
+	}
+	if wroteOutputs {
+		t.Fatalf("expected writeOutputs not to be called after cancellation")
+	}
+	if savedState {
+		t.Fatalf("expected SaveState not to be called after cancellation")
+	}
+}
+
+func TestDaemonIntegration_StartImmediatelyFalse_ShutdownWhileWaiting(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Scheduler.Interval = 10 * time.Millisecond
+
+	var runCount int
+	runCalled := make(chan struct{}, 1)
+	loggerBuf := &bytes.Buffer{}
+
+	deps := daemonDeps{
+		runOnce: func(context.Context, *config.Config, CLIOptions, *slog.Logger) error {
+			runCount++
+			runCalled <- struct{}{}
+			return nil
+		},
+		makeTicker: func(d time.Duration) ticker { return timeTicker{t: time.NewTicker(d)} },
+		now:        time.Now,
+		logger:     newLogger(loggerBuf),
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	done := make(chan struct{})
+	go func() {
+		_ = runDaemonWithDeps(ctx, cfg, CLIOptions{}, deps)
+		close(done)
+	}()
+
+	<-runCalled // first tick execution
+	stop()      // simulate SIGINT while waiting for next tick
+	<-done
+
+	if runCount != 1 {
+		t.Fatalf("expected exactly one run before shutdown, got %d", runCount)
+	}
+	if !strings.Contains(loggerBuf.String(), "shutdown signal received") {
+		t.Fatalf("expected shutdown log, got %s", loggerBuf.String())
+	}
+}
+
+func TestDaemonIntegration_StartImmediatelyTrue_ShutdownDuringRun(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Scheduler.Interval = 50 * time.Millisecond
+	cfg.Scheduler.StartImmediately = true
+
+	runStarted := make(chan struct{})
+	release := make(chan struct{})
+	loggerBuf := &bytes.Buffer{}
+
+	deps := daemonDeps{
+		runOnce: func(context.Context, *config.Config, CLIOptions, *slog.Logger) error {
+			close(runStarted)
+			<-release
+			return nil
+		},
+		makeTicker: func(d time.Duration) ticker { return timeTicker{t: time.NewTicker(d)} },
+		now:        time.Now,
+		logger:     newLogger(loggerBuf),
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	done := make(chan struct{})
+	go func() {
+		_ = runDaemonWithDeps(ctx, cfg, CLIOptions{}, deps)
+		close(done)
+	}()
+
+	<-runStarted
+	stop() // cancel while runOnce is executing
+	close(release)
+	<-done
+
+	if !strings.Contains(loggerBuf.String(), "shutdown signal received") {
+		t.Fatalf("expected shutdown log, got %s", loggerBuf.String())
+	}
+}
+
+func TestDaemonIntegration_ErrorRecoveryContinues(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Scheduler.Interval = 10 * time.Millisecond
+
+	var runCount int
+	runCalled := make(chan struct{}, 2)
+	loggerBuf := &bytes.Buffer{}
+
+	deps := daemonDeps{
+		runOnce: func(context.Context, *config.Config, CLIOptions, *slog.Logger) error {
+			runCount++
+			runCalled <- struct{}{}
+			if runCount == 1 {
+				return errors.New("boom")
+			}
+			return nil
+		},
+		makeTicker: func(d time.Duration) ticker { return timeTicker{t: time.NewTicker(d)} },
+		now:        time.Now,
+		logger:     newLogger(loggerBuf),
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	done := make(chan struct{})
+	go func() {
+		_ = runDaemonWithDeps(ctx, cfg, CLIOptions{}, deps)
+		close(done)
+	}()
+
+	<-runCalled // first (fails)
+	<-runCalled // second (succeeds)
+	stop()
+	<-done
+
+	if runCount < 2 {
+		t.Fatalf("expected at least two runs despite first failure, got %d", runCount)
+	}
+	if !strings.Contains(loggerBuf.String(), "daemon cycle failed") {
+		t.Fatalf("expected daemon failure log, got %s", loggerBuf.String())
+	}
+	if !strings.Contains(loggerBuf.String(), "next extraction at") {
+		t.Fatalf("expected next extraction log, got %s", loggerBuf.String())
 	}
 }
