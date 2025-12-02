@@ -1,0 +1,339 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>3</storyId>
+    <title>Implement Daemon Mode and Complete Main Entry Point</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-02</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-3-implement-daemon-mode.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>operator</asA>
+    <iWant>continuous daemon operation with graceful shutdown</iWant>
+    <soThat>data stays automatically updated in production</soThat>
+    <tasks>
+      <task id="1" goal="Complete Daemon Scheduler Implementation (AC: 1-4, 11)">
+        <subtask id="1.1">Verify runDaemonWithDeps exists in cmd/extractor/main.go (from Story 5.2)</subtask>
+        <subtask id="1.2">Add INFO log "daemon started, interval: {interval}" at daemon start</subtask>
+        <subtask id="1.3">Implement time.Ticker with cfg.Scheduler.Interval (default 2h)</subtask>
+        <subtask id="1.4">If cfg.Scheduler.StartImmediately == true: run extraction immediately before entering ticker loop</subtask>
+        <subtask id="1.5">After each extraction cycle, log INFO "next extraction at {timestamp}" with next scheduled time</subtask>
+        <subtask id="1.6">Verify start_immediately failures log error and continue to next tick (already implemented in 5.2)</subtask>
+      </task>
+      <task id="2" goal="Implement Graceful Shutdown (AC: 6-8, 12)">
+        <subtask id="2.1">Use signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM) for context cancellation</subtask>
+        <subtask id="2.2">In daemon loop: check ctx.Done() to detect shutdown signal</subtask>
+        <subtask id="2.3">On shutdown during extraction: log "shutdown signal received, finishing current extraction"</subtask>
+        <subtask id="2.4">Allow current extraction to complete via context propagation</subtask>
+        <subtask id="2.5">On shutdown while waiting: ticker select receives context.Done(), exits immediately</subtask>
+        <subtask id="2.6">Ensure daemon exit code is 0 on graceful shutdown</subtask>
+        <subtask id="2.7">For --once mode: if context cancelled mid-extraction, skip writes and exit 1</subtask>
+      </task>
+      <task id="3" goal="Wire Complete Main Entry Point (AC: 9-10)">
+        <subtask id="3.1">Verify main() sequence follows tech spec order</subtask>
+        <subtask id="3.2">Verify error handling at each initialization step returns exit 1</subtask>
+        <subtask id="3.3">Ensure all components are created before signal handler setup</subtask>
+        <subtask id="3.4">Route to runDaemonWithDeps when no --once flag</subtask>
+      </task>
+      <task id="4" goal="Implement Daemon Error Recovery (AC: 5)">
+        <subtask id="4.1">Wrap extraction call in error handling within daemon loop</subtask>
+        <subtask id="4.2">On extraction failure: log ERROR with error message and duration</subtask>
+        <subtask id="4.3">Continue to next scheduled extraction (do not exit)</subtask>
+        <subtask id="4.4">Log "next extraction at {timestamp}" even after failure</subtask>
+      </task>
+      <task id="5" goal="Write Unit Tests (AC: all)">
+        <subtask id="5.1">Test daemon scheduler runs at interval</subtask>
+        <subtask id="5.2">Test start_immediately=true runs extraction immediately</subtask>
+        <subtask id="5.3">Test start_immediately=false waits for first interval</subtask>
+        <subtask id="5.4">Test daemon logs "daemon started" with interval</subtask>
+        <subtask id="5.5">Test "next extraction at" log after each cycle</subtask>
+        <subtask id="5.6">Test daemon continues after extraction failure</subtask>
+        <subtask id="5.7">Test graceful shutdown during extraction completes current work</subtask>
+        <subtask id="5.8">Test graceful shutdown while waiting exits immediately</subtask>
+        <subtask id="5.9">Test main() initialization failure exits 1</subtask>
+        <subtask id="5.10">Test --once interrupted exits 1 with partial results not written</subtask>
+      </task>
+      <task id="6" goal="Integration Testing (AC: all)">
+        <subtask id="6.1">Run daemon with short interval (e.g., 5s for testing)</subtask>
+        <subtask id="6.2">Verify scheduled extractions occur</subtask>
+        <subtask id="6.3">Send SIGINT during wait, verify immediate exit</subtask>
+        <subtask id="6.4">Send SIGINT during extraction, verify completion then exit</subtask>
+        <subtask id="6.5">Cause extraction failure, verify daemon continues</subtask>
+      </task>
+      <task id="7" goal="Verification (AC: all)">
+        <subtask id="7.1">Run go build ./... and verify success</subtask>
+        <subtask id="7.2">Run go test ./cmd/extractor/... and verify all pass</subtask>
+        <subtask id="7.3">Run make lint and verify no errors</subtask>
+        <subtask id="7.4">Manual smoke test: Run without --once, verify daemon starts and logs interval</subtask>
+        <subtask id="7.5">Manual smoke test: Wait for scheduled extraction, verify runs and logs next time</subtask>
+        <subtask id="7.6">Manual smoke test: Send SIGINT during wait, verify immediate clean exit</subtask>
+        <subtask id="7.7">Manual smoke test: Cause init failure (bad config path), verify exit 1</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>daemon mode (no --once flag) with scheduler.interval: 2h</given>
+      <when>application starts</when>
+      <then>extraction runs on schedule every 2 hours AND log: "daemon started, interval: 2h"</then>
+    </criterion>
+    <criterion id="AC2" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>scheduler.start_immediately: true</given>
+      <when>daemon starts</when>
+      <then>first extraction runs immediately, subsequent follow interval</then>
+    </criterion>
+    <criterion id="AC3" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>scheduler.start_immediately: false</given>
+      <when>daemon starts</when>
+      <then>first extraction waits for interval</then>
+    </criterion>
+    <criterion id="AC4" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>extraction cycle completes in daemon mode</given>
+      <when>waiting for next interval</when>
+      <then>log: "next extraction at {timestamp}"</then>
+    </criterion>
+    <criterion id="AC5" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>extraction fails in daemon mode</given>
+      <when>error occurs</when>
+      <then>error is logged, daemon continues running, next extraction scheduled normally</then>
+    </criterion>
+    <criterion id="AC6" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>daemon running an extraction</given>
+      <when>SIGINT/SIGTERM received</when>
+      <then>current extraction completes AND log: "shutdown signal received, finishing current extraction" AND exits cleanly with code 0</then>
+    </criterion>
+    <criterion id="AC7" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>daemon waiting for next extraction</given>
+      <when>SIGINT/SIGTERM received</when>
+      <then>wait is cancelled immediately, exits with code 0</then>
+    </criterion>
+    <criterion id="AC8" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>--once mode with extraction in progress</given>
+      <when>SIGINT received</when>
+      <then>extraction cancelled via context, partial results NOT written, exit code 1</then>
+    </criterion>
+    <criterion id="AC9" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>application starts</given>
+      <when>main() executes</when>
+      <then>sequence is: 1) Parse CLI flags, 2) Handle --version, 3) Load configuration, 4) Apply environment overrides, 5) Validate configuration, 6) Initialize logger, 7) Create components, 8) Set up signal handling, 9) Run in appropriate mode, 10) Exit with appropriate code</then>
+    </criterion>
+    <criterion id="AC10" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>any initialization failure (bad config, etc.)</given>
+      <when>error occurs</when>
+      <then>error logged, exit code 1</then>
+    </criterion>
+    <criterion id="AC11" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>scheduler.start_immediately: true and the initial extraction fails</given>
+      <when>error occurs during the boot cycle</when>
+      <then>error is logged, daemon continues waiting for the next interval instead of exiting</then>
+    </criterion>
+    <criterion id="AC12" source="docs/sprint-artifacts/tech-spec-epic-5.md#Story-5.3">
+      <given>daemon starts</given>
+      <when>setting up signal handler</when>
+      <then>listen for os.Interrupt and syscall.SIGTERM AND use context cancellation for clean shutdown</then>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <entry>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Output and CLI</title>
+        <section>Story 5.3: Daemon Mode and Main Entry Point</section>
+        <snippet>Authoritative source for AC 5.3.1-5.3.12. Defines daemon scheduler (time.Ticker), graceful shutdown (signal.NotifyContext), and main() sequence.</snippet>
+      </entry>
+      <entry>
+        <path>docs/epics/epic-5-output-cli.md</path>
+        <title>Epic 5: Output and CLI</title>
+        <section>Story 5.3 Definition</section>
+        <snippet>Story definition with AC for daemon mode scheduler, graceful shutdown, and complete main entry point. Smoke test guide included.</snippet>
+      </entry>
+      <entry>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR43, FR47</section>
+        <snippet>FR43: System runs in daemon mode with configurable interval (default 2 hours). FR47: System shuts down gracefully on SIGINT and SIGTERM signals.</snippet>
+      </entry>
+      <entry>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-001, ADR-004</section>
+        <snippet>ADR-001: Use Go Standard Library (time.Ticker for scheduling). ADR-004: Structured Logging with slog (JSON output in daemon mode).</snippet>
+      </entry>
+      <entry>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>cmd/extractor/main.go</section>
+        <snippet>Entry point: CLI parsing, DI, signal handling. Standard Go project layout.</snippet>
+      </entry>
+      <entry>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Table-driven tests, co-located test files (*_test.go), mock server tests for HTTP client.</snippet>
+      </entry>
+      <entry>
+        <path>docs/sprint-artifacts/5-2-implement-cli-and-single-run-mode.md</path>
+        <title>Story 5.2: Implement CLI and Single-Run Mode</title>
+        <section>Dev Agent Record, Completion Notes</section>
+        <snippet>Daemon foundation built: runDaemonWithDeps exists at main.go:186-241, signal-aware context, ticker scheduling, start_immediately resiliency implemented.</snippet>
+      </entry>
+    </docs>
+
+    <code>
+      <entry>
+        <path>cmd/extractor/main.go</path>
+        <kind>entry-point</kind>
+        <symbol>runDaemonWithDeps</symbol>
+        <lines>186-241</lines>
+        <reason>Primary daemon implementation. Contains time.Ticker, signal.NotifyContext, start_immediately logic, and daemon loop. This is where AC 1-7, 11-12 changes will occur.</reason>
+      </entry>
+      <entry>
+        <path>cmd/extractor/main.go</path>
+        <kind>entry-point</kind>
+        <symbol>run</symbol>
+        <lines>243-293</lines>
+        <reason>Main entry point orchestrating CLI parsing, config loading, logger setup, signal handling setup, and mode routing. AC 9-10 verification target.</reason>
+      </entry>
+      <entry>
+        <path>cmd/extractor/main.go</path>
+        <kind>function</kind>
+        <symbol>runOnceWithDeps</symbol>
+        <lines>95-165</lines>
+        <reason>Single extraction cycle implementation. Called by daemon loop and --once mode. Context propagation for graceful cancellation (AC 6-8).</reason>
+      </entry>
+      <entry>
+        <path>cmd/extractor/main.go</path>
+        <kind>interface</kind>
+        <symbol>daemonDeps</symbol>
+        <lines>179-184</lines>
+        <reason>Dependency injection struct for daemon testability. Contains runOnce, makeTicker, now, logger.</reason>
+      </entry>
+      <entry>
+        <path>cmd/extractor/main.go</path>
+        <kind>interface</kind>
+        <symbol>ticker</symbol>
+        <lines>167-170</lines>
+        <reason>Ticker interface for testable scheduling. Wraps time.Ticker with Chan() and Stop().</reason>
+      </entry>
+      <entry>
+        <path>cmd/extractor/main_test.go</path>
+        <kind>test</kind>
+        <symbol>TestRunDaemonWithDepsRunsOnTickAndStopsOnCancel</symbol>
+        <lines>320-366</lines>
+        <reason>Existing daemon unit test. Tests tick execution and context cancellation. Extend for additional coverage.</reason>
+      </entry>
+      <entry>
+        <path>cmd/extractor/main_test.go</path>
+        <kind>test</kind>
+        <symbol>TestRunDaemonWithDepsContinuesAfterStartImmediatelyFailure</symbol>
+        <lines>368-417</lines>
+        <reason>Existing test for AC11 (start_immediately failure resiliency). Verifies daemon continues after boot failure.</reason>
+      </entry>
+      <entry>
+        <path>cmd/extractor/main_test.go</path>
+        <kind>stub</kind>
+        <symbol>stubTicker</symbol>
+        <lines>313-318</lines>
+        <reason>Test stub for ticker interface. Use for unit testing scheduler logic.</reason>
+      </entry>
+      <entry>
+        <path>internal/config/config.go</path>
+        <kind>type</kind>
+        <symbol>SchedulerConfig</symbol>
+        <lines>N/A</lines>
+        <reason>Contains Interval (time.Duration) and StartImmediately (bool) fields for daemon configuration.</reason>
+      </entry>
+    </code>
+
+    <dependencies>
+      <go>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <version>go1.24.0</version>
+        <external>
+          <package name="golang.org/x/sync" version="v0.18.0" purpose="errgroup for parallel API fetching" />
+          <package name="gopkg.in/yaml.v3" version="v3.0.1" purpose="YAML config file parsing" />
+        </external>
+        <stdlib>
+          <package name="flag" purpose="CLI flag parsing (ADR-001)" />
+          <package name="log/slog" purpose="Structured logging (ADR-004)" />
+          <package name="time" purpose="Ticker for daemon scheduling" />
+          <package name="context" purpose="Cancellation propagation" />
+          <package name="os/signal" purpose="Signal handling for graceful shutdown" />
+          <package name="syscall" purpose="SIGTERM constant" />
+          <package name="os" purpose="Exit codes, Interrupt signal" />
+        </stdlib>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-001">Use time.Ticker from stdlib (not third-party scheduler)</constraint>
+    <constraint source="ADR-004">Use log/slog for all logging</constraint>
+    <constraint source="tech-spec">Daemon must continue after extraction failures (log error, schedule next)</constraint>
+    <constraint source="tech-spec">Graceful shutdown: complete current extraction on signal during work, exit immediately on signal during wait</constraint>
+    <constraint source="tech-spec">Exit code 0 for daemon graceful shutdown, exit code 1 for --once interrupted</constraint>
+    <constraint source="story">MODIFY only: cmd/extractor/main.go, cmd/extractor/main_test.go (no new files)</constraint>
+    <constraint source="go-patterns">Use signal.NotifyContext for clean context cancellation</constraint>
+    <constraint source="go-patterns">Use dependency injection (daemonDeps) for testability</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="ticker" kind="Go interface">
+      <signature>
+type ticker interface {
+    Chan() &lt;-chan time.Time
+    Stop()
+}
+      </signature>
+      <path>cmd/extractor/main.go:167-170</path>
+    </interface>
+    <interface name="daemonDeps" kind="Go struct">
+      <signature>
+type daemonDeps struct {
+    runOnce    func(context.Context, *config.Config, CLIOptions, *slog.Logger) error
+    makeTicker func(time.Duration) ticker
+    now        func() time.Time
+    logger     *slog.Logger
+}
+      </signature>
+      <path>cmd/extractor/main.go:179-184</path>
+    </interface>
+    <interface name="runDaemonWithDeps" kind="function">
+      <signature>func runDaemonWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d daemonDeps) error</signature>
+      <path>cmd/extractor/main.go:186</path>
+    </interface>
+    <interface name="signal.NotifyContext" kind="stdlib function">
+      <signature>func signal.NotifyContext(parent context.Context, signals ...os.Signal) (ctx context.Context, stop context.CancelFunc)</signature>
+      <path>os/signal</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use table-driven test patterns. Co-locate tests in *_test.go files. Use dependency injection via daemonDeps and stubTicker for daemon tests. Test signal handling via context cancellation. Use short intervals (milliseconds) in tests to avoid slow test suites. Assert log messages contain required attributes. No external dependencies in tests.
+    </standards>
+    <locations>
+      <pattern>cmd/extractor/main_test.go</pattern>
+      <pattern>internal/*_test.go</pattern>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test daemon logs "daemon started, interval: 2h" message at startup</idea>
+      <idea ac="AC2">Test start_immediately=true triggers immediate runOnce before ticker loop</idea>
+      <idea ac="AC3">Test start_immediately=false waits for first ticker before runOnce</idea>
+      <idea ac="AC4">Test "next extraction at {timestamp}" logged after successful cycle completion</idea>
+      <idea ac="AC4">Test "next extraction at {timestamp}" logged even after failed cycle</idea>
+      <idea ac="AC5">Test daemon continues to next interval after extraction failure (no exit)</idea>
+      <idea ac="AC6">Test SIGINT during extraction allows completion before exit 0</idea>
+      <idea ac="AC7">Test SIGINT while waiting exits immediately with code 0</idea>
+      <idea ac="AC8">Test --once mode SIGINT cancels extraction, skips writes, exits 1</idea>
+      <idea ac="AC9">Test main() sequence matches tech spec order</idea>
+      <idea ac="AC10">Test bad config path causes exit 1 with error log</idea>
+      <idea ac="AC11">Test start_immediately failure logs error and continues to ticker</idea>
+      <idea ac="AC12">Test signal handler listens for os.Interrupt and syscall.SIGTERM</idea>
+    </ideas>
+  </tests>
+</story-context>
