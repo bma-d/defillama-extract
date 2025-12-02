@@ -60,7 +60,7 @@ So that **I can retrieve TVS data and protocol-to-oracle mappings**.
 **And** the response is parsed into `OracleAPIResponse` struct containing:
   - `Oracles`: map of oracle name → protocol slugs
   - `Chart`: historical TVS data by oracle/chain/timestamp
-  - `OraclesTVS`: current TVS by oracle/chain
+  - `OraclesTVS`: current TVS by oracle/protocol/chain (legacy timestamp dimension supported as fallback)
   - `ChainsByOracle`: chains where each oracle operates
 
 **Given** a successful API response

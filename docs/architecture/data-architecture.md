@@ -6,6 +6,10 @@
 
 ```go
 // OracleAPIResponse from GET /oracles
+// Note: As of 2025-12-02, oraclesTVS is keyed by protocol, not timestamp.
+// Shape: oraclesTVS[oracle][protocol][chain] => tvs. Older payloads used
+// oraclesTVS[oracle][timestamp][chain]; the code now falls back to that legacy
+// form when protocol keys are absent.
 type OracleAPIResponse struct {
     Oracles        map[string][]string                       `json:"oracles"`
     Chart          map[string]map[string]map[string]float64  `json:"chart"`

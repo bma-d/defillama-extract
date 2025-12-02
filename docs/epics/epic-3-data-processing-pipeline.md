@@ -70,7 +70,7 @@ So that **I have the data needed for aggregation and output**.
   - `Chains` list from protocol metadata
   - `TVS` calculated from oracle response data
 
-**Given** oracle response with `OraclesTVS["Switchboard"]["Solana"] = 1000000`
+**Given** oracle response with `OraclesTVS["Switchboard"]["<protocol>"]["Solana"] = 1000000` (timestamp key only as legacy fallback)
 **When** extracting TVS for a protocol on Solana
 **Then** the protocol's TVS includes the Solana contribution
 
@@ -87,7 +87,7 @@ So that **I have the data needed for aggregation and output**.
 **Technical Notes:**
 - Package: `internal/aggregator/aggregator.go`
 - Create `AggregatedProtocol` struct in `internal/models/protocol.go`
-- Cross-reference protocol chains with `OraclesTVS` data
+- Cross-reference protocol chains with `OraclesTVS` data using protocol-keyed map; fall back to timestamp-keyed map when protocol entries are missing
 - Extract timestamp from chart data keys (Unix timestamps as strings)
 - Reference: data-architecture.md output models
 

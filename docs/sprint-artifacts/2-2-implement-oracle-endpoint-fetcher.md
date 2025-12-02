@@ -15,7 +15,7 @@ so that **I can retrieve TVS data and protocol-to-oracle mappings for downstream
 2. **Given** a successful API response **When** the response is parsed **Then** the function returns `(*OracleAPIResponse, nil)` with all fields populated:
    - `Oracles`: map of oracle name to protocol slugs (`map[string][]string`)
    - `Chart`: historical TVS data by oracle/chain/timestamp (`map[string]map[string]map[string]float64`)
-   - `OraclesTVS`: current TVS by oracle/chain (`map[string]map[string]map[string]float64`)
+   - `OraclesTVS`: current TVS by oracle/protocol/chain (fallback to legacy oracle/timestamp/chain) (`map[string]map[string]map[string]float64`)
    - `ChainsByOracle`: chains where each oracle operates (`map[string][]string`)
 
 3. **Given** an HTTP error (network failure, timeout, non-2xx status) **When** the request fails **Then** the function returns `(nil, error)` with descriptive error wrapping
@@ -33,7 +33,7 @@ so that **I can retrieve TVS data and protocol-to-oracle mappings for downstream
     type OracleAPIResponse struct {
         Oracles        map[string][]string                       `json:"oracles"`
         Chart          map[string]map[string]map[string]float64  `json:"chart"`
-        OraclesTVS     map[string]map[string]map[string]float64  `json:"oraclesTVS"`
+        OraclesTVS     map[string]map[string]map[string]float64  `json:"oraclesTVS"` // oracle → protocol → chain (or legacy oracle → timestamp → chain)
         ChainsByOracle map[string][]string                       `json:"chainsByOracle"`
     }
     ```

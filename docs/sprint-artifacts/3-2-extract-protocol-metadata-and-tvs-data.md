@@ -14,7 +14,7 @@ Source: Epic 3.2 / PRD FR11-FR14
 
 1. **Given** filtered Switchboard protocols and oracle API response **When** `ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResponse, oracleName string)` is called **Then** for each protocol an `AggregatedProtocol` struct is created with: `Name`, `Slug`, `Category`, `URL` from protocol metadata, `TVL` from protocol metadata, `Chains` list from protocol metadata, and `TVS` calculated from oracle response data
 
-2. **Given** oracle response with `OraclesTVS["Switchboard"]["Solana"] = 1000000` **When** extracting TVS for a protocol on Solana **Then** the protocol's TVS includes the Solana contribution
+2. **Given** oracle response with `OraclesTVS["Switchboard"]["Kamino Lend"]["Solana"] = 1000000` (or legacy timestamp form) **When** extracting TVS for a protocol on Solana **Then** the protocol's TVS includes the Solana contribution
 
 3. **Given** a protocol operating on multiple chains **When** extracting TVS **Then** `TVSByChain` map contains TVS for each chain where the protocol operates AND the oracle has TVS data
 
@@ -77,18 +77,21 @@ Source: Epic 3.2 / PRD FR11-FR14
 
 ### OraclesTVS Data Structure
 
-The `OracleAPIResponse.OraclesTVS` is a nested map:
+`OracleAPIResponse.OraclesTVS` is now keyed by protocol, then chain. Legacy payloads used a timestamp in the middle. Code must try protocol first, then fall back to timestamp if needed:
 ```go
 OraclesTVS map[string]map[string]map[string]float64
 // Level 1: oracle name -> map
-// Level 2: timestamp (string) -> map
+// Level 2: protocol name (preferred) or timestamp string (legacy) -> map
 // Level 3: chain name -> TVS value
 
-// Example access:
-oracleResp.OraclesTVS["Switchboard"]["1732924800"]["Solana"] // returns float64 TVS
+// Preferred (current API):
+oracleResp.OraclesTVS["Switchboard"]["Kamino Lend"]["Solana"]
+
+// Legacy fallback (timestamp):
+oracleResp.OraclesTVS["Switchboard"]["1732924800"]["Solana"]
 ```
 
-To get current TVS by chain, find the latest timestamp key first.
+When aggregating, resolve protocol-level TVS first; only use the timestamp path if protocol keys are absent.
 
 ### Chart Data Structure
 

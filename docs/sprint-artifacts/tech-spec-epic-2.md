@@ -84,7 +84,7 @@ func NewClient(cfg *config.APIConfig, logger *slog.Logger) *Client
 type OracleAPIResponse struct {
     Oracles        map[string][]string                       `json:"oracles"`        // oracle name → protocol slugs
     Chart          map[string]map[string]map[string]float64  `json:"chart"`          // historical TVS by oracle/chain/timestamp
-    OraclesTVS     map[string]map[string]map[string]float64  `json:"oraclesTVS"`     // current TVS by oracle/chain/period
+    OraclesTVS     map[string]map[string]map[string]float64  `json:"oraclesTVS"`     // oracle -> protocol (preferred) or timestamp (legacy) -> chain -> TVS
     ChainsByOracle map[string][]string                       `json:"chainsByOracle"` // oracle name → chains
 }
 ```
