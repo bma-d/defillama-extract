@@ -14,7 +14,7 @@ func TestExtractProtocolData_PopulatesMetadataAndTVS(t *testing.T) {
 		},
 		OraclesTVS: map[string]map[string]map[string]float64{
 			"Switchboard": {
-				"1732924800": {
+				"Jupiter": {
 					"Solana": 1_000_000,
 				},
 			},
@@ -60,7 +60,7 @@ func TestExtractProtocolData_MultiChainTVS(t *testing.T) {
 		Chart: map[string]map[string]map[string]float64{"1733000000": {}},
 		OraclesTVS: map[string]map[string]map[string]float64{
 			"Switchboard": {
-				"1733000000": {
+				"multi": {
 					"Solana": 750_000,
 					"Sui":    250_000,
 				},
@@ -186,5 +186,22 @@ func TestExtractLatestTimestamp(t *testing.T) {
 				t.Fatalf("ExtractLatestTimestamp() = %d, want %d", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestResolveProtocolChainTVS_FallsBackToTimestamp(t *testing.T) {
+	oracleResp := &api.OracleAPIResponse{
+		OraclesTVS: map[string]map[string]map[string]float64{
+			"Switchboard": {
+				"1732924800": {
+					"Solana": 123,
+				},
+			},
+		},
+	}
+
+	chains := resolveProtocolChainTVS(oracleResp, "Switchboard", "unknown", 1732924800)
+	if chains == nil || chains["Solana"] != 123 {
+		t.Fatalf("expected timestamp fallback to return chain data, got %+v", chains)
 	}
 }

@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/switchboard-xyz/defillama-extract/internal/api"
 )
@@ -12,8 +13,6 @@ func ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResp
 	if len(protocols) == 0 {
 		return []AggregatedProtocol{}, timestamp
 	}
-
-	chainTVS := resolveChainTVS(oracleResp, oracleName, timestamp)
 
 	result := make([]AggregatedProtocol, 0, len(protocols))
 	for _, p := range protocols {
@@ -27,12 +26,18 @@ func ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResp
 			TVSByChain: make(map[string]float64),
 		}
 
+		protocolKey := strings.TrimSpace(p.Name)
+		if protocolKey == "" {
+			protocolKey = strings.TrimSpace(p.Slug)
+		}
+
+		protocolTVS := resolveProtocolChainTVS(oracleResp, oracleName, protocolKey, timestamp)
 		for _, chain := range p.Chains {
-			if chainTVS == nil {
+			if protocolTVS == nil {
 				continue
 			}
 
-			if tvs, ok := chainTVS[chain]; ok {
+			if tvs, ok := protocolTVS[chain]; ok {
 				agg.TVSByChain[chain] = tvs
 				agg.TVS += tvs
 			}
@@ -65,7 +70,7 @@ func ExtractLatestTimestamp(oracleResp *api.OracleAPIResponse) int64 {
 	return maxTimestamp
 }
 
-func resolveChainTVS(oracleResp *api.OracleAPIResponse, oracleName string, timestamp int64) map[string]float64 {
+func resolveProtocolChainTVS(oracleResp *api.OracleAPIResponse, oracleName, protocolName string, timestamp int64) map[string]float64 {
 	if oracleResp == nil || oracleResp.OraclesTVS == nil {
 		return nil
 	}
@@ -75,8 +80,16 @@ func resolveChainTVS(oracleResp *api.OracleAPIResponse, oracleName string, times
 		return nil
 	}
 
-	timestampStr := strconv.FormatInt(timestamp, 10)
-	return oracleData[timestampStr]
+	if data, ok := oracleData[protocolName]; ok {
+		return data
+	}
+
+	if timestamp <= 0 {
+		return nil
+	}
+
+	tsKey := strconv.FormatInt(timestamp, 10)
+	return oracleData[tsKey]
 }
 
 func copyChains(chains []string) []string {
