@@ -167,11 +167,11 @@ func TestRunOnceSuccess(t *testing.T) {
 		client: client,
 		agg:    agg,
 		sm:     state,
-		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			fullCalled = true
 			return &models.FullOutput{}
 		},
-		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+		generateSummary: func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput {
 			summaryCalled = true
 			return &models.SummaryOutput{}
 		},
@@ -208,11 +208,11 @@ func TestRunOnceSkipsWhenNoNewData(t *testing.T) {
 		client: stubClient{res: &api.FetchResult{}},
 		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 123}},
 		sm:     state,
-		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			t.Fatalf("generateFull should not be called")
 			return nil
 		},
-		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+		generateSummary: func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput {
 			t.Fatalf("generateSummary should not be called")
 			return nil
 		},
@@ -244,10 +244,10 @@ func TestRunOnceDryRunSkipsWrites(t *testing.T) {
 		client: stubClient{res: &api.FetchResult{}},
 		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 300}},
 		sm:     state,
-		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			return &models.FullOutput{}
 		},
-		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+		generateSummary: func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput {
 			return &models.SummaryOutput{}
 		},
 		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
@@ -298,10 +298,10 @@ func TestRunOncePropagatesWriteError(t *testing.T) {
 		client: stubClient{res: &api.FetchResult{}},
 		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 10}},
 		sm:     &stubState{state: &storage.State{}, shouldProcess: true},
-		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			return &models.FullOutput{}
 		},
-		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+		generateSummary: func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput {
 			return &models.SummaryOutput{}
 		},
 		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
@@ -521,11 +521,11 @@ func TestRunOnceWithCanceledContextSkipsWrites(t *testing.T) {
 		client: stubClient{res: &api.FetchResult{}},
 		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 1}},
 		sm:     &stubState{state: &storage.State{}, shouldProcess: true},
-		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			wroteOutputs = true
 			return &models.FullOutput{}
 		},
-		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+		generateSummary: func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput {
 			wroteOutputs = true
 			return &models.SummaryOutput{}
 		},
@@ -565,11 +565,11 @@ func TestRunOnceCancellationDuringProcessingSkipsWrites(t *testing.T) {
 		client: stubClient{res: &api.FetchResult{OracleResponse: &api.OracleAPIResponse{}, Protocols: []api.Protocol{}}},
 		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 10, TotalProtocols: 1}},
 		sm:     state,
-		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			cancel()
 			return &models.FullOutput{}
 		},
-		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+		generateSummary: func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput {
 			return &models.SummaryOutput{}
 		},
 		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
@@ -611,10 +611,10 @@ func TestRunOnceCancellationDuringWriteOutputsLeavesNoFiles(t *testing.T) {
 		client: stubClient{res: &api.FetchResult{OracleResponse: &api.OracleAPIResponse{}, Protocols: []api.Protocol{}}},
 		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 50, TotalProtocols: 1}},
 		sm:     state,
-		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			return full
 		},
-		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+		generateSummary: func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput {
 			return summary
 		},
 		writeOutputs: func(ctx context.Context, outputDir string, cfg *config.Config, full *models.FullOutput, summary *models.SummaryOutput) error {
@@ -742,10 +742,10 @@ func TestRunOnceCancellationBetweenOutputsAndWritesSkipsSideEffects(t *testing.T
 				return nil
 			},
 		},
-		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput {
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			return &models.FullOutput{}
 		},
-		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+		generateSummary: func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput {
 			cancel() // cancel after outputs produced, before writes
 			return &models.SummaryOutput{}
 		},

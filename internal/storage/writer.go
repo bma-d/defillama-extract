@@ -40,8 +40,8 @@ func resolveFileName(preferred string, fallback string) string {
 }
 
 // GenerateFullOutput builds the full output structure using aggregation results,
-// historical snapshots, and oracle metadata from config.
-func GenerateFullOutput(result *aggregator.AggregationResult, history []aggregator.Snapshot, cfg *config.Config) *models.FullOutput {
+// historical snapshots, chart history, and oracle metadata from config.
+func GenerateFullOutput(result *aggregator.AggregationResult, history []aggregator.Snapshot, chartHistory []aggregator.ChartDataPoint, cfg *config.Config) *models.FullOutput {
 	if result == nil {
 		result = &aggregator.AggregationResult{}
 	}
@@ -82,13 +82,14 @@ func GenerateFullOutput(result *aggregator.AggregationResult, history []aggregat
 			ByChain:    result.ChainBreakdown,
 			ByCategory: result.CategoryBreakdown,
 		},
-		Protocols:  result.Protocols,
-		Historical: history,
+		Protocols:    result.Protocols,
+		ChartHistory: chartHistory,
+		Historical:   history,
 	}
 }
 
-// GenerateSummaryOutput builds the summary output structure without historical data.
-func GenerateSummaryOutput(result *aggregator.AggregationResult, cfg *config.Config) *models.SummaryOutput {
+// GenerateSummaryOutput builds the summary output structure including chart history but without historical snapshots.
+func GenerateSummaryOutput(result *aggregator.AggregationResult, chartHistory []aggregator.ChartDataPoint, cfg *config.Config) *models.SummaryOutput {
 	if result == nil {
 		result = &aggregator.AggregationResult{}
 	}
@@ -133,6 +134,7 @@ func GenerateSummaryOutput(result *aggregator.AggregationResult, cfg *config.Con
 			ByChain:    result.ChainBreakdown,
 			ByCategory: result.CategoryBreakdown,
 		},
+		ChartHistory: chartHistory,
 		TopProtocols: topProtocols,
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"log/slog"
 
 	"github.com/switchboard-xyz/defillama-extract/internal/config"
+	"golang.org/x/net/http2"
 )
 
 func newTestLogger(buf *bytes.Buffer) *slog.Logger {
@@ -74,10 +75,15 @@ func TestIsRetryable_TimeoutAndNetwork(t *testing.T) {
 	}
 }
 
-func TestIsRetryable_DecodeError(t *testing.T) {
+func TestIsRetryable_DecodeAndH2Errors(t *testing.T) {
 	decodeErr := fmt.Errorf("decode response: %w", io.ErrUnexpectedEOF)
-	if isRetryable(0, decodeErr) {
-		t.Fatalf("decode errors should not be retryable")
+	if !isRetryable(0, decodeErr) {
+		t.Fatalf("decode errors hitting unexpected EOF should be retryable")
+	}
+
+	h2Err := http2.StreamError{StreamID: 1, Code: http2.ErrCodeInternal}
+	if !isRetryable(0, h2Err) {
+		t.Fatalf("http2 stream errors should be retryable")
 	}
 }
 

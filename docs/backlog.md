@@ -10,6 +10,7 @@ Routing guidance:
 
 | Date | Story | Epic | Type | Severity | Owner | Status | Notes |
 | ---- | ----- | ---- | ---- | -------- | ----- | ------ | ----- |
+| 2025-12-03 | 5-4-extract-historical-chart-data | 5 | Advisory | Low | TBD | Open | Monitor `chart_history` size and write time as history grows (current: 1,466 points, 2021-11-29..2025-12-03 in `data/switchboard-oracle-data.json`); consider compression or streaming write if latency degrades. |
 | 2025-12-02 | 5-3-implement-daemon-mode | 5 | Bug | High | Amelia | Closed | SIGINT in `--once` can still persist outputs because `WriteAllOutputs` is not context-aware; add ctx-gated writes to satisfy AC8 (`cmd/extractor/main.go:170-190`, `internal/storage/writer.go:158-190`). |
 | 2025-12-02 | 5-3-implement-daemon-mode | 5 | Test Gap | Med | Amelia | Closed | No test covers SIGINT during `WriteAllOutputs` to assert no files are created and exit code is 1; add once-mode cancellation test in `cmd/extractor/main_test.go`. |
 | 2025-12-02 | 5-3-implement-daemon-mode | 5 | Bug | High | Amelia | Closed | `RunOnce` allows writes/state after SIGINT in `--once`; add cancellation guard between generation and writes and exit 1 on cancellation (cmd/extractor/main.go:167-195). |

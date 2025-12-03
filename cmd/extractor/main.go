@@ -69,8 +69,8 @@ type runDeps struct {
 	client          apiClient
 	agg             aggregationPipeline
 	sm              stateManager
-	generateFull    func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput
-	generateSummary func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput
+	generateFull    func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput
+	generateSummary func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput
 	writeOutputs    func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error
 	now             func() time.Time
 	logger          *slog.Logger
@@ -147,6 +147,8 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 		return err
 	}
 
+	chartHistory := aggregator.ExtractChartHistory(result.OracleResponse, cfg.Oracle.Name)
+
 	aggResult := d.agg.Aggregate(ctx, result.OracleResponse, result.Protocols, history)
 
 	if !d.sm.ShouldProcess(aggResult.Timestamp, state) {
@@ -171,8 +173,8 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 			return err
 		}
 
-		full := d.generateFull(aggResult, history, cfg)
-		summary := d.generateSummary(aggResult, cfg)
+		full := d.generateFull(aggResult, history, chartHistory, cfg)
+		summary := d.generateSummary(aggResult, chartHistory, cfg)
 
 		if err := checkCtx("after_generate_outputs"); err != nil {
 			return err

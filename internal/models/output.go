@@ -43,14 +43,15 @@ type Breakdown struct {
 
 // FullOutput is the complete output including historical snapshots.
 type FullOutput struct {
-	Version    string                          `json:"version"`
-	Oracle     OracleInfo                      `json:"oracle"`
-	Metadata   OutputMetadata                  `json:"metadata"`
-	Summary    Summary                         `json:"summary"`
-	Metrics    Metrics                         `json:"metrics"`
-	Breakdown  Breakdown                       `json:"breakdown"`
-	Protocols  []aggregator.AggregatedProtocol `json:"protocols"`
-	Historical []aggregator.Snapshot           `json:"historical"`
+	Version      string                          `json:"version"`
+	Oracle       OracleInfo                      `json:"oracle"`
+	Metadata     OutputMetadata                  `json:"metadata"`
+	Summary      Summary                         `json:"summary"`
+	Metrics      Metrics                         `json:"metrics"`
+	Breakdown    Breakdown                       `json:"breakdown"`
+	Protocols    []aggregator.AggregatedProtocol `json:"protocols"`
+	ChartHistory []aggregator.ChartDataPoint     `json:"chart_history"`
+	Historical   []aggregator.Snapshot           `json:"historical"`
 }
 
 // SummaryOutput is the compact snapshot-only output.
@@ -61,5 +62,6 @@ type SummaryOutput struct {
 	Summary      Summary                         `json:"summary"`
 	Metrics      Metrics                         `json:"metrics"`
 	Breakdown    Breakdown                       `json:"breakdown"`
+	ChartHistory []aggregator.ChartDataPoint     `json:"chart_history"`
 	TopProtocols []aggregator.AggregatedProtocol `json:"top_protocols"`
 }

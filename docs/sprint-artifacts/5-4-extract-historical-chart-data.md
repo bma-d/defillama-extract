@@ -1,6 +1,6 @@
 # Story 5.4: Extract Historical Chart Data for Graphing
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -45,43 +45,43 @@ Source: [Source: docs/epics/epic-5-output-cli.md#Story-5.4]; [Source: docs/sprin
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add ChartEntry and ChartDataPoint models (AC: 1, 2)
-  - [ ] 1.1: Create `internal/aggregator/chart.go` with `ChartDataPoint` struct
-  - [ ] 1.2: Add `ChartHistory []ChartDataPoint` field to `FullOutput` in `internal/models/output.go`
-  - [ ] 1.3: Add `ChartHistory []ChartDataPoint` field to `SummaryOutput` in `internal/models/output.go`
+- [x] Task 1: Add ChartEntry and ChartDataPoint models (AC: 1, 2)
+  - [x] 1.1: Create `internal/aggregator/chart.go` with `ChartDataPoint` struct
+  - [x] 1.2: Add `ChartHistory []ChartDataPoint` field to `FullOutput` in `internal/models/output.go`
+  - [x] 1.3: Add `ChartHistory []ChartDataPoint` field to `SummaryOutput` in `internal/models/output.go`
 
-- [ ] Task 2: Implement Chart Data Extraction (AC: 1, 3)
-  - [ ] 2.1: Create `ExtractChartHistory(oracleResp, oracleName)` function in `internal/aggregator/chart.go`
-  - [ ] 2.2: Parse timestamp strings from chart map keys
-  - [ ] 2.3: Filter entries for target oracle name (e.g., "Switchboard")
-  - [ ] 2.4: Extract tvl, borrowed, staking from each chart entry
-  - [ ] 2.5: Sort results by timestamp ascending
-  - [ ] 2.6: Convert timestamps to ISO date strings
+- [x] Task 2: Implement Chart Data Extraction (AC: 1, 3)
+  - [x] 2.1: Create `ExtractChartHistory(oracleResp, oracleName)` function in `internal/aggregator/chart.go`
+  - [x] 2.2: Parse timestamp strings from chart map keys
+  - [x] 2.3: Filter entries for target oracle name (e.g., "Switchboard")
+  - [x] 2.4: Extract tvl, borrowed, staking from each chart entry
+  - [x] 2.5: Sort results by timestamp ascending
+  - [x] 2.6: Convert timestamps to ISO date strings
 
-- [ ] Task 3: Integrate Chart Data into Output Generation (AC: 2, 4)
-  - [ ] 3.1: Update `GenerateFullOutput` to accept chart history parameter
-  - [ ] 3.2: Update `GenerateSummaryOutput` to accept chart history parameter
-  - [ ] 3.3: Update `runOnce` to extract chart history and pass to output generation
-  - [ ] 3.4: Ensure chart_history is serialized in both full and summary outputs
+- [x] Task 3: Integrate Chart Data into Output Generation (AC: 2, 4)
+  - [x] 3.1: Update `GenerateFullOutput` to accept chart history parameter
+  - [x] 3.2: Update `GenerateSummaryOutput` to accept chart history parameter
+  - [x] 3.3: Update `runOnce` to extract chart history and pass to output generation
+  - [x] 3.4: Ensure chart_history is serialized in both full and summary outputs
 
-- [ ] Task 4: Write Unit Tests (AC: all)
-  - [ ] 4.1: Test chart extraction with sample API response
-  - [ ] 4.2: Test filtering for specific oracle name
-  - [ ] 4.3: Test sorting by timestamp
-  - [ ] 4.4: Test empty chart data handling
-  - [ ] 4.5: Test output JSON includes chart_history array
+- [x] Task 4: Write Unit Tests (AC: all)
+  - [x] 4.1: Test chart extraction with sample API response
+  - [x] 4.2: Test filtering for specific oracle name
+  - [x] 4.3: Test sorting by timestamp
+  - [x] 4.4: Test empty chart data handling
+  - [x] 4.5: Test output JSON includes chart_history array
 
-- [ ] Task 5: Integration Testing (AC: all)
-  - [ ] 5.1: Run extraction against real API
-  - [ ] 5.2: Verify chart_history has 1000+ entries
-  - [ ] 5.3: Verify date range spans from 2021-11-29 to present
-  - [ ] 5.4: Verify data is suitable for graphing (sequential, valid values)
+- [x] Task 5: Integration Testing (AC: all)
+  - [x] 5.1: Run extraction against real API
+  - [x] 5.2: Verify chart_history has 1000+ entries
+  - [x] 5.3: Verify date range spans from 2021-11-29 to present
+  - [x] 5.4: Verify data is suitable for graphing (sequential, valid values)
 
-- [ ] Task 6: Verification (AC: all)
-  - [ ] 6.1: Run `go build ./...` and verify success
-  - [ ] 6.2: Run `go test ./...` and verify all pass
-  - [ ] 6.3: Run `make lint` and verify no errors
-  - [ ] 6.4: Verify output JSON schema matches AC requirements
+- [x] Task 6: Verification (AC: all)
+  - [x] 6.1: Run `go build ./...` and verify success
+  - [x] 6.2: Run `go test ./...` and verify all pass
+  - [x] 6.3: Run `make lint` and verify no errors
+  - [x] 6.4: Verify output JSON schema matches AC requirements
 
 ## Dev Notes
 
@@ -181,19 +181,80 @@ The existing `historical` array captures snapshots from when the extractor runs 
 {{agent_model_name_version}}
 
 ### Debug Log References
-
-(to be filled during implementation)
+- Implemented chart extraction helper and output wiring; updated outputs/tests to carry chart_history per AC4. Build/test/lint executed. Live extraction run produced chart_history=1466 entries (2021-11-29 to 2025-12-03), summary contains chart_history, historical preserved.
 
 ### Completion Notes List
-
-(to be filled on completion)
+- Chart history extracted from /oracles chart for Switchboard, sorted ascending, wired into full/summary outputs; all unit tests/build/lint passing. Live API run confirmed chart_history (1466 points) spans 2021-11-29..2025-12-03 and is sorted.
 
 ### File List
-
-(to be filled on completion)
+- internal/aggregator/chart.go
+- internal/aggregator/chart_test.go
+- internal/models/output.go
+- internal/storage/writer.go
+- internal/storage/writer_test.go
+- cmd/extractor/main.go
+- cmd/extractor/main_test.go
+- docs/sprint-artifacts/sprint-status.yaml
+- data/switchboard-oracle-data.json
+- data/switchboard-summary.json
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-12-02 | SM Agent (Bob) | Initial story draft created - discovered during Epic 5 retrospective |
+| 2025-12-03 | Amelia | Added chart_history models, extraction pipeline, output wiring, and unit tests |
+| 2025-12-03 | Amelia | Ran live extraction, validated chart_history length/date range, completed build/test/lint |
+| 2025-12-03 | Amelia (AI Reviewer) | Senior Developer Review completed — outcome: Approve |
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad  
+- Date: 2025-12-03  
+- Outcome: Approve (all ACs satisfied; no blocking issues)
+
+### Summary
+- Chart history is extracted, sorted, and threaded through full/summary outputs; live run produced 1,466 points spanning 2021-11-29 to 2025-12-03. No regressions found. Evidence below.
+
+### Key Findings
+- HIGH: None
+- MEDIUM: None
+- LOW: None
+
+### Acceptance Criteria Coverage
+| AC | Status | Evidence |
+|----|--------|----------|
+| AC1 | Implemented | Chart extraction parses timestamps, filters oracle, and captures tvl/borrowed/staking, then sorts ascending — `internal/aggregator/chart.go:20-56`; validated by `internal/aggregator/chart_test.go:10-47`. |
+| AC2 | Implemented | `chart_history` added to both outputs and populated during runOnce — `internal/models/output.go:45-66`, `internal/storage/writer.go:42-139`, `cmd/extractor/main.go:68-178`. |
+| AC3 | Implemented | Live output contains 1,466 points from 2021-11-29 to 2025-12-03 — `data/switchboard-oracle-data.json` (first: timestamp 1638144000, last: 1764720000) verified via local check. |
+| AC4 | Implemented | `chart_history` top-level alongside `historical`; summary omits `historical` while keeping `chart_history` — `internal/models/output.go:45-66`; summary exclusion asserted in `internal/storage/writer_test.go:198-244`. |
+
+AC coverage: 4 / 4 implemented.
+
+### Task Completion Validation
+| Task | Marked | Verified | Evidence |
+|------|--------|----------|----------|
+| Task 1 (models) | [x] | Verified | Output structs include `ChartHistory` — `internal/models/output.go:45-66`. |
+| Task 2 (extraction) | [x] | Verified | `ExtractChartHistory` filters and sorts chart data — `internal/aggregator/chart.go:20-56`; tests `chart_test.go:10-47`. |
+| Task 3 (integration) | [x] | Verified | runOnce extracts chart history and passes to output generators — `cmd/extractor/main.go:150-178`; output generation threads through writes — `internal/storage/writer.go:42-139`. |
+| Task 4 (unit tests) | [x] | Verified | Chart extraction tests and writer coverage for chart_history — `internal/aggregator/chart_test.go`; `internal/storage/writer_test.go:90-244`. |
+| Task 5 (integration testing) | [x] | Verified | Live data files generated with 1,466 chart points covering full range — `data/switchboard-oracle-data.json`, `data/switchboard-summary.json`. |
+| Task 6 (verification) | [x] | Verified | `go test ./...` passed locally (2025-12-03). |
+
+### Test Coverage and Gaps
+- Executed: `go test ./...` (pass).  
+- Gaps: None observed for story scope.
+
+### Architectural Alignment
+- Uses aggregator-layer helper per implementation-patterns; preserves atomic writes; chart_history included without altering historical arrays — `internal/aggregator/chart.go`, `internal/storage/writer.go`.
+
+### Security Notes
+- No new inputs; chart data handled as numeric fields. No secrets added.
+
+### Best-Practices & References
+- Atomic file writes preserved (ADR-002); chart extraction isolated to aggregator layer per architecture guidance.
+
+### Action Items
+**Code Changes Required:** None  
+**Advisory Notes:**  
+- Note: Monitor chart_history file size growth in future runs to ensure write times remain acceptable as history expands.

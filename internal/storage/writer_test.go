@@ -72,6 +72,13 @@ func sampleConfig() *config.Config {
 	return &cfg
 }
 
+func chartHistorySample() []aggregator.ChartDataPoint {
+	return []aggregator.ChartDataPoint{
+		{Timestamp: 1, Date: "2021-01-01", TVS: 10},
+		{Timestamp: 2, Date: "2021-01-02", TVS: 20, Borrowed: 1},
+	}
+}
+
 func TestGenerateFullOutput_PopulatesAllFields(t *testing.T) {
 	result := sampleAggregationResult()
 	history := []aggregator.Snapshot{
@@ -80,7 +87,7 @@ func TestGenerateFullOutput_PopulatesAllFields(t *testing.T) {
 	}
 
 	cfg := sampleConfig()
-	out := GenerateFullOutput(result, history, cfg)
+	out := GenerateFullOutput(result, history, chartHistorySample(), cfg)
 
 	if out.Version != outputVersion {
 		t.Fatalf("version = %s, want %s", out.Version, outputVersion)
@@ -106,6 +113,9 @@ func TestGenerateFullOutput_PopulatesAllFields(t *testing.T) {
 	if !reflect.DeepEqual(out.Protocols, result.Protocols) {
 		t.Fatalf("protocols mismatch")
 	}
+	if !reflect.DeepEqual(out.ChartHistory, chartHistorySample()) {
+		t.Fatalf("chart history mismatch: %+v", out.ChartHistory)
+	}
 	if !reflect.DeepEqual(out.Historical, history) {
 		t.Fatalf("history mismatch: %+v", out.Historical)
 	}
@@ -123,7 +133,7 @@ func TestGenerateSummaryOutput_TopProtocolsLimitedAndNoHistory(t *testing.T) {
 		})
 	}
 
-	out := GenerateSummaryOutput(result, sampleConfig())
+	out := GenerateSummaryOutput(result, chartHistorySample(), sampleConfig())
 
 	if len(out.TopProtocols) != 10 {
 		t.Fatalf("top protocol count = %d, want 10", len(out.TopProtocols))
@@ -131,8 +141,8 @@ func TestGenerateSummaryOutput_TopProtocolsLimitedAndNoHistory(t *testing.T) {
 	if out.Metadata.LastUpdated == "" {
 		t.Fatalf("expected metadata timestamp set")
 	}
-	if strings.Contains(fmt.Sprintf("%+v", out), "historical") {
-		t.Fatalf("summary output should not contain historical field")
+	if len(out.ChartHistory) != len(chartHistorySample()) {
+		t.Fatalf("chart history missing in summary output")
 	}
 	// Ensure original slice not mutated beyond length check
 	if len(result.Protocols) != 12 {
@@ -191,8 +201,8 @@ func TestWriteAllOutputs_WritesAllFilesAndMatchesData(t *testing.T) {
 	history := []aggregator.Snapshot{{Timestamp: 1, Date: "2025-01-01", TVS: 10}}
 	cfg := sampleConfig()
 
-	full := GenerateFullOutput(result, history, cfg)
-	summary := GenerateSummaryOutput(result, cfg)
+	full := GenerateFullOutput(result, history, chartHistorySample(), cfg)
+	summary := GenerateSummaryOutput(result, chartHistorySample(), cfg)
 
 	if err := WriteAllOutputs(context.Background(), dir, cfg, full, summary); err != nil {
 		t.Fatalf("WriteAllOutputs error: %v", err)
@@ -240,8 +250,8 @@ func TestWriteAllOutputs_RespectsConfigFilenames(t *testing.T) {
 	cfg.Output.MinFile = "custom-min.json"
 	cfg.Output.SummaryFile = "custom-summary.json"
 
-	full := GenerateFullOutput(sampleAggregationResult(), nil, cfg)
-	summary := GenerateSummaryOutput(sampleAggregationResult(), cfg)
+	full := GenerateFullOutput(sampleAggregationResult(), nil, chartHistorySample(), cfg)
+	summary := GenerateSummaryOutput(sampleAggregationResult(), chartHistorySample(), cfg)
 
 	if err := WriteAllOutputs(context.Background(), dir, cfg, full, summary); err != nil {
 		t.Fatalf("WriteAllOutputs error: %v", err)
@@ -278,8 +288,8 @@ func TestWriteAllOutputs_CancelsBeforeWritesAndLeavesNoFiles(t *testing.T) {
 
 	dir := t.TempDir()
 	cfg := sampleConfig()
-	full := GenerateFullOutput(sampleAggregationResult(), nil, cfg)
-	summary := GenerateSummaryOutput(sampleAggregationResult(), cfg)
+	full := GenerateFullOutput(sampleAggregationResult(), nil, chartHistorySample(), cfg)
+	summary := GenerateSummaryOutput(sampleAggregationResult(), chartHistorySample(), cfg)
 
 	err := WriteAllOutputs(ctx, dir, cfg, full, summary)
 	if !errors.Is(err, context.Canceled) {
@@ -303,12 +313,12 @@ func TestUpdateFrequency_UsesSchedulerInterval(t *testing.T) {
 	cfg := sampleConfig()
 	cfg.Scheduler.Interval = 30 * time.Minute
 
-	full := GenerateFullOutput(sampleAggregationResult(), nil, cfg)
+	full := GenerateFullOutput(sampleAggregationResult(), nil, chartHistorySample(), cfg)
 	if full.Metadata.UpdateFrequency != cfg.Scheduler.Interval.String() {
 		t.Fatalf("update_frequency = %s, want %s", full.Metadata.UpdateFrequency, cfg.Scheduler.Interval.String())
 	}
 
-	summary := GenerateSummaryOutput(sampleAggregationResult(), cfg)
+	summary := GenerateSummaryOutput(sampleAggregationResult(), chartHistorySample(), cfg)
 	if summary.Metadata.UpdateFrequency != cfg.Scheduler.Interval.String() {
 		t.Fatalf("summary update_frequency = %s, want %s", summary.Metadata.UpdateFrequency, cfg.Scheduler.Interval.String())
 	}

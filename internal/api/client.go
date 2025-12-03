@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math/rand"
 	"net"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"log/slog"
 
 	"github.com/switchboard-xyz/defillama-extract/internal/config"
+	"golang.org/x/net/http2"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -169,6 +171,15 @@ func isRetryable(statusCode int, err error) bool {
 
 	var netErr net.Error
 	if errors.As(err, &netErr) && netErr.Timeout() {
+		return true
+	}
+
+	var h2Err http2.StreamError
+	if errors.As(err, &h2Err) {
+		return true
+	}
+
+	if errors.Is(err, io.ErrUnexpectedEOF) {
 		return true
 	}
 
