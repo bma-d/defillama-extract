@@ -406,6 +406,15 @@ Signal received while waiting:
 | 5.3.11 | Main sequence | Parse flags → Version check → Load config → Apply env → Validate → Init logger → Create components → Signal handling → Run mode → Exit |
 | 5.3.12 | Init failure | Error logged, exit 1 |
 
+### Story 5.4: Extract Historical Chart Data for Graphing
+
+| AC ID | Criterion | Testable Statement |
+|-------|-----------|-------------------|
+| 5.4.1 | Chart extraction | `/oracles` response `chart[timestamp]["Switchboard"]` entries extracted with timestamp, tvs, borrowed, staking |
+| 5.4.2 | Chart history in outputs | `chart_history` array present in both FullOutput and SummaryOutput with fields: timestamp(int64), date(YYYY-MM-DD), tvs, borrowed?, staking?; sorted ascending |
+| 5.4.3 | Date range and volume | All available chart points included; `chart_history` contains 1000+ entries spanning 2021-11-29 to current date |
+| 5.4.4 | Schema placement | `chart_history` appears at top level alongside `historical`; `historical` remains extractor-run snapshots |
+
 ## Traceability Mapping
 
 | AC ID | FR(s) | Spec Section | Component/File | Test Approach |

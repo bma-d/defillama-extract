@@ -1,0 +1,177 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>4</storyId>
+    <title>Extract Historical Chart Data for Graphing</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-02</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/5-4-extract-historical-chart-data.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>dashboard consumer</asA>
+    <iWant>historical TVS chart data extracted from DefiLlama</iWant>
+    <soThat>I can render time-series graphs showing Switchboard's TVS over time</soThat>
+    <tasks>
+      <task id="1" desc="Add ChartEntry and ChartDataPoint models">
+        <subtask id="1.1">Create internal/aggregator/chart.go with ChartDataPoint struct</subtask>
+        <subtask id="1.2">Add ChartHistory []ChartDataPoint field to FullOutput in internal/models/output.go</subtask>
+        <subtask id="1.3">Add ChartHistory []ChartDataPoint field to SummaryOutput in internal/models/output.go</subtask>
+      </task>
+      <task id="2" desc="Implement Chart Data Extraction">
+        <subtask id="2.1">Create ExtractChartHistory(oracleResp, oracleName) function in internal/aggregator/chart.go</subtask>
+        <subtask id="2.2">Parse timestamp strings from chart map keys</subtask>
+        <subtask id="2.3">Filter entries for target oracle name (e.g., "Switchboard")</subtask>
+        <subtask id="2.4">Extract tvl, borrowed, staking from each chart entry</subtask>
+        <subtask id="2.5">Sort results by timestamp ascending</subtask>
+        <subtask id="2.6">Convert timestamps to ISO date strings</subtask>
+      </task>
+      <task id="3" desc="Integrate Chart Data into Output Generation">
+        <subtask id="3.1">Update GenerateFullOutput to accept chart history parameter</subtask>
+        <subtask id="3.2">Update GenerateSummaryOutput to accept chart history parameter</subtask>
+        <subtask id="3.3">Update runOnce to extract chart history and pass to output generation</subtask>
+        <subtask id="3.4">Ensure chart_history is serialized in both full and summary outputs</subtask>
+      </task>
+      <task id="4" desc="Write Unit Tests">
+        <subtask id="4.1">Test chart extraction with sample API response</subtask>
+        <subtask id="4.2">Test filtering for specific oracle name</subtask>
+        <subtask id="4.3">Test sorting by timestamp</subtask>
+        <subtask id="4.4">Test empty chart data handling</subtask>
+        <subtask id="4.5">Test output JSON includes chart_history array</subtask>
+      </task>
+      <task id="5" desc="Integration Testing">
+        <subtask id="5.1">Run extraction against real API</subtask>
+        <subtask id="5.2">Verify chart_history has 1000+ entries</subtask>
+        <subtask id="5.3">Verify date range spans from 2021-11-29 to present</subtask>
+        <subtask id="5.4">Verify data is suitable for graphing (sequential, valid values)</subtask>
+      </task>
+      <task id="6" desc="Verification">
+        <subtask id="6.1">Run go build ./... and verify success</subtask>
+        <subtask id="6.2">Run go test ./... and verify all pass</subtask>
+        <subtask id="6.3">Run make lint and verify no errors</subtask>
+        <subtask id="6.4">Verify output JSON schema matches AC requirements</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" name="Extract Chart Data from API">
+      <given>the /oracles API response contains chart field</given>
+      <when>extraction runs</when>
+      <then>all Switchboard entries from chart[timestamp]["Switchboard"] are extracted</then>
+      <and>each entry includes: timestamp, date, tvl (TVS), borrowed, staking</and>
+    </criterion>
+    <criterion id="AC2" name="Chart History in Output">
+      <given>extracted chart data</given>
+      <when>output JSON is generated</when>
+      <then>a chart_history array is included with entries: timestamp (int64), date (YYYY-MM-DD), tvs (float64), borrowed (float64, optional), staking (float64, optional)</then>
+      <and>entries are sorted by timestamp ascending</and>
+      <and>array is included in both full output and summary output</and>
+    </criterion>
+    <criterion id="AC3" name="Chart Data Date Range">
+      <given>chart history is generated</given>
+      <when>output is written</when>
+      <then>all available historical data points are included (full history from API)</then>
+      <and>chart_history contains 1000+ entries (DefiLlama has 4+ years of data)</and>
+    </criterion>
+    <criterion id="AC4" name="Output Schema Update">
+      <given>updated output schema</given>
+      <when>JSON is generated</when>
+      <then>chart_history array appears at top level alongside historical</then>
+      <and>historical continues to contain extractor-run snapshots (protocol-level detail)</and>
+      <and>chart_history contains API-sourced daily TVS data (for graphing)</and>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="Historical Data Management (FR30-FR34)" snippet="System maintains historical snapshots of TVS data over time; stores timestamp, date, TVS, TVS by chain, protocol count, and chain count per snapshot."/>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-5.md" title="Epic 5 Tech Spec" section="Story 5.4 Acceptance Criteria" snippet="AC 5.4.1-5.4.4: Chart extraction from /oracles response, chart_history in outputs, date range validation, schema placement."/>
+      <doc path="docs/epics/epic-5-output-cli.md" title="Epic 5 Epic File" section="Story 5.4" snippet="Chart data extraction from API chart field; output includes chart_history array alongside historical for graphing."/>
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="ADRs" section="ADR-002: Atomic File Writes" snippet="Write to temp file then atomic rename. Readers always see complete previous version or complete new version."/>
+      <doc path="docs/architecture/implementation-patterns.md" title="Implementation Patterns" section="Dependency Injection" snippet="Use constructor functions, not global state. main.go wires everything."/>
+      <doc path="docs/architecture/consistency-rules.md" title="Consistency Rules" section="Naming, Error Handling, Logging" snippet="JSON fields use snake_case; errors returned explicitly; slog with structured fields for logging."/>
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization" snippet="Unit tests co-located; table-driven tests; test data in testdata/ directory."/>
+    </docs>
+    <code>
+      <file path="internal/api/responses.go" kind="model" symbol="OracleAPIResponse" lines="9-15" reason="Contains Chart field map[string]map[string]map[string]float64 that holds the chart data to extract"/>
+      <file path="internal/models/output.go" kind="model" symbol="FullOutput, SummaryOutput" lines="44-65" reason="Output structs to add ChartHistory field"/>
+      <file path="internal/storage/writer.go" kind="service" symbol="GenerateFullOutput, GenerateSummaryOutput, WriteAllOutputs" lines="42-229" reason="Output generation functions to update with chart history parameter"/>
+      <file path="cmd/extractor/main.go" kind="entrypoint" symbol="runOnceWithDeps, runDeps" lines="68-218" reason="Extraction flow to add chart extraction step and pass to output generation"/>
+      <file path="internal/aggregator/models.go" kind="model" symbol="Snapshot, AggregationResult" lines="40-72" reason="Reference for existing snapshot model structure"/>
+      <file path="internal/aggregator/aggregator.go" kind="service" symbol="Aggregator" reason="Aggregation logic pattern to follow for chart extraction"/>
+      <file path="internal/aggregator/filter.go" kind="utility" reason="Filter pattern to reference for oracle name matching"/>
+    </code>
+    <dependencies>
+      <go_mod>
+        <module>github.com/switchboard-xyz/defillama-extract</module>
+        <go_version>1.24.0</go_version>
+        <require>
+          <dep name="golang.org/x/sync" version="v0.18.0" purpose="errgroup for parallel fetching"/>
+          <dep name="gopkg.in/yaml.v3" version="v3.0.1" purpose="YAML config file parsing"/>
+        </require>
+      </go_mod>
+      <stdlib>
+        <pkg name="encoding/json" purpose="JSON marshaling for chart data"/>
+        <pkg name="sort" purpose="Sorting chart entries by timestamp"/>
+        <pkg name="strconv" purpose="Parsing timestamp strings to int64"/>
+        <pkg name="time" purpose="Converting Unix timestamp to ISO date string"/>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-002" rule="Atomic file writes via temp file + rename pattern"/>
+    <constraint source="ADR-004" rule="Use slog for all logging with structured fields"/>
+    <constraint source="Consistency Rules" rule="JSON fields use snake_case (e.g., chart_history not chartHistory)"/>
+    <constraint source="Implementation Patterns" rule="Place chart extraction in internal/aggregator package (aggregator-layer helper)"/>
+    <constraint source="Story Dev Notes" rule="Ensure context-aware cancellation is threaded through extraction"/>
+    <constraint source="Story Dev Notes" rule="ChartDataPoint struct: Timestamp int64, Date string, TVS float64, Borrowed float64 omitempty, Staking float64 omitempty"/>
+    <constraint source="API Response" rule="Chart field structure: map[timestamp_string]map[oracle_name]ChartEntry where ChartEntry has tvl, borrowed, staking"/>
+  </constraints>
+
+  <interfaces>
+    <interface name="OracleAPIResponse.Chart" kind="data_structure" path="internal/api/responses.go:12">
+      <signature>Chart map[string]map[string]map[string]float64 `json:"chart"`</signature>
+      <notes>First key is Unix timestamp string, second key is oracle name, third key is metric (tvl/borrowed/staking)</notes>
+    </interface>
+    <interface name="GenerateFullOutput" kind="function" path="internal/storage/writer.go:44">
+      <signature>func GenerateFullOutput(result *aggregator.AggregationResult, history []aggregator.Snapshot, cfg *config.Config) *models.FullOutput</signature>
+      <notes>Must add chartHistory parameter: []aggregator.ChartDataPoint</notes>
+    </interface>
+    <interface name="GenerateSummaryOutput" kind="function" path="internal/storage/writer.go:91">
+      <signature>func GenerateSummaryOutput(result *aggregator.AggregationResult, cfg *config.Config) *models.SummaryOutput</signature>
+      <notes>Must add chartHistory parameter: []aggregator.ChartDataPoint</notes>
+    </interface>
+    <interface name="runDeps.generateFull" kind="function_field" path="cmd/extractor/main.go:72">
+      <signature>generateFull func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput</signature>
+      <notes>Update signature to accept chart history</notes>
+    </interface>
+    <interface name="runDeps.generateSummary" kind="function_field" path="cmd/extractor/main.go:73">
+      <signature>generateSummary func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput</signature>
+      <notes>Update signature to accept chart history</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Table-driven unit tests with test fixtures in testdata/ directory. Co-located test files (*_test.go). High coverage for aggregation/business logic. Use httptest for mock server tests. All tests must pass: go test ./...</standards>
+    <locations>
+      <location>internal/aggregator/chart_test.go (new)</location>
+      <location>internal/storage/writer_test.go (existing, update)</location>
+      <location>cmd/extractor/main_test.go (existing, update)</location>
+    </locations>
+    <ideas>
+      <test ac="AC1" desc="Test ExtractChartHistory filters for target oracle name and extracts tvl/borrowed/staking"/>
+      <test ac="AC1" desc="Test timestamp string parsing handles valid Unix timestamps"/>
+      <test ac="AC2" desc="Test ChartDataPoint struct serializes correctly with snake_case JSON tags"/>
+      <test ac="AC2" desc="Test chart history is sorted ascending by timestamp"/>
+      <test ac="AC2" desc="Test borrowed/staking omitted when zero (omitempty)"/>
+      <test ac="AC3" desc="Test empty chart data returns empty slice (not nil)"/>
+      <test ac="AC3" desc="Test chart with only one oracle extracts correctly"/>
+      <test ac="AC4" desc="Test FullOutput includes chart_history at top level"/>
+      <test ac="AC4" desc="Test SummaryOutput includes chart_history at top level"/>
+      <test ac="AC4" desc="Test historical array remains unchanged after adding chart_history"/>
+    </ideas>
+  </tests>
+</story-context>

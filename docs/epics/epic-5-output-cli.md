@@ -248,3 +248,64 @@ So that **data stays automatically updated in production**.
 5. Cause init failure (bad config) → exits 1 with error
 
 ---
+
+## Story 5.4: Extract Historical Chart Data for Graphing
+
+As a **dashboard consumer**,
+I want **historical TVS chart data extracted from DefiLlama**,
+So that **I can render time-series graphs showing Switchboard's TVS over time**.
+
+**Acceptance Criteria:**
+
+**AC1: Extract Chart Data from API**
+**Given** the `/oracles` API response contains `chart` field
+**When** extraction runs
+**Then** all Switchboard entries from `chart[timestamp]["Switchboard"]` are extracted
+**And** each entry includes: timestamp, date, tvl (TVS), borrowed, staking
+
+**AC2: Chart History in Output**
+**Given** extracted chart data
+**When** output JSON is generated
+**Then** a `chart_history` array is included with entries:
+  - `timestamp`: Unix timestamp (int64)
+  - `date`: ISO date string (YYYY-MM-DD)
+  - `tvs`: Total value secured (float64)
+  - `borrowed`: Borrowed value (float64, optional)
+  - `staking`: Staking value (float64, optional)
+**And** entries are sorted by timestamp ascending
+**And** array is included in both full output and summary output
+
+**AC3: Chart Data Date Range**
+**Given** chart history is generated
+**When** output is written
+**Then** all available historical data points are included (full history from API)
+**And** chart_history contains 1000+ entries (DefiLlama has 4+ years of data)
+
+**AC4: Output Schema Update**
+**Given** updated output schema
+**When** JSON is generated
+**Then** `chart_history` array appears at top level alongside `historical`
+**And** `historical` continues to contain extractor-run snapshots (protocol-level detail)
+**And** `chart_history` contains API-sourced daily TVS data (for graphing)
+
+**Prerequisites:** Story 5.1, Story 5.3
+
+**Technical Notes:**
+- The `chart` field structure is: `map[timestamp_string]map[oracle_name]ChartEntry`
+- `ChartEntry` has: `tvl` (float64), `borrowed` (float64), `staking` (float64)
+- Filter for `oracleName` (e.g., "Switchboard") from chart data
+- Parse timestamp strings to int64 for sorting
+- Package: `internal/aggregator/chart.go` (new file)
+- Update: `internal/models/output.go` to add `ChartHistory` field
+- Update: `internal/storage/writer.go` to include chart data in output generation
+- Reference: Seed doc `3-data-sources-api-specifications.md` line 28
+
+**Smoke Test Guide:**
+1. Run extraction with `--once`
+2. Verify `chart_history` array exists in output JSON
+3. Verify array has 1000+ entries
+4. Verify first entry date is ~2021-11-29 (when Switchboard data starts)
+5. Verify last entry matches current date
+6. Verify data can be used to plot a chart (timestamps sequential, values reasonable)
+
+---
