@@ -1,6 +1,6 @@
 # Story 5.4: Extract Historical Chart Data for Graphing
 
-Status: review
+Status: done
 
 ## Story
 

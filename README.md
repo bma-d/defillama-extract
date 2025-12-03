@@ -152,9 +152,9 @@ All outputs are written atomically (temp file + rename) to prevent corruption.
 
 | File | Purpose | Content |
 |------|---------|---------|
-| `switchboard-oracle-data.json` | Full data with history | Indented, human-readable JSON |
+| `switchboard-oracle-data.json` | Full data with history | Indented, human-readable JSON with chart_history + historical |
 | `switchboard-oracle-data.min.json` | Same data, compact | No whitespace, smaller file size |
-| `switchboard-summary.json` | Current snapshot only | Lightweight for quick reads |
+| `switchboard-summary.json` | Current snapshot + chart history | Lightweight for quick reads and graphing |
 | `state.json` | Incremental update tracking | Last timestamp, protocol count |
 
 ### Output Schema
@@ -196,13 +196,20 @@ All outputs are written atomically (temp file + rename) to prevent corruption.
   "protocols": [
     {"rank": 1, "name": "Protocol Name", "slug": "protocol-name", "category": "Lending", "tvl": 100000000, "tvs": 50000000, "chains": ["Solana"]}
   ],
+  "chart_history": [
+    {"timestamp": 1638144000, "date": "2021-11-29", "tvs": 6289642.70, "borrowed": 0, "staking": 0}
+  ],
   "historical": [
     {"timestamp": 1764720000, "date": "2025-12-03", "tvs": 988531925.97, "tvs_by_chain": {...}, "protocol_count": 31, "chain_count": 5}
   ]
 }
 ```
 
-Note: `switchboard-summary.json` has the same schema but excludes the `historical` array and limits `protocols` to top 10.
+**Output Arrays:**
+- `chart_history`: Daily TVS data from DefiLlama (4+ years, ~1,466 data points) - for time-series graphing
+- `historical`: Extractor-run snapshots (every 2 hours) - detailed protocol-level data per extraction
+
+Note: `switchboard-summary.json` includes `chart_history` for graphing but excludes `historical` and limits `protocols` to top 10.
 
 ## Development
 
