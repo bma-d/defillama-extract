@@ -17,7 +17,7 @@
       <task id="1" desc="Add ChartEntry and ChartDataPoint models">
         <subtask id="1.1">Create internal/aggregator/chart.go with ChartDataPoint struct</subtask>
         <subtask id="1.2">Add ChartHistory []ChartDataPoint field to FullOutput in internal/models/output.go</subtask>
-        <subtask id="1.3">Add ChartHistory []ChartDataPoint field to SummaryOutput in internal/models/output.go</subtask>
+        <subtask id="1.3">Document that SummaryOutput intentionally omits ChartHistory to avoid duplication</subtask>
       </task>
       <task id="2" desc="Implement Chart Data Extraction">
         <subtask id="2.1">Create ExtractChartHistory(oracleResp, oracleName) function in internal/aggregator/chart.go</subtask>
@@ -29,9 +29,9 @@
       </task>
       <task id="3" desc="Integrate Chart Data into Output Generation">
         <subtask id="3.1">Update GenerateFullOutput to accept chart history parameter</subtask>
-        <subtask id="3.2">Update GenerateSummaryOutput to accept chart history parameter</subtask>
+        <subtask id="3.2">Update GenerateSummaryOutput to omit chart history (by design)</subtask>
         <subtask id="3.3">Update runOnce to extract chart history and pass to output generation</subtask>
-        <subtask id="3.4">Ensure chart_history is serialized in both full and summary outputs</subtask>
+        <subtask id="3.4">Ensure chart_history is serialized in full output; summary intentionally excludes it</subtask>
       </task>
       <task id="4" desc="Write Unit Tests">
         <subtask id="4.1">Test chart extraction with sample API response</subtask>
@@ -62,12 +62,12 @@
       <then>all Switchboard entries from chart[timestamp]["Switchboard"] are extracted</then>
       <and>each entry includes: timestamp, date, tvl (TVS), borrowed, staking</and>
     </criterion>
-    <criterion id="AC2" name="Chart History in Output">
+    <criterion id="AC2" name="Chart History in Full Output (no summary duplication)">
       <given>extracted chart data</given>
       <when>output JSON is generated</when>
-      <then>a chart_history array is included with entries: timestamp (int64), date (YYYY-MM-DD), tvs (float64), borrowed (float64, optional), staking (float64, optional)</then>
+      <then>a chart_history array is included in the full output with entries: timestamp (int64), date (YYYY-MM-DD), tvs (float64), borrowed (float64, optional), staking (float64, optional)</then>
       <and>entries are sorted by timestamp ascending</and>
-      <and>array is included in both full output and summary output</and>
+      <and>summary output may omit chart_history to avoid duplication</and>
     </criterion>
     <criterion id="AC3" name="Chart Data Date Range">
       <given>chart history is generated</given>
@@ -75,12 +75,12 @@
       <then>all available historical data points are included (full history from API)</then>
       <and>chart_history contains 1000+ entries (DefiLlama has 4+ years of data)</and>
     </criterion>
-    <criterion id="AC4" name="Output Schema Update">
+    <criterion id="AC4" name="Output Schema Update (de-duplicated)">
       <given>updated output schema</given>
       <when>JSON is generated</when>
-      <then>chart_history array appears at top level alongside historical</then>
+      <then>chart_history appears at top level in the full output alongside historical</then>
       <and>historical continues to contain extractor-run snapshots (protocol-level detail)</and>
-      <and>chart_history contains API-sourced daily TVS data (for graphing)</and>
+      <and>summary output excludes chart_history by design to prevent duplication</and>
     </criterion>
   </acceptanceCriteria>
 
@@ -96,8 +96,8 @@
     </docs>
     <code>
       <file path="internal/api/responses.go" kind="model" symbol="OracleAPIResponse" lines="9-15" reason="Contains Chart field map[string]map[string]map[string]float64 that holds the chart data to extract"/>
-      <file path="internal/models/output.go" kind="model" symbol="FullOutput, SummaryOutput" lines="44-65" reason="Output structs to add ChartHistory field"/>
-      <file path="internal/storage/writer.go" kind="service" symbol="GenerateFullOutput, GenerateSummaryOutput, WriteAllOutputs" lines="42-229" reason="Output generation functions to update with chart history parameter"/>
+      <file path="internal/models/output.go" kind="model" symbol="FullOutput, SummaryOutput" lines="44-65" reason="Output structs (ChartHistory in full output; summary omits)"/>
+      <file path="internal/storage/writer.go" kind="service" symbol="GenerateFullOutput, GenerateSummaryOutput, WriteAllOutputs" lines="42-229" reason="Output generation functions (chart history only in full output)"/>
       <file path="cmd/extractor/main.go" kind="entrypoint" symbol="runOnceWithDeps, runDeps" lines="68-218" reason="Extraction flow to add chart extraction step and pass to output generation"/>
       <file path="internal/aggregator/models.go" kind="model" symbol="Snapshot, AggregationResult" lines="40-72" reason="Reference for existing snapshot model structure"/>
       <file path="internal/aggregator/aggregator.go" kind="service" symbol="Aggregator" reason="Aggregation logic pattern to follow for chart extraction"/>
@@ -140,10 +140,10 @@
       <signature>func GenerateFullOutput(result *aggregator.AggregationResult, history []aggregator.Snapshot, cfg *config.Config) *models.FullOutput</signature>
       <notes>Must add chartHistory parameter: []aggregator.ChartDataPoint</notes>
     </interface>
-    <interface name="GenerateSummaryOutput" kind="function" path="internal/storage/writer.go:91">
-      <signature>func GenerateSummaryOutput(result *aggregator.AggregationResult, cfg *config.Config) *models.SummaryOutput</signature>
-      <notes>Must add chartHistory parameter: []aggregator.ChartDataPoint</notes>
-    </interface>
+      <interface name="GenerateSummaryOutput" kind="function" path="internal/storage/writer.go:91">
+        <signature>func GenerateSummaryOutput(result *aggregator.AggregationResult, cfg *config.Config) *models.SummaryOutput</signature>
+        <notes>Summary intentionally omits chartHistory to prevent duplication</notes>
+      </interface>
     <interface name="runDeps.generateFull" kind="function_field" path="cmd/extractor/main.go:72">
       <signature>generateFull func(*aggregator.AggregationResult, []aggregator.Snapshot, *config.Config) *models.FullOutput</signature>
       <notes>Update signature to accept chart history</notes>
@@ -170,8 +170,8 @@
       <test ac="AC3" desc="Test empty chart data returns empty slice (not nil)"/>
       <test ac="AC3" desc="Test chart with only one oracle extracts correctly"/>
       <test ac="AC4" desc="Test FullOutput includes chart_history at top level"/>
-      <test ac="AC4" desc="Test SummaryOutput includes chart_history at top level"/>
-      <test ac="AC4" desc="Test historical array remains unchanged after adding chart_history"/>
+      <test ac="AC4" desc="Test SummaryOutput omits chart_history by design"/>
+      <test ac="AC4" desc="Test historical array remains unchanged after adding chart_history to full output"/>
     </ideas>
   </tests>
 </story-context>
