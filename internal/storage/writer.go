@@ -88,8 +88,8 @@ func GenerateFullOutput(result *aggregator.AggregationResult, history []aggregat
 	}
 }
 
-// GenerateSummaryOutput builds the summary output structure including chart history but without historical snapshots.
-func GenerateSummaryOutput(result *aggregator.AggregationResult, chartHistory []aggregator.ChartDataPoint, cfg *config.Config) *models.SummaryOutput {
+// GenerateSummaryOutput builds the summary output structure without historical or chart history snapshots.
+func GenerateSummaryOutput(result *aggregator.AggregationResult, cfg *config.Config) *models.SummaryOutput {
 	if result == nil {
 		result = &aggregator.AggregationResult{}
 	}
@@ -134,7 +134,6 @@ func GenerateSummaryOutput(result *aggregator.AggregationResult, chartHistory []
 			ByChain:    result.ChainBreakdown,
 			ByCategory: result.CategoryBreakdown,
 		},
-		ChartHistory: chartHistory,
 		TopProtocols: topProtocols,
 	}
 }

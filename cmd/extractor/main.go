@@ -70,7 +70,7 @@ type runDeps struct {
 	agg             aggregationPipeline
 	sm              stateManager
 	generateFull    func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput
-	generateSummary func(*aggregator.AggregationResult, []aggregator.ChartDataPoint, *config.Config) *models.SummaryOutput
+	generateSummary func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput
 	writeOutputs    func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error
 	now             func() time.Time
 	logger          *slog.Logger
@@ -174,7 +174,7 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 		}
 
 		full := d.generateFull(aggResult, history, chartHistory, cfg)
-		summary := d.generateSummary(aggResult, chartHistory, cfg)
+		summary := d.generateSummary(aggResult, cfg)
 
 		if err := checkCtx("after_generate_outputs"); err != nil {
 			return err

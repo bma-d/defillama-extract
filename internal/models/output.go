@@ -62,6 +62,5 @@ type SummaryOutput struct {
 	Summary      Summary                         `json:"summary"`
 	Metrics      Metrics                         `json:"metrics"`
 	Breakdown    Breakdown                       `json:"breakdown"`
-	ChartHistory []aggregator.ChartDataPoint     `json:"chart_history"`
 	TopProtocols []aggregator.AggregatedProtocol `json:"top_protocols"`
 }

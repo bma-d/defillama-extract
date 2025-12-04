@@ -154,7 +154,7 @@ All outputs are written atomically (temp file + rename) to prevent corruption.
 |------|---------|---------|
 | `switchboard-oracle-data.json` | Full data with history | Indented, human-readable JSON with chart_history + historical |
 | `switchboard-oracle-data.min.json` | Same data, compact | No whitespace, smaller file size |
-| `switchboard-summary.json` | Current snapshot + chart history | Lightweight for quick reads and graphing |
+| `switchboard-summary.json` | Current snapshot | Lightweight for quick reads |
 | `state.json` | Incremental update tracking | Last timestamp, protocol count |
 
 ### Output Schema

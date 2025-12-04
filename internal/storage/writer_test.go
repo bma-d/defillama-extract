@@ -113,9 +113,6 @@ func TestGenerateFullOutput_PopulatesAllFields(t *testing.T) {
 	if !reflect.DeepEqual(out.Protocols, result.Protocols) {
 		t.Fatalf("protocols mismatch")
 	}
-	if !reflect.DeepEqual(out.ChartHistory, chartHistorySample()) {
-		t.Fatalf("chart history mismatch: %+v", out.ChartHistory)
-	}
 	if !reflect.DeepEqual(out.Historical, history) {
 		t.Fatalf("history mismatch: %+v", out.Historical)
 	}
@@ -133,16 +130,13 @@ func TestGenerateSummaryOutput_TopProtocolsLimitedAndNoHistory(t *testing.T) {
 		})
 	}
 
-	out := GenerateSummaryOutput(result, chartHistorySample(), sampleConfig())
+out := GenerateSummaryOutput(result, sampleConfig())
 
 	if len(out.TopProtocols) != 10 {
 		t.Fatalf("top protocol count = %d, want 10", len(out.TopProtocols))
 	}
 	if out.Metadata.LastUpdated == "" {
 		t.Fatalf("expected metadata timestamp set")
-	}
-	if len(out.ChartHistory) != len(chartHistorySample()) {
-		t.Fatalf("chart history missing in summary output")
 	}
 	// Ensure original slice not mutated beyond length check
 	if len(result.Protocols) != 12 {
@@ -202,7 +196,7 @@ func TestWriteAllOutputs_WritesAllFilesAndMatchesData(t *testing.T) {
 	cfg := sampleConfig()
 
 	full := GenerateFullOutput(result, history, chartHistorySample(), cfg)
-	summary := GenerateSummaryOutput(result, chartHistorySample(), cfg)
+	summary := GenerateSummaryOutput(result, cfg)
 
 	if err := WriteAllOutputs(context.Background(), dir, cfg, full, summary); err != nil {
 		t.Fatalf("WriteAllOutputs error: %v", err)
@@ -250,8 +244,8 @@ func TestWriteAllOutputs_RespectsConfigFilenames(t *testing.T) {
 	cfg.Output.MinFile = "custom-min.json"
 	cfg.Output.SummaryFile = "custom-summary.json"
 
-	full := GenerateFullOutput(sampleAggregationResult(), nil, chartHistorySample(), cfg)
-	summary := GenerateSummaryOutput(sampleAggregationResult(), chartHistorySample(), cfg)
+full := GenerateFullOutput(sampleAggregationResult(), nil, chartHistorySample(), cfg)
+summary := GenerateSummaryOutput(sampleAggregationResult(), cfg)
 
 	if err := WriteAllOutputs(context.Background(), dir, cfg, full, summary); err != nil {
 		t.Fatalf("WriteAllOutputs error: %v", err)
@@ -288,8 +282,8 @@ func TestWriteAllOutputs_CancelsBeforeWritesAndLeavesNoFiles(t *testing.T) {
 
 	dir := t.TempDir()
 	cfg := sampleConfig()
-	full := GenerateFullOutput(sampleAggregationResult(), nil, chartHistorySample(), cfg)
-	summary := GenerateSummaryOutput(sampleAggregationResult(), chartHistorySample(), cfg)
+full := GenerateFullOutput(sampleAggregationResult(), nil, chartHistorySample(), cfg)
+summary := GenerateSummaryOutput(sampleAggregationResult(), cfg)
 
 	err := WriteAllOutputs(ctx, dir, cfg, full, summary)
 	if !errors.Is(err, context.Canceled) {
@@ -318,7 +312,7 @@ func TestUpdateFrequency_UsesSchedulerInterval(t *testing.T) {
 		t.Fatalf("update_frequency = %s, want %s", full.Metadata.UpdateFrequency, cfg.Scheduler.Interval.String())
 	}
 
-	summary := GenerateSummaryOutput(sampleAggregationResult(), chartHistorySample(), cfg)
+summary := GenerateSummaryOutput(sampleAggregationResult(), cfg)
 	if summary.Metadata.UpdateFrequency != cfg.Scheduler.Interval.String() {
 		t.Fatalf("summary update_frequency = %s, want %s", summary.Metadata.UpdateFrequency, cfg.Scheduler.Interval.String())
 	}
