@@ -1,20 +1,41 @@
 package aggregator
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/switchboard-xyz/defillama-extract/internal/api"
 )
 
-// ExtractProtocolData enriches filtered protocols with TVS data and returns the latest timestamp.
-func ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResponse, oracleName string) ([]AggregatedProtocol, int64) {
+// ExtractProtocolData enriches filtered protocols with TVS data and returns the latest timestamp
+// along with counts of protocols that have/are missing TVS.
+func ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResponse, oracleName string) ([]AggregatedProtocol, int64, int, int) {
 	timestamp := ExtractLatestTimestamp(oracleResp)
 	if len(protocols) == 0 {
-		return []AggregatedProtocol{}, timestamp
+		return []AggregatedProtocol{}, timestamp, 0, 0
 	}
 
+	logger := slog.Default()
 	result := make([]AggregatedProtocol, 0, len(protocols))
+	withTVS := 0
+	withoutTVS := 0
+
+	if oracleResp == nil {
+		for _, p := range protocols {
+			result = append(result, AggregatedProtocol{
+				Name:       p.Name,
+				Slug:       p.Slug,
+				Category:   p.Category,
+				URL:        p.URL,
+				TVL:        p.TVL,
+				Chains:     copyChains(p.Chains),
+				TVSByChain: make(map[string]float64),
+			})
+		}
+		return result, timestamp, 0, len(protocols)
+	}
+
 	for _, p := range protocols {
 		agg := AggregatedProtocol{
 			Name:       p.Name,
@@ -26,27 +47,37 @@ func ExtractProtocolData(protocols []api.Protocol, oracleResp *api.OracleAPIResp
 			TVSByChain: make(map[string]float64),
 		}
 
-		protocolKey := strings.TrimSpace(p.Name)
+		slugKey := strings.TrimSpace(p.Slug)
+		nameKey := strings.TrimSpace(p.Name)
+		protocolKey := slugKey
 		if protocolKey == "" {
-			protocolKey = strings.TrimSpace(p.Slug)
+			protocolKey = nameKey
 		}
 
-		protocolTVS := resolveProtocolChainTVS(oracleResp, oracleName, protocolKey, timestamp)
-		for _, chain := range p.Chains {
-			if protocolTVS == nil {
-				continue
+		total, byChain, found := ExtractProtocolTVS(oracleResp.OraclesTVS, oracleName, protocolKey)
+		if !found && nameKey != "" && nameKey != protocolKey {
+			total, byChain, found = ExtractProtocolTVS(oracleResp.OraclesTVS, oracleName, nameKey)
+			if !found {
+				protocolKey = nameKey
 			}
+		}
 
-			if tvs, ok := protocolTVS[chain]; ok {
-				agg.TVSByChain[chain] = tvs
-				agg.TVS += tvs
-			}
+		if found {
+			agg.TVS = total
+			agg.TVSByChain = byChain
+			withTVS++
+		} else {
+			withoutTVS++
+			logger.Warn("protocol_tvs_unavailable",
+				"protocol", protocolKey,
+				"reason", "not found in oraclesTVS",
+			)
 		}
 
 		result = append(result, agg)
 	}
 
-	return result, timestamp
+	return result, timestamp, withTVS, withoutTVS
 }
 
 // ExtractLatestTimestamp returns the latest Unix timestamp found in the oracle chart data.

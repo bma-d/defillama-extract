@@ -24,7 +24,7 @@ func (a *Aggregator) Aggregate(ctx context.Context, oracleResp *api.OracleAPIRes
 	_ = ctx
 
 	filtered := FilterByOracle(protocols, a.oracleName)
-	aggregated, timestamp := ExtractProtocolData(filtered, oracleResp, a.oracleName)
+	aggregated, timestamp, withTVS, withoutTVS := ExtractProtocolData(filtered, oracleResp, a.oracleName)
 
 	chainBreakdown := CalculateChainBreakdown(aggregated)
 	categoryBreakdown := CalculateCategoryBreakdown(aggregated)
@@ -37,16 +37,18 @@ func (a *Aggregator) Aggregate(ctx context.Context, oracleResp *api.OracleAPIRes
 	categories := extractUniqueCategories(aggregated)
 
 	return &AggregationResult{
-		TotalTVS:          totalTVS,
-		TotalProtocols:    len(aggregated),
-		ActiveChains:      activeChains,
-		Categories:        categories,
-		ChainBreakdown:    chainBreakdown,
-		CategoryBreakdown: categoryBreakdown,
-		Protocols:         ranked,
-		LargestProtocol:   largest,
-		ChangeMetrics:     changeMetrics,
-		Timestamp:         timestamp,
+		TotalTVS:            totalTVS,
+		TotalProtocols:      len(aggregated),
+		ActiveChains:        activeChains,
+		Categories:          categories,
+		ChainBreakdown:      chainBreakdown,
+		CategoryBreakdown:   categoryBreakdown,
+		Protocols:           ranked,
+		LargestProtocol:     largest,
+		ChangeMetrics:       changeMetrics,
+		Timestamp:           timestamp,
+		ProtocolsWithTVS:    withTVS,
+		ProtocolsWithoutTVS: withoutTVS,
 	}
 }
 

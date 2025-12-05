@@ -171,10 +171,10 @@ func TestRunOnceSuccess(t *testing.T) {
 			fullCalled = true
 			return &models.FullOutput{}
 		},
-	generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
-		summaryCalled = true
-		return &models.SummaryOutput{}
-	},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			summaryCalled = true
+			return &models.SummaryOutput{}
+		},
 		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
 			wroteOutputs = true
 			return nil
@@ -195,6 +195,104 @@ func TestRunOnceSuccess(t *testing.T) {
 	}
 	if !strings.Contains(buf.String(), "extraction completed") {
 		t.Fatalf("expected completion log, got: %s", buf.String())
+	}
+}
+
+func TestRunOnceLogsSumValidationWarning(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newLogger(buf)
+	cfg := baseConfig()
+
+	oracleResp := &api.OracleAPIResponse{
+		Chart: map[string]map[string]map[string]float64{
+			"1733000000": {
+				"Switchboard": {"tvl": 200},
+			},
+		},
+	}
+
+	aggResult := &aggregator.AggregationResult{
+		Timestamp:      100,
+		TotalProtocols: 2,
+		TotalTVS:       100,
+		Protocols: []aggregator.AggregatedProtocol{
+			{Name: "A", TVS: 40},
+			{Name: "B", TVS: 40},
+		},
+	}
+
+	deps := runDeps{
+		client: stubClient{res: &api.FetchResult{OracleResponse: oracleResp, Protocols: []api.Protocol{}}},
+		agg:    stubAgg{result: aggResult},
+		sm:     &stubState{state: &storage.State{}, shouldProcess: true},
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
+			return &models.FullOutput{}
+		},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			return &models.SummaryOutput{}
+		},
+		writeOutputs: func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error {
+			return nil
+		},
+		now:    func() time.Time { return time.Unix(200, 0) },
+		logger: logger,
+	}
+
+	if err := runOnceWithDeps(context.Background(), cfg, CLIOptions{}, deps); err != nil {
+		t.Fatalf("runOnceWithDeps returned error: %v", err)
+	}
+
+	if !strings.Contains(buf.String(), "tvs_sum_validation") || !strings.Contains(buf.String(), "status=fail") {
+		t.Fatalf("expected sum validation failure log, got %s", buf.String())
+	}
+}
+
+func TestRunOnceSkipsSumWarningWithinTolerance(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newLogger(buf)
+	cfg := baseConfig()
+
+	oracleResp := &api.OracleAPIResponse{
+		Chart: map[string]map[string]map[string]float64{
+			"1733000000": {
+				"Switchboard": {"tvl": 100},
+			},
+		},
+	}
+
+	aggResult := &aggregator.AggregationResult{
+		Timestamp:      100,
+		TotalProtocols: 2,
+		TotalTVS:       100,
+		Protocols: []aggregator.AggregatedProtocol{
+			{Name: "A", TVS: 50},
+			{Name: "B", TVS: 49},
+		},
+	}
+
+	deps := runDeps{
+		client: stubClient{res: &api.FetchResult{OracleResponse: oracleResp, Protocols: []api.Protocol{}}},
+		agg:    stubAgg{result: aggResult},
+		sm:     &stubState{state: &storage.State{}, shouldProcess: true},
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
+			return &models.FullOutput{}
+		},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			return &models.SummaryOutput{}
+		},
+		writeOutputs: func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error {
+			return nil
+		},
+		now:    func() time.Time { return time.Unix(200, 0) },
+		logger: logger,
+	}
+
+	if err := runOnceWithDeps(context.Background(), cfg, CLIOptions{}, deps); err != nil {
+		t.Fatalf("runOnceWithDeps returned error: %v", err)
+	}
+
+	if !strings.Contains(buf.String(), "tvs_sum_validation") || !strings.Contains(buf.String(), "status=pass") {
+		t.Fatalf("expected sum validation pass log, got %s", buf.String())
 	}
 }
 
@@ -525,10 +623,10 @@ func TestRunOnceWithCanceledContextSkipsWrites(t *testing.T) {
 			wroteOutputs = true
 			return &models.FullOutput{}
 		},
-	generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
-		wroteOutputs = true
-		return &models.SummaryOutput{}
-	},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			wroteOutputs = true
+			return &models.SummaryOutput{}
+		},
 		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
 			wroteOutputs = true
 			return nil
@@ -614,9 +712,9 @@ func TestRunOnceCancellationDuringWriteOutputsLeavesNoFiles(t *testing.T) {
 		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			return full
 		},
-	generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
-		return summary
-	},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			return summary
+		},
 		writeOutputs: func(ctx context.Context, outputDir string, cfg *config.Config, full *models.FullOutput, summary *models.SummaryOutput) error {
 			cancel()
 			return storage.WriteAllOutputs(ctx, outputDir, cfg, full, summary)
@@ -745,10 +843,10 @@ func TestRunOnceCancellationBetweenOutputsAndWritesSkipsSideEffects(t *testing.T
 		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
 			return &models.FullOutput{}
 		},
-	generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
-		cancel() // cancel after outputs produced, before writes
-		return &models.SummaryOutput{}
-	},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			cancel() // cancel after outputs produced, before writes
+			return &models.SummaryOutput{}
+		},
 		writeOutputs: func(_ context.Context, _ string, _ *config.Config, _ *models.FullOutput, _ *models.SummaryOutput) error {
 			wroteOutputs = true
 			return nil

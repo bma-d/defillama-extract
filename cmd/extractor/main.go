@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"os"
 	"os/signal"
 	"strings"
@@ -151,6 +152,45 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 
 	aggResult := d.agg.Aggregate(ctx, result.OracleResponse, result.Protocols, history)
 
+	// AC3: Validate protocol TVS sum vs independent reference total_value_secured (5% tolerance)
+	if aggResult != nil {
+		var protocolSum float64
+		for _, p := range aggResult.Protocols {
+			protocolSum += p.TVS
+		}
+
+		var referenceTVS float64
+		if n := len(chartHistory); n > 0 {
+			referenceTVS = chartHistory[n-1].TVS
+		}
+
+		switch {
+		case referenceTVS <= 0:
+			logger.Info("tvs_sum_validation_skipped",
+				"reason", "no reference total_value_secured",
+				"protocols_with_tvs", aggResult.ProtocolsWithTVS,
+				"protocols_without_tvs", aggResult.ProtocolsWithoutTVS,
+			)
+		default:
+			diffPct := math.Abs(protocolSum-referenceTVS) / referenceTVS * 100
+			if diffPct > 5 {
+				logger.Warn("tvs_sum_validation",
+					"status", "fail",
+					"protocols_total_tvs", protocolSum,
+					"reference_total_value_secured", referenceTVS,
+					"pct_diff", diffPct,
+				)
+			} else {
+				logger.Info("tvs_sum_validation",
+					"status", "pass",
+					"protocols_total_tvs", protocolSum,
+					"reference_total_value_secured", referenceTVS,
+					"pct_diff", diffPct,
+				)
+			}
+		}
+	}
+
 	if !d.sm.ShouldProcess(aggResult.Timestamp, state) {
 		logger.Info("no new data, skipping extraction",
 			"last_updated", state.LastUpdated,
@@ -214,6 +254,13 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 		"protocol_count", aggResult.TotalProtocols,
 		"tvs", aggResult.TotalTVS,
 		"chains", len(aggResult.ActiveChains),
+		"protocols_with_tvs", aggResult.ProtocolsWithTVS,
+		"protocols_without_tvs", aggResult.ProtocolsWithoutTVS,
+	)
+
+	logger.Info("extraction_complete",
+		"protocols_with_tvs", aggResult.ProtocolsWithTVS,
+		"protocols_without_tvs", aggResult.ProtocolsWithoutTVS,
 	)
 
 	return checkCtx("complete")

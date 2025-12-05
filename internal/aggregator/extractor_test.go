@@ -1,7 +1,10 @@
 package aggregator
 
 import (
+	"bytes"
+	"log/slog"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/switchboard-xyz/defillama-extract/internal/api"
@@ -30,10 +33,14 @@ func TestExtractProtocolData_PopulatesMetadataAndTVS(t *testing.T) {
 		Chains:   []string{"Solana"},
 	}}
 
-	got, ts := ExtractProtocolData(protocols, oracleResp, "Switchboard")
+	got, ts, withTVS, withoutTVS := ExtractProtocolData(protocols, oracleResp, "Switchboard")
 
 	if ts != 1732924800 {
 		t.Fatalf("timestamp mismatch: got %d, want %d", ts, 1732924800)
+	}
+
+	if withTVS != 1 || withoutTVS != 0 {
+		t.Fatalf("counts mismatch: with=%d without=%d", withTVS, withoutTVS)
 	}
 
 	if len(got) != 1 {
@@ -73,7 +80,7 @@ func TestExtractProtocolData_MultiChainTVS(t *testing.T) {
 		Chains: []string{"Solana", "Sui"},
 	}}
 
-	got, _ := ExtractProtocolData(protocols, oracleResp, "Switchboard")
+	got, _, withTVS, withoutTVS := ExtractProtocolData(protocols, oracleResp, "Switchboard")
 
 	agg := got[0]
 	if agg.TVS != 1_000_000 {
@@ -83,6 +90,10 @@ func TestExtractProtocolData_MultiChainTVS(t *testing.T) {
 	wantByChain := map[string]float64{"Solana": 750_000, "Sui": 250_000}
 	if !reflect.DeepEqual(agg.TVSByChain, wantByChain) {
 		t.Fatalf("TVSByChain = %+v, want %+v", agg.TVSByChain, wantByChain)
+	}
+
+	if withTVS != 1 || withoutTVS != 0 {
+		t.Fatalf("counts mismatch: with=%d without=%d", withTVS, withoutTVS)
 	}
 }
 
@@ -96,7 +107,7 @@ func TestExtractProtocolData_HandlesMissingChains(t *testing.T) {
 		Slug: "no-chains",
 	}}
 
-	got, ts := ExtractProtocolData(protocols, oracleResp, "Switchboard")
+	got, ts, withTVS, withoutTVS := ExtractProtocolData(protocols, oracleResp, "Switchboard")
 
 	if ts != 1733000000 {
 		t.Fatalf("timestamp = %d, want 1733000000", ts)
@@ -108,6 +119,10 @@ func TestExtractProtocolData_HandlesMissingChains(t *testing.T) {
 	}
 	if len(agg.TVSByChain) != 0 {
 		t.Fatalf("TVSByChain should be empty, got %+v", agg.TVSByChain)
+	}
+
+	if withTVS != 0 || withoutTVS != 1 {
+		t.Fatalf("counts mismatch: with=%d without=%d", withTVS, withoutTVS)
 	}
 }
 
@@ -124,7 +139,7 @@ func TestExtractProtocolData_MissingOracleData(t *testing.T) {
 		Chains: []string{"Solana"},
 	}}
 
-	got, ts := ExtractProtocolData(protocols, oracleResp, "Switchboard")
+	got, ts, withTVS, withoutTVS := ExtractProtocolData(protocols, oracleResp, "Switchboard")
 
 	if ts != 1733000000 {
 		t.Fatalf("timestamp = %d, want 1733000000", ts)
@@ -137,17 +152,24 @@ func TestExtractProtocolData_MissingOracleData(t *testing.T) {
 	if len(agg.TVSByChain) != 0 {
 		t.Fatalf("TVSByChain should be empty, got %+v", agg.TVSByChain)
 	}
+
+	if withTVS != 0 || withoutTVS != 1 {
+		t.Fatalf("counts mismatch: with=%d without=%d", withTVS, withoutTVS)
+	}
 }
 
 func TestExtractProtocolData_EmptyInputs(t *testing.T) {
 	oracleResp := &api.OracleAPIResponse{Chart: map[string]map[string]map[string]float64{"1733000000": {}}}
 
-	got, ts := ExtractProtocolData(nil, oracleResp, "Switchboard")
+	got, ts, withTVS, withoutTVS := ExtractProtocolData(nil, oracleResp, "Switchboard")
 	if ts != 1733000000 {
 		t.Fatalf("timestamp = %d, want 1733000000", ts)
 	}
 	if len(got) != 0 {
 		t.Fatalf("expected empty result, got %d items", len(got))
+	}
+	if withTVS != 0 || withoutTVS != 0 {
+		t.Fatalf("counts mismatch: with=%d without=%d", withTVS, withoutTVS)
 	}
 }
 
@@ -203,5 +225,30 @@ func TestResolveProtocolChainTVS_FallsBackToTimestamp(t *testing.T) {
 	chains := resolveProtocolChainTVS(oracleResp, "Switchboard", "unknown", 1732924800)
 	if chains == nil || chains["Solana"] != 123 {
 		t.Fatalf("expected timestamp fallback to return chain data, got %+v", chains)
+	}
+}
+
+func TestExtractProtocolData_LogsWarningWhenMissingTVS(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := slog.New(slog.NewTextHandler(buf, &slog.HandlerOptions{Level: slog.LevelWarn}))
+	original := slog.Default()
+	slog.SetDefault(logger)
+	defer slog.SetDefault(original)
+
+	oracleResp := &api.OracleAPIResponse{
+		Chart:      map[string]map[string]map[string]float64{"1733000000": {}},
+		OraclesTVS: map[string]map[string]map[string]float64{},
+	}
+
+	protocols := []api.Protocol{{Slug: "missing-proto"}}
+
+	_, _, withTVS, withoutTVS := ExtractProtocolData(protocols, oracleResp, "Switchboard")
+
+	if withTVS != 0 || withoutTVS != 1 {
+		t.Fatalf("expected counts with=0 without=1, got with=%d without=%d", withTVS, withoutTVS)
+	}
+
+	if !strings.Contains(buf.String(), "protocol_tvs_unavailable") {
+		t.Fatalf("expected warning log for missing TVS, got %s", buf.String())
 	}
 }

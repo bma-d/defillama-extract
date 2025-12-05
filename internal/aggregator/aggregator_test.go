@@ -27,10 +27,12 @@ func TestAggregate_CompletesPipeline(t *testing.T) {
 		},
 		OraclesTVS: map[string]map[string]map[string]float64{
 			"Switchboard": {
-				tsStr: {
+				"proto-a": {
 					"Solana": 1000,
 					"Sui":    500,
-					"Aptos":  250,
+				},
+				"proto-b": {
+					"Aptos": 250,
 				},
 			},
 		},
@@ -75,6 +77,10 @@ func TestAggregate_CompletesPipeline(t *testing.T) {
 
 	if result.TotalProtocols != 2 {
 		t.Fatalf("TotalProtocols = %d, want 2", result.TotalProtocols)
+	}
+
+	if result.ProtocolsWithTVS != 2 || result.ProtocolsWithoutTVS != 0 {
+		t.Fatalf("unexpected TVS counts: with=%d without=%d", result.ProtocolsWithTVS, result.ProtocolsWithoutTVS)
 	}
 
 	if !almostEqual(result.TotalTVS, 1750) {

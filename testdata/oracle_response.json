@@ -11,9 +11,9 @@
   },
   "oraclesTVS": {
     "Switchboard": {
-      "Solana": {
-        "tvs": 500000000
-      }
+      "marinade-finance": {"Solana": 500000000},
+      "solend": {"Solana": 250000000, "Sui": 50000000},
+      "drift-protocol": {"Solana": 100000000, "Aptos": 25000000}
     }
   },
   "chainsByOracle": {

@@ -59,14 +59,16 @@ type ChangeMetrics struct {
 
 // AggregationResult contains the complete output of the aggregation pipeline.
 type AggregationResult struct {
-	TotalTVS          float64              `json:"total_tvs"`
-	TotalProtocols    int                  `json:"total_protocols"`
-	ActiveChains      []string             `json:"active_chains"`
-	Categories        []string             `json:"categories"`
-	ChainBreakdown    []ChainBreakdown     `json:"chain_breakdown"`
-	CategoryBreakdown []CategoryBreakdown  `json:"category_breakdown"`
-	Protocols         []AggregatedProtocol `json:"protocols"`
-	LargestProtocol   *LargestProtocol     `json:"largest_protocol,omitempty"`
-	ChangeMetrics     ChangeMetrics        `json:"change_metrics"`
-	Timestamp         int64                `json:"timestamp"`
+	TotalTVS            float64              `json:"total_tvs"`
+	TotalProtocols      int                  `json:"total_protocols"`
+	ProtocolsWithTVS    int                  `json:"protocols_with_tvs"`
+	ProtocolsWithoutTVS int                  `json:"protocols_without_tvs"`
+	ActiveChains        []string             `json:"active_chains"`
+	Categories          []string             `json:"categories"`
+	ChainBreakdown      []ChainBreakdown     `json:"chain_breakdown"`
+	CategoryBreakdown   []CategoryBreakdown  `json:"category_breakdown"`
+	Protocols           []AggregatedProtocol `json:"protocols"`
+	LargestProtocol     *LargestProtocol     `json:"largest_protocol,omitempty"`
+	ChangeMetrics       ChangeMetrics        `json:"change_metrics"`
+	Timestamp           int64                `json:"timestamp"`
 }
