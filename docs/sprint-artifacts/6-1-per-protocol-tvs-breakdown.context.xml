@@ -1,0 +1,303 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>1</storyId>
+    <title>Per-Protocol TVS Breakdown</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-04</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-1-per-protocol-tvs-breakdown.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>dashboard consumer</asA>
+    <iWant>each protocol to have its TVS value and per-chain breakdown populated</iWant>
+    <soThat>I can display accurate TVS attribution per protocol and verify data completeness</soThat>
+    <tasks>
+      <task id="1" title="Investigate API Response Structure" acs="1,2">
+        <subtask id="1.1">Fetch raw `/oracles` API response and examine `oraclesTVS` structure</subtask>
+        <subtask id="1.2">Verify key format (protocol slug vs ID) in `oraclesTVS` mapping</subtask>
+        <subtask id="1.3">Cross-reference protocol slugs between `/oracles` and `/lite/protocols2`</subtask>
+        <subtask id="1.4">Document findings in this story's Dev Notes section</subtask>
+        <subtask id="1.5">Update test fixture `testdata/oracle_response.json` with realistic `oraclesTVS` data</subtask>
+      </task>
+      <task id="2" title="Implement Per-Protocol TVS Extraction" acs="1,2">
+        <subtask id="2.1">Create helper function `ExtractProtocolTVS(oraclesTVS, oracleName, protocolSlug)` in `internal/aggregator/`</subtask>
+        <subtask id="2.2">Return `(totalTVS float64, tvsByChain map[string]float64, found bool)`</subtask>
+        <subtask id="2.3">Handle case where protocol not found in `oraclesTVS` (return 0, empty map, false)</subtask>
+        <subtask id="2.4">Integrate TVS extraction into existing protocol aggregation loop</subtask>
+      </task>
+      <task id="3" title="Populate Protocol TVS Fields" acs="1,2">
+        <subtask id="3.1">Modify protocol aggregation to call TVS extraction for each protocol</subtask>
+        <subtask id="3.2">Set `AggregatedProtocol.TVS` = sum of chain values</subtask>
+        <subtask id="3.3">Set `AggregatedProtocol.TVSByChain` = per-chain breakdown map</subtask>
+        <subtask id="3.4">Ensure existing fields (TVL, rank, category) remain unchanged</subtask>
+      </task>
+      <task id="4" title="Add Warning Logging" acs="4,5">
+        <subtask id="4.1">Log WARNING for each protocol without TVS data (include slug)</subtask>
+        <subtask id="4.2">Track count of protocols with/without TVS during extraction</subtask>
+        <subtask id="4.3">Log summary at extraction completion: `protocols_with_tvs=N protocols_without_tvs=M`</subtask>
+      </task>
+      <task id="5" title="Add TVS Sum Validation" acs="3">
+        <subtask id="5.1">After all protocols processed, calculate sum of `protocols[].tvs`</subtask>
+        <subtask id="5.2">Compare to `summary.total_value_secured`</subtask>
+        <subtask id="5.3">If discrepancy > 5%, log WARNING with both values and percentage difference</subtask>
+        <subtask id="5.4">Document expected discrepancy sources (rounding, timing, upstream gaps)</subtask>
+      </task>
+      <task id="6" title="Write Unit Tests" acs="all">
+        <subtask id="6.1">Test TVS extraction with mock `oraclesTVS` containing multiple protocols</subtask>
+        <subtask id="6.2">Test TVS extraction when protocol missing from `oraclesTVS`</subtask>
+        <subtask id="6.3">Test sum validation within and outside 5% tolerance</subtask>
+        <subtask id="6.4">Test warning log generation for missing protocols</subtask>
+      </task>
+      <task id="7" title="Integration Testing" acs="all">
+        <subtask id="7.1">Run extraction with `--once` against live API</subtask>
+        <subtask id="7.2">Verify previously zero-TVS protocols now have values (where data exists)</subtask>
+        <subtask id="7.3">Verify `tvs_by_chain` populated for protocols with TVS</subtask>
+        <subtask id="7.4">Check logs for any `protocol_tvs_unavailable` warnings</subtask>
+        <subtask id="7.5">Verify sum validation output</subtask>
+      </task>
+      <task id="8" title="Verification" acs="all">
+        <subtask id="8.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="8.2">Run `go test ./...` and verify all pass</subtask>
+        <subtask id="8.3">Run `make lint` and verify no errors</subtask>
+        <subtask id="8.4">Compare output before/after to verify no schema breaking changes</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" title="Protocols Have Non-Zero TVS (where data exists)">
+      <given>the `/oracles` API response contains `oraclesTVS` data for a protocol</given>
+      <when>extraction runs</when>
+      <then>that protocol's `tvs` field is populated with the sum of its chain TVS values</then>
+      <and>protocols without upstream TVS data retain `tvs: 0` (graceful degradation)</and>
+    </criterion>
+    <criterion id="AC2" title="Per-Chain TVS Breakdown Populated">
+      <given>the `/oracles` API response contains `oraclesTVS[oracle][protocol][chain]` mapping</given>
+      <when>extraction runs</when>
+      <then>each protocol's `tvs_by_chain` map is populated with per-chain values</then>
+      <and>the structure is `{"Solana": 1234567.89, "Sui": 234567.89, ...}`</and>
+    </criterion>
+    <criterion id="AC3" title="TVS Sum Validation">
+      <given>all protocols have been processed</given>
+      <when>output is generated</when>
+      <then>the sum of all `protocols[].tvs` is within 5% of `summary.total_value_secured`</then>
+      <and>any discrepancy beyond 5% is logged as WARNING</and>
+    </criterion>
+    <criterion id="AC4" title="Missing Data Logging">
+      <given>a protocol exists in the oracle's protocol list but has no entry in `oraclesTVS`</given>
+      <when>extraction runs</when>
+      <then>a WARNING is logged with format: `protocol_tvs_unavailable protocol=&lt;slug&gt; reason="not found in oraclesTVS"`</then>
+      <and>extraction continues without failure</and>
+    </criterion>
+    <criterion id="AC5" title="Extraction Summary Logging">
+      <given>extraction completes</given>
+      <when>summary is logged</when>
+      <then>log includes: `extraction_complete protocols_with_tvs=&lt;N&gt; protocols_without_tvs=&lt;M&gt;`</then>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics/epic-6-maintenance.md</path>
+        <title>Epic 6: Maintenance and Data Quality</title>
+        <section>Issue: M-001 - Per-Protocol TVS Breakdown Missing</section>
+        <snippet>Many protocols in output have `tvs: 0` and `tvs_by_chain: {}` despite having substantial TVL. Issue documented with expected outcome: each protocol should have non-zero `tvs` value (where data exists).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic Technical Specification: Maintenance and Data Quality</title>
+        <section>M-001: Per-Protocol TVS Breakdown</section>
+        <snippet>Detailed acceptance criteria AC-M001-01 through AC-M001-05. Specifies expected API structure with oraclesTVS[oracle][protocol][chain] mapping and traceability to aggregator components.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Success Criteria - Complete Protocol Capture</section>
+        <snippet>FR11: System extracts TVS (Total Value Secured) data per protocol per chain. Success metric: Zero false negatives for protocols using Switchboard.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>API Response Models</section>
+        <snippet>OracleAPIResponse struct with OraclesTVS `map[string]map[string]map[string]float64` - keyed by oracle, protocol, chain. AggregatedProtocol has TVS and TVSByChain fields.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/implementation-patterns.md</path>
+        <title>Implementation Patterns</title>
+        <section>Dependency Injection, Context Propagation</section>
+        <snippet>Use constructor functions, not global state. All I/O functions accept `context.Context` as first parameter. Use `errgroup` for concurrent API calls.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-002, ADR-004, ADR-005</section>
+        <snippet>ADR-002: Atomic file writes via temp+rename. ADR-004: Structured logging with slog. ADR-005: Minimal external dependencies (only yaml.v3).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization, Test Fixtures</section>
+        <snippet>Table-driven tests in `*_test.go` co-located files. Test fixtures in `testdata/` directory. High coverage required for aggregation logic.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>Package Layout</section>
+        <snippet>Aggregator logic in `internal/aggregator/`. Models in `internal/models/`. API client in `internal/api/`. Test fixtures in `testdata/`.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>internal/aggregator/extractor.go</path>
+        <kind>extraction-logic</kind>
+        <symbol>ExtractProtocolData, resolveProtocolChainTVS</symbol>
+        <lines>1-103</lines>
+        <reason>PRIMARY MODIFICATION TARGET - Contains existing TVS extraction logic. resolveProtocolChainTVS attempts to look up protocol TVS from oraclesTVS but may have key matching issues. Story requires investigation and potential fixes here.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/aggregator.go</path>
+        <kind>orchestrator</kind>
+        <symbol>Aggregator.Aggregate, calculateTotalTVS</symbol>
+        <lines>1-96</lines>
+        <reason>Orchestrates pipeline. calculateTotalTVS sums protocols' TVS. May need TVS sum validation logic added here or in metrics.go.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/models.go</path>
+        <kind>data-model</kind>
+        <symbol>AggregatedProtocol</symbol>
+        <lines>1-73</lines>
+        <reason>Defines AggregatedProtocol with TVS float64 and TVSByChain map[string]float64 fields. These are the target fields to populate.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/metrics.go</path>
+        <kind>metrics-calculation</kind>
+        <symbol>CalculateChainBreakdown, CalculateCategoryBreakdown</symbol>
+        <lines>1-234</lines>
+        <reason>Contains TVS breakdown calculations. TVS sum validation (AC3) could be added here.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/chart.go</path>
+        <kind>reference-pattern</kind>
+        <symbol>ExtractChartHistory</symbol>
+        <lines>1-57</lines>
+        <reason>PATTERN REFERENCE - Story 5.4 added chart extraction in aggregator layer. Follow same pattern for TVS extraction improvements.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/filter.go</path>
+        <kind>filter-logic</kind>
+        <symbol>FilterByOracle</symbol>
+        <lines>1-30</lines>
+        <reason>Filters protocols by oracle name. May need to pass additional data through for TVS extraction.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/responses.go</path>
+        <kind>api-model</kind>
+        <symbol>OracleAPIResponse</symbol>
+        <lines>1-90</lines>
+        <reason>Defines OraclesTVS as `map[string]map[string]map[string]float64`. Investigation needed to verify actual API response structure matches expected.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/models/output.go</path>
+        <kind>output-model</kind>
+        <symbol>FullOutput, Summary</symbol>
+        <lines>1-66</lines>
+        <reason>FullOutput.Summary.TotalValueSecured is the value to compare against sum of protocol TVS for AC3 validation.</reason>
+      </artifact>
+      <artifact>
+        <path>testdata/oracle_response.json</path>
+        <kind>test-fixture</kind>
+        <symbol>N/A</symbol>
+        <lines>1-23</lines>
+        <reason>NEEDS UPDATE - Current fixture has minimal oraclesTVS structure. Story requires adding realistic per-protocol TVS data for proper testing.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/extractor_test.go</path>
+        <kind>unit-test</kind>
+        <symbol>TestExtractProtocolData_*, TestResolveProtocolChainTVS_*</symbol>
+        <lines>1-207</lines>
+        <reason>PATTERN REFERENCE - Existing table-driven tests for extraction. New TVS tests should follow same pattern.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="go">
+        <package name="golang.org/x/sync" version="v0.18.0" purpose="errgroup for parallel fetching" />
+        <package name="gopkg.in/yaml.v3" version="v3.0.1" purpose="Config parsing" />
+        <package name="log/slog" version="stdlib" purpose="Structured logging (ADR-004)" />
+      </ecosystem>
+      <note>No new dependencies allowed per ADR-005. Use stdlib for all new functionality.</note>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-002">All file writes must use atomic temp-file + rename pattern</constraint>
+    <constraint source="ADR-004">Use `log/slog` for all logging with structured fields. WARNING logs for missing TVS data.</constraint>
+    <constraint source="ADR-005">No new external dependencies. Use Go stdlib only.</constraint>
+    <constraint source="Tech-Spec">All changes must maintain backward compatibility with existing output schema</constraint>
+    <constraint source="Tech-Spec">Data gaps logged as warnings, not errors. Extraction must not fail due to missing upstream TVS.</constraint>
+    <constraint source="Epic-6">Schema changes must be additive only - no breaking changes to output JSON structure</constraint>
+    <constraint source="Project-Pattern">Follow existing aggregator-layer pattern (see chart.go from Story 5.4)</constraint>
+    <constraint source="Dev-Notes">TVS fields should appear in both full and summary output (not historical-only like chart_history)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>OracleAPIResponse.OraclesTVS</name>
+      <kind>API response field</kind>
+      <signature>map[string]map[string]map[string]float64 - oraclesTVS[oracle][protocol][chain] => tvs_value</signature>
+      <path>internal/api/responses.go:13</path>
+    </interface>
+    <interface>
+      <name>AggregatedProtocol</name>
+      <kind>Data struct</kind>
+      <signature>struct { TVS float64; TVSByChain map[string]float64; ... }</signature>
+      <path>internal/aggregator/models.go:4-14</path>
+    </interface>
+    <interface>
+      <name>resolveProtocolChainTVS</name>
+      <kind>Internal function</kind>
+      <signature>func(oracleResp *api.OracleAPIResponse, oracleName, protocolName string, timestamp int64) map[string]float64</signature>
+      <path>internal/aggregator/extractor.go:73-93</path>
+    </interface>
+    <interface>
+      <name>ExtractProtocolData</name>
+      <kind>Public function</kind>
+      <signature>func(protocols []api.Protocol, oracleResp *api.OracleAPIResponse, oracleName string) ([]AggregatedProtocol, int64)</signature>
+      <path>internal/aggregator/extractor.go:11-50</path>
+    </interface>
+    <interface>
+      <name>calculateTotalTVS</name>
+      <kind>Internal function</kind>
+      <signature>func(protocols []AggregatedProtocol) float64</signature>
+      <path>internal/aggregator/aggregator.go:53-59</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Table-driven unit tests co-located in `*_test.go` files. Use Go testing package with `t.Run` for subtests.
+      Mock API responses using struct literals (see extractor_test.go pattern). No external mocking frameworks.
+      High coverage required for aggregation logic. All error handling paths must be tested.
+      Integration tests use `httptest` mock server where needed. Test fixtures stored in `testdata/` directory.
+    </standards>
+    <locations>
+      <location>internal/aggregator/*_test.go</location>
+      <location>testdata/oracle_response.json</location>
+      <location>testdata/protocol_response.json</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1,AC2">Test TVS extraction with mock oraclesTVS containing multiple protocols with multi-chain breakdown</idea>
+      <idea ac="AC1,AC2">Test protocol name vs slug key matching in oraclesTVS lookup</idea>
+      <idea ac="AC1">Test graceful degradation: protocol in filter but missing from oraclesTVS returns tvs=0</idea>
+      <idea ac="AC2">Test multi-chain protocol: Solana + Sui TVS correctly summed and broken down</idea>
+      <idea ac="AC3">Test sum validation: protocol sum within 5% of total_value_secured (pass case)</idea>
+      <idea ac="AC3">Test sum validation: protocol sum > 5% discrepancy triggers WARNING log</idea>
+      <idea ac="AC4">Test warning log generation for protocol missing from oraclesTVS (verify log format)</idea>
+      <idea ac="AC5">Test extraction summary log includes protocols_with_tvs and protocols_without_tvs counts</idea>
+      <idea ac="all">Integration test: run extraction against fixture data, verify output schema unchanged</idea>
+      <idea ac="all">Regression test: compare output JSON before/after to verify no breaking changes</idea>
+    </ideas>
+  </tests>
+</story-context>
