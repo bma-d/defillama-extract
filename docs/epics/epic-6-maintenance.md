@@ -2,7 +2,13 @@
 
 **Goal:** Address data quality issues and operational improvements discovered post-MVP.
 
+**Type:** ONGOING MAINTENANCE EPIC
+
 **Nature:** This is a **flexible maintenance epic** - stories are created ad-hoc as issues are discovered and prioritized. Unlike feature epics, this epic intentionally does NOT have a predefined story list.
+
+> **Note:** This epic remains open indefinitely. New maintenance stories will be added as issues are discovered during operation. Epic 6 is never "complete" - it serves as the permanent home for maintenance work.
+>
+> **Priority Rule:** Stories from Epic 6 are never automatically selected as the "next story" unless explicitly specified by the user. Feature epics (7+) always take precedence in the default story queue.
 
 ## Why This Epic Exists
 
