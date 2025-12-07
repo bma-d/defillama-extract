@@ -1,4 +1,4 @@
-# generated: 2025-11-29
+# generated: 2025-12-07
 # project: defillama-extract
 # project_key: defillama-extract
 # tracking_system: file-system
@@ -28,7 +28,7 @@
 # - SM typically drafts next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', dev reviews, then Dev moves to 'done'
 
-generated: 2025-11-29
+generated: 2025-12-07
 project: defillama-extract
 project_key: defillama-extract
 tracking_system: file-system
@@ -78,13 +78,23 @@ development_status:
 
   # Epic 5: Output & CLI (4 stories - 3 consolidated + 1 added for chart data)
   epic-5: contexted
-  5-1-implement-output-file-generation: done            # Full/minified/summary + atomic writes (was 5.1-5.4)
-  5-2-implement-cli-and-single-run-mode: done           # CLI flags + single-run + logging (was 5.5+5.6+5.9)
-  5-3-implement-daemon-mode: done                       # Daemon + graceful shutdown + main (was 5.7+5.8+5.10)
-  5-4-extract-historical-chart-data: done               # Extract chart[] data for graphing (added 2025-12-02)
-  epic-5-retrospective: done                            # Completed 2025-12-02 (second retro after 5.4)
+  5-1-implement-output-file-generation: done
+  5-2-implement-cli-and-single-run-mode: done
+  5-3-implement-daemon-mode: done
+  5-4-extract-historical-chart-data: done
+  epic-5-retrospective: done
 
   # Epic 6: Maintenance & Data Quality (flexible - stories created ad-hoc)
-  epic-6: contexted                                     # Tech spec created 2025-12-04
-  6-1-per-protocol-tvs-breakdown: done                  # M-001: Per-protocol TVS missing
-  # Additional stories added here as issues are converted via *create-story
+  epic-6: contexted
+  6-1-per-protocol-tvs-breakdown: done
+  epic-6-retrospective: optional
+
+  # Epic 7: Custom Protocols & Per-Protocol TVL Charting (6 stories)
+  epic-7: backlog
+  7-1-load-custom-protocols-configuration: backlog
+  7-2-implement-protocol-tvl-fetcher: backlog
+  7-3-merge-protocol-lists: backlog
+  7-4-include-integration-date-in-output: backlog
+  7-5-generate-tvl-data-json-output: backlog
+  7-6-integrate-tvl-pipeline-into-main-extraction-cycle: backlog
+  epic-7-retrospective: optional
