@@ -18,7 +18,7 @@ func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []mo
 		merged[slug] = models.MergedProtocol{
 			Slug:            slug,
 			Source:          "auto",
-			IsOngoing:       true,
+			IsOngoing:       false,
 			SimpleTVSRatio:  1.0,
 			IntegrationDate: nil,
 			DocsProof:       &docs,

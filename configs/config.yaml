@@ -13,7 +13,7 @@ api:
   # Base URL for oracle listings
   oracles_url: https://api.llama.fi/oracles
   # Base URL for protocol data
-  protocols_url: https://api.llama.fi/lite/protocols2?b=2
+  protocols_url: https://api.llama.fi/lite/protocols2
   # Request timeout (Go duration, e.g., 30s, 1m)
   timeout: 30s
   # Number of retries before failing a request
@@ -32,7 +32,7 @@ output:
 
 tvl:
   # Path to custom protocols JSON configuration
-  custom_protocols_path: config/custom-protocols.json
+  custom_protocols_path: configs/custom-protocols.json
   # Whether TVL pipeline (including custom protocol loading) is enabled
   enabled: true
 

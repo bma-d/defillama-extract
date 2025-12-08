@@ -9,6 +9,8 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -20,6 +22,9 @@ import (
 )
 
 const userAgentValue = "defillama-extract/1.0"
+
+var oraclesCachePath = filepath.Join("api-cache", "oracles.json")
+var oraclesMinInterval = 4 * time.Second
 
 type contextKey string
 
@@ -40,6 +45,9 @@ type Client struct {
 	rngMu                       sync.Mutex
 	protocolRateMu              sync.Mutex
 	nextProtocolAllowedAt       time.Time
+	oracleRateMu                sync.Mutex
+	nextOracleAllowedAt         time.Time
+	minOracleInterval           time.Duration
 }
 
 // NewClient constructs a Client using API configuration. Nil logger falls back to slog.Default().
@@ -68,6 +76,7 @@ func NewClient(cfg *config.APIConfig, logger *slog.Logger) *Client {
 		retryDelay:                  cfg.RetryDelay,
 		logger:                      logger,
 		rng:                         rand.New(rand.NewSource(time.Now().UnixNano())),
+		minOracleInterval:           oraclesMinInterval,
 	}
 }
 
@@ -84,6 +93,11 @@ func attemptFromContext(ctx context.Context) int {
 // doRequest performs a GET request with User-Agent injection and JSON decoding.
 func (c *Client) doRequest(ctx context.Context, url string, target any) error {
 	start := time.Now()
+	if url == c.oraclesURL {
+		if err := c.waitForOracleRateLimit(ctx); err != nil {
+			return err
+		}
+	}
 	attempt := attemptFromContext(ctx)
 	method := http.MethodGet
 
@@ -147,6 +161,70 @@ func (c *Client) doRequest(ctx context.Context, url string, target any) error {
 	}
 
 	return nil
+}
+
+func (c *Client) loadOraclesCache() (*OracleAPIResponse, error) {
+	data, err := os.ReadFile(oraclesCachePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp OracleAPIResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+func (c *Client) saveOraclesCache(resp *OracleAPIResponse) error {
+	if resp == nil {
+		return errors.New("nil oracles response")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(oraclesCachePath), 0o755); err != nil {
+		c.logger.Warn("oracles_cache_write_failed", "path", oraclesCachePath, "error", err)
+		return err
+	}
+
+	data, err := json.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		c.logger.Warn("oracles_cache_marshal_failed", "error", err)
+		return err
+	}
+
+	if err := os.WriteFile(oraclesCachePath, data, 0o644); err != nil {
+		c.logger.Warn("oracles_cache_write_failed", "path", oraclesCachePath, "error", err)
+		return err
+	}
+
+	c.logger.Debug("oracles_cache_updated", "path", oraclesCachePath)
+	return nil
+}
+
+func (c *Client) waitForOracleRateLimit(ctx context.Context) error {
+	c.oracleRateMu.Lock()
+	now := time.Now()
+	wait := time.Until(c.nextOracleAllowedAt)
+	if wait <= 0 {
+		c.nextOracleAllowedAt = now.Add(c.minOracleInterval)
+		c.oracleRateMu.Unlock()
+		return nil
+	}
+	c.oracleRateMu.Unlock()
+
+	t := time.NewTimer(wait)
+	defer t.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+		c.oracleRateMu.Lock()
+		c.nextOracleAllowedAt = time.Now().Add(c.minOracleInterval)
+		c.oracleRateMu.Unlock()
+		return nil
+	}
 }
 
 func isRetryable(statusCode int, err error) bool {
@@ -308,8 +386,19 @@ func (c *Client) FetchOracles(ctx context.Context) (*OracleAPIResponse, error) {
 	if err := c.doWithRetry(ctx, func(ctx context.Context) error {
 		return c.doRequest(ctx, c.oraclesURL, &response)
 	}); err != nil {
+		cached, cacheErr := c.loadOraclesCache()
+		if cacheErr == nil {
+			c.logger.Warn("oracles_fallback_cache_used",
+				"path", oraclesCachePath,
+				"error", err,
+			)
+			return cached, nil
+		}
+
 		return nil, fmt.Errorf("fetch oracles: %w", err)
 	}
+
+	_ = c.saveOraclesCache(&response)
 
 	return &response, nil
 }

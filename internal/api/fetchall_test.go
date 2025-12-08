@@ -19,6 +19,14 @@ import (
 
 func newFetchAllClient(t *testing.T, oracleHandler, protocolHandler http.HandlerFunc, timeout time.Duration) (*Client, func()) {
 	t.Helper()
+	oldPath := oraclesCachePath
+	oraclesCachePath = filepath.Join(t.TempDir(), "oracles.json")
+	prevInterval := oraclesMinInterval
+	oraclesMinInterval = 0
+	t.Cleanup(func() {
+		oraclesCachePath = oldPath
+		oraclesMinInterval = prevInterval
+	})
 
 	oracleSrv := httptest.NewServer(oracleHandler)
 	protocolSrv := httptest.NewServer(protocolHandler)

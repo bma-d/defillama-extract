@@ -16,7 +16,7 @@
     "github_proof": "https://github.com/ThalaLabs/sbv2-movement"
   },
   {
-    "slug": "save-protocol",
+    "slug": "save",
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 1.0,

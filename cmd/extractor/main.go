@@ -21,6 +21,7 @@ import (
 	"github.com/switchboard-xyz/defillama-extract/internal/logging"
 	"github.com/switchboard-xyz/defillama-extract/internal/models"
 	"github.com/switchboard-xyz/defillama-extract/internal/storage"
+	"github.com/switchboard-xyz/defillama-extract/internal/tvl"
 )
 
 const Version = "1.0.0"
@@ -68,6 +69,7 @@ type stateManager interface {
 
 type runDeps struct {
 	client          apiClient
+	tvlClient       tvl.TVLClient
 	agg             aggregationPipeline
 	sm              stateManager
 	generateFull    func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput
@@ -75,12 +77,14 @@ type runDeps struct {
 	writeOutputs    func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error
 	now             func() time.Time
 	logger          *slog.Logger
+	tvlRunner       func(context.Context, *config.Config, *api.OracleAPIResponse, time.Time, CLIOptions, tvl.TVLClient, *slog.Logger) error
 }
 
 // RunOnce executes a single extraction cycle according to Story 5.2.
 func RunOnce(ctx context.Context, cfg *config.Config, opts CLIOptions, logger *slog.Logger) error {
 	deps := runDeps{
 		client:          api.NewClient(&cfg.API, logger),
+		tvlClient:       nil,
 		agg:             aggregator.NewAggregator(cfg.Oracle.Name),
 		sm:              storage.NewStateManager(cfg.Output.Directory, logger),
 		generateFull:    storage.GenerateFullOutput,
@@ -88,6 +92,7 @@ func RunOnce(ctx context.Context, cfg *config.Config, opts CLIOptions, logger *s
 		writeOutputs:    storage.WriteAllOutputs,
 		now:             time.Now,
 		logger:          logger,
+		tvlRunner:       nil,
 	}
 
 	return runOnceWithDeps(ctx, cfg, opts, deps)
@@ -103,165 +108,265 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 		logger = slog.Default()
 	}
 
+	mainLogger := logger.With("pipeline", "main")
+	tvlLogger := logger.With("pipeline", "tvl")
+
 	checkCtx := func(stage string) error {
 		if err := ctx.Err(); err != nil {
-			logger.Info("extraction cancelled", "stage", stage, "error", err)
+			mainLogger.Info("extraction cancelled", "stage", stage, "error", err)
 			return err
 		}
 		return nil
 	}
 
 	start := d.now()
-	logger.Info("extraction started", "timestamp", start.Format(time.RFC3339))
+	mainLogger.Info("extraction started", "timestamp", start.Format(time.RFC3339))
 
 	if err := checkCtx("start"); err != nil {
 		return err
 	}
 
-	state, err := d.sm.LoadState()
-	if err != nil {
-		logger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
-		return err
-	}
+	var (
+		mainErr    error
+		mainStatus = "success"
+		oracleResp *api.OracleAPIResponse
+		aggResult  *aggregator.AggregationResult
+	)
 
-	if err := checkCtx("after_load_state"); err != nil {
-		return err
-	}
-
-	result, err := d.client.FetchAll(ctx)
-	if err != nil {
-		logger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
-		return err
-	}
-
-	if err := checkCtx("after_fetch"); err != nil {
-		return err
-	}
-
-	history, err := d.sm.LoadHistory()
-	if err != nil {
-		logger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
-		return err
-	}
-
-	if err := checkCtx("after_load_history"); err != nil {
-		return err
-	}
-
-	chartHistory := aggregator.ExtractChartHistory(result.OracleResponse, cfg.Oracle.Name)
-
-	aggResult := d.agg.Aggregate(ctx, result.OracleResponse, result.Protocols, history)
-
-	// AC3: Validate protocol TVS sum vs independent reference total_value_secured (5% tolerance)
-	if aggResult != nil {
-		var protocolSum float64
-		for _, p := range aggResult.Protocols {
-			protocolSum += p.TVS
+	for {
+		state, err := d.sm.LoadState()
+		if err != nil {
+			mainLogger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
 
-		var referenceTVS float64
-		if n := len(chartHistory); n > 0 {
-			referenceTVS = chartHistory[n-1].TVS
+		if err := checkCtx("after_load_state"); err != nil {
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
 
-		switch {
-		case referenceTVS <= 0:
-			logger.Info("tvs_sum_validation_skipped",
-				"reason", "no reference total_value_secured",
-				"protocols_with_tvs", aggResult.ProtocolsWithTVS,
-				"protocols_without_tvs", aggResult.ProtocolsWithoutTVS,
-			)
-		default:
-			diffPct := math.Abs(protocolSum-referenceTVS) / referenceTVS * 100
-			if diffPct > 5 {
-				logger.Warn("tvs_sum_validation",
-					"status", "fail",
-					"protocols_total_tvs", protocolSum,
-					"reference_total_value_secured", referenceTVS,
-					"pct_diff", diffPct,
+		result, err := d.client.FetchAll(ctx)
+		if err != nil {
+			mainLogger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
+			mainErr = err
+			mainStatus = "failed"
+			break
+		}
+		oracleResp = result.OracleResponse
+
+		if err := checkCtx("after_fetch"); err != nil {
+			mainErr = err
+			mainStatus = "failed"
+			break
+		}
+
+		history, err := d.sm.LoadHistory()
+		if err != nil {
+			mainLogger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
+			mainErr = err
+			mainStatus = "failed"
+			break
+		}
+
+		if err := checkCtx("after_load_history"); err != nil {
+			mainErr = err
+			mainStatus = "failed"
+			break
+		}
+
+		chartHistory := aggregator.ExtractChartHistory(result.OracleResponse, cfg.Oracle.Name)
+
+		aggResult = d.agg.Aggregate(ctx, result.OracleResponse, result.Protocols, history)
+
+		// AC3: Validate protocol TVS sum vs independent reference total_value_secured (5% tolerance)
+		if aggResult != nil {
+			var protocolSum float64
+			for _, p := range aggResult.Protocols {
+				protocolSum += p.TVS
+			}
+
+			var referenceTVS float64
+			if n := len(chartHistory); n > 0 {
+				referenceTVS = chartHistory[n-1].TVS
+			}
+
+			switch {
+			case referenceTVS <= 0:
+				mainLogger.Info("tvs_sum_validation_skipped",
+					"reason", "no reference total_value_secured",
+					"protocols_with_tvs", aggResult.ProtocolsWithTVS,
+					"protocols_without_tvs", aggResult.ProtocolsWithoutTVS,
 				)
-			} else {
-				logger.Info("tvs_sum_validation",
-					"status", "pass",
-					"protocols_total_tvs", protocolSum,
-					"reference_total_value_secured", referenceTVS,
-					"pct_diff", diffPct,
-				)
+			default:
+				diffPct := math.Abs(protocolSum-referenceTVS) / referenceTVS * 100
+				if diffPct > 5 {
+					mainLogger.Warn("tvs_sum_validation",
+						"status", "fail",
+						"protocols_total_tvs", protocolSum,
+						"reference_total_value_secured", referenceTVS,
+						"pct_diff", diffPct,
+					)
+				} else {
+					mainLogger.Info("tvs_sum_validation",
+						"status", "pass",
+						"protocols_total_tvs", protocolSum,
+						"reference_total_value_secured", referenceTVS,
+						"pct_diff", diffPct,
+					)
+				}
 			}
 		}
-	}
 
-	if !d.sm.ShouldProcess(aggResult.Timestamp, state) {
-		logger.Info("no new data, skipping extraction",
-			"last_updated", state.LastUpdated,
-			"current_ts", aggResult.Timestamp,
-		)
-		return nil
-	}
+		if aggResult == nil {
+			mainErr = fmt.Errorf("nil aggregation result")
+			mainStatus = "failed"
+			break
+		}
 
-	if err := checkCtx("before_snapshot"); err != nil {
-		return err
-	}
+		if !d.sm.ShouldProcess(aggResult.Timestamp, state) {
+			mainLogger.Info("no new data, skipping extraction",
+				"last_updated", state.LastUpdated,
+				"current_ts", aggResult.Timestamp,
+			)
+			mainStatus = "skipped"
+			break
+		}
 
-	snapshot := storage.CreateSnapshot(aggResult)
-	history = d.sm.AppendSnapshot(history, snapshot)
+		if err := checkCtx("before_snapshot"); err != nil {
+			mainErr = err
+			mainStatus = "failed"
+			break
+		}
 
-	if opts.DryRun {
-		logger.Info("dry-run mode, skipping file writes")
-	} else {
+		snapshot := storage.CreateSnapshot(aggResult)
+		history = d.sm.AppendSnapshot(history, snapshot)
+
+		if opts.DryRun {
+			mainLogger.Info("dry-run mode, skipping file writes")
+			mainStatus = "success"
+			break
+		}
+
 		if err := checkCtx("before_writes"); err != nil {
-			return err
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
 
 		full := d.generateFull(aggResult, history, chartHistory, cfg)
 		summary := d.generateSummary(aggResult, cfg)
 
 		if err := checkCtx("after_generate_outputs"); err != nil {
-			return err
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
 
 		if err := checkCtx("before_write_outputs"); err != nil {
-			return err
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
 
 		if err := d.writeOutputs(ctx, cfg.Output.Directory, cfg, full, summary); err != nil {
-			logger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
-			return err
+			mainLogger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
 
 		if err := checkCtx("after_write_outputs"); err != nil {
-			return err
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
 
 		newState := d.sm.UpdateState(cfg.Oracle.Name, aggResult.Timestamp, aggResult.TotalProtocols, aggResult.TotalTVS, history)
 
 		if err := checkCtx("before_save_state"); err != nil {
-			return err
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
 
 		if err := d.sm.SaveState(newState); err != nil {
-			logger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
-			return err
+			mainLogger.Error("extraction failed", "error", err, "duration_ms", d.now().Sub(start).Milliseconds())
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
 
 		if err := checkCtx("after_save_state"); err != nil {
-			return err
+			mainErr = err
+			mainStatus = "failed"
+			break
 		}
+
+		mainLogger.Info("extraction completed",
+			"duration_ms", d.now().Sub(start).Milliseconds(),
+			"protocol_count", aggResult.TotalProtocols,
+			"tvs", aggResult.TotalTVS,
+			"chains", len(aggResult.ActiveChains),
+			"protocols_with_tvs", aggResult.ProtocolsWithTVS,
+			"protocols_without_tvs", aggResult.ProtocolsWithoutTVS,
+		)
+
+		mainLogger.Info("extraction_complete",
+			"protocols_with_tvs", aggResult.ProtocolsWithTVS,
+			"protocols_without_tvs", aggResult.ProtocolsWithoutTVS,
+		)
+
+		mainStatus = "success"
+		break
 	}
 
-	logger.Info("extraction completed",
+	tvlStatus := "skipped"
+	var tvlErr error
+
+	if cfg != nil && cfg.TVL.Enabled {
+		tvlClient := d.tvlClient
+		if tvlClient == nil {
+			if c, ok := d.client.(tvl.TVLClient); ok {
+				tvlClient = c
+			}
+		}
+		if tvlClient == nil {
+			tvlClient = api.NewClient(&cfg.API, tvlLogger)
+		}
+
+		runner := d.tvlRunner
+		if runner == nil {
+			runner = func(c context.Context, cfg *config.Config, resp *api.OracleAPIResponse, ts time.Time, opts CLIOptions, client tvl.TVLClient, logger *slog.Logger) error {
+				return tvl.RunTVLPipeline(c, cfg, resp, ts, opts.DryRun, logger, tvl.RunnerDeps{
+					Client:    client,
+					OutputDir: cfg.Output.Directory,
+				})
+			}
+		}
+
+		tvlErr = runner(ctx, cfg, oracleResp, start, opts, tvlClient, tvlLogger)
+		if tvlErr != nil {
+			tvlStatus = "failed"
+			mainLogger.Warn("tvl_pipeline_failed", "error", tvlErr)
+		} else {
+			tvlStatus = "success"
+		}
+	} else {
+		tvlStatus = "disabled"
+	}
+
+	logger.Info("extraction_cycle_complete",
+		"main_status", mainStatus,
+		"tvl_status", tvlStatus,
 		"duration_ms", d.now().Sub(start).Milliseconds(),
-		"protocol_count", aggResult.TotalProtocols,
-		"tvs", aggResult.TotalTVS,
-		"chains", len(aggResult.ActiveChains),
-		"protocols_with_tvs", aggResult.ProtocolsWithTVS,
-		"protocols_without_tvs", aggResult.ProtocolsWithoutTVS,
 	)
 
-	logger.Info("extraction_complete",
-		"protocols_with_tvs", aggResult.ProtocolsWithTVS,
-		"protocols_without_tvs", aggResult.ProtocolsWithoutTVS,
-	)
+	if mainErr != nil {
+		return mainErr
+	}
 
 	return checkCtx("complete")
 }

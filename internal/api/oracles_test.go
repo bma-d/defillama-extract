@@ -25,6 +25,15 @@ func newTestClient(oraclesURL string) *Client {
 }
 
 func TestFetchOracles_Success(t *testing.T) {
+	oldPath := oraclesCachePath
+	oraclesCachePath = filepath.Join(t.TempDir(), "oracles.json")
+	prevInterval := oraclesMinInterval
+	oraclesMinInterval = 0
+	t.Cleanup(func() {
+		oraclesCachePath = oldPath
+		oraclesMinInterval = prevInterval
+	})
+
 	fixturePath := filepath.Join("..", "..", "testdata", "oracle_response.json")
 	fixture, err := os.ReadFile(fixturePath)
 	if err != nil {
@@ -54,6 +63,15 @@ func TestFetchOracles_Success(t *testing.T) {
 }
 
 func TestFetchOracles_SetsUserAgent(t *testing.T) {
+	oldPath := oraclesCachePath
+	oraclesCachePath = filepath.Join(t.TempDir(), "oracles.json")
+	prevInterval := oraclesMinInterval
+	oraclesMinInterval = 0
+	t.Cleanup(func() {
+		oraclesCachePath = oldPath
+		oraclesMinInterval = prevInterval
+	})
+
 	var capturedUA string
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -75,6 +93,15 @@ func TestFetchOracles_SetsUserAgent(t *testing.T) {
 }
 
 func TestFetchOracles_StatusErrors(t *testing.T) {
+	oldPath := oraclesCachePath
+	oraclesCachePath = filepath.Join(t.TempDir(), "oracles.json")
+	prevInterval := oraclesMinInterval
+	oraclesMinInterval = 0
+	t.Cleanup(func() {
+		oraclesCachePath = oldPath
+		oraclesMinInterval = prevInterval
+	})
+
 	cases := []int{http.StatusInternalServerError, http.StatusNotFound}
 
 	for _, status := range cases {
@@ -97,6 +124,15 @@ func TestFetchOracles_StatusErrors(t *testing.T) {
 }
 
 func TestFetchOracles_MalformedJSON(t *testing.T) {
+	oldPath := oraclesCachePath
+	oraclesCachePath = filepath.Join(t.TempDir(), "oracles.json")
+	prevInterval := oraclesMinInterval
+	oraclesMinInterval = 0
+	t.Cleanup(func() {
+		oraclesCachePath = oldPath
+		oraclesMinInterval = prevInterval
+	})
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"oracles": `))
@@ -116,6 +152,15 @@ func TestFetchOracles_MalformedJSON(t *testing.T) {
 }
 
 func TestFetchOracles_ContextCancellation(t *testing.T) {
+	oldPath := oraclesCachePath
+	oraclesCachePath = filepath.Join(t.TempDir(), "oracles.json")
+	prevInterval := oraclesMinInterval
+	oraclesMinInterval = 0
+	t.Cleanup(func() {
+		oraclesCachePath = oldPath
+		oraclesMinInterval = prevInterval
+	})
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		<-r.Context().Done()
 	}))
@@ -136,5 +181,70 @@ func TestFetchOracles_ContextCancellation(t *testing.T) {
 
 	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context.Canceled, got %v", err)
+	}
+}
+
+func TestFetchOracles_FallbackCache(t *testing.T) {
+	// point cache to temp file
+	oldPath := oraclesCachePath
+	t.Cleanup(func() { oraclesCachePath = oldPath })
+	tmpDir := t.TempDir()
+	oraclesCachePath = filepath.Join(tmpDir, "oracles.json")
+
+	fixturePath := filepath.Join("..", "..", "testdata", "oracle_response.json")
+	data, err := os.ReadFile(fixturePath)
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	if err := os.WriteFile(oraclesCachePath, data, 0o644); err != nil {
+		t.Fatalf("write cache: %v", err)
+	}
+
+	// server always fails
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(server.Close)
+
+	client := newTestClient(server.URL)
+
+	resp, err := client.FetchOracles(context.Background())
+	if err != nil {
+		t.Fatalf("expected fallback without error, got %v", err)
+	}
+	if len(resp.Oracles) == 0 {
+		t.Fatalf("expected data from cache, got empty response")
+	}
+}
+
+func TestFetchOracles_WritesCacheOnSuccess(t *testing.T) {
+	oldPath := oraclesCachePath
+	t.Cleanup(func() { oraclesCachePath = oldPath })
+	tmpDir := t.TempDir()
+	oraclesCachePath = filepath.Join(tmpDir, "oracles.json")
+
+	fixturePath := filepath.Join("..", "..", "testdata", "oracle_response.json")
+	fixture, err := os.ReadFile(fixturePath)
+	if err != nil {
+		t.Fatalf("failed to read fixture: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(fixture)
+	}))
+	t.Cleanup(server.Close)
+
+	client := newTestClient(server.URL)
+	if _, err := client.FetchOracles(context.Background()); err != nil {
+		t.Fatalf("FetchOracles returned error: %v", err)
+	}
+
+	info, err := os.Stat(oraclesCachePath)
+	if err != nil {
+		t.Fatalf("expected cache file, got error: %v", err)
+	}
+	if info.Size() == 0 {
+		t.Fatalf("expected cache file to be written, got size 0")
 	}
 }

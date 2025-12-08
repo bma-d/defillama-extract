@@ -18,6 +18,7 @@ import (
 	"github.com/switchboard-xyz/defillama-extract/internal/config"
 	"github.com/switchboard-xyz/defillama-extract/internal/models"
 	"github.com/switchboard-xyz/defillama-extract/internal/storage"
+	"github.com/switchboard-xyz/defillama-extract/internal/tvl"
 )
 
 type stubClient struct {
@@ -368,6 +369,142 @@ func TestRunOnceDryRunSkipsWrites(t *testing.T) {
 	}
 	if !strings.Contains(buf.String(), "dry-run mode, skipping file writes") {
 		t.Fatalf("expected dry-run log, got %s", buf.String())
+	}
+}
+
+func TestRunOnceInvokesTVLRunnerAfterMain(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newLogger(buf)
+	cfg := baseConfig()
+	cfg.TVL.Enabled = true
+
+	state := &stubState{state: &storage.State{}, shouldProcess: true}
+	tvlCalled := false
+	var passedTS time.Time
+
+	deps := runDeps{
+		client: stubClient{res: &api.FetchResult{OracleResponse: &api.OracleAPIResponse{}}},
+		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 123}},
+		sm:     state,
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
+			return &models.FullOutput{}
+		},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			return &models.SummaryOutput{}
+		},
+		writeOutputs: func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error {
+			return nil
+		},
+		now:    func() time.Time { return time.Unix(500, 0) },
+		logger: logger,
+		tvlRunner: func(_ context.Context, _ *config.Config, _ *api.OracleAPIResponse, ts time.Time, _ CLIOptions, _ tvl.TVLClient, l *slog.Logger) error {
+			tvlCalled = true
+			passedTS = ts
+			if l != nil {
+				l.Info("tvl_runner_called")
+			}
+			return nil
+		},
+	}
+
+	if err := runOnceWithDeps(context.Background(), cfg, CLIOptions{}, deps); err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+
+	if !tvlCalled {
+		t.Fatalf("expected tvl runner to be called")
+	}
+	if passedTS.Unix() != 500 {
+		t.Fatalf("expected shared start timestamp 500, got %v", passedTS.Unix())
+	}
+	logStr := buf.String()
+	if !strings.Contains(logStr, "pipeline=main") || !strings.Contains(logStr, "pipeline=tvl") {
+		t.Fatalf("expected pipeline-scoped logs, got %s", logStr)
+	}
+}
+
+func TestRunOnceTVLErrorDoesNotFailMain(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newLogger(buf)
+	cfg := baseConfig()
+	cfg.TVL.Enabled = true
+
+	state := &stubState{state: &storage.State{}, shouldProcess: true}
+	tvlCalled := 0
+
+	deps := runDeps{
+		client: stubClient{res: &api.FetchResult{OracleResponse: &api.OracleAPIResponse{}}},
+		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 123}},
+		sm:     state,
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
+			return &models.FullOutput{}
+		},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			return &models.SummaryOutput{}
+		},
+		writeOutputs: func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error {
+			return nil
+		},
+		now:    func() time.Time { return time.Unix(600, 0) },
+		logger: logger,
+		tvlRunner: func(_ context.Context, _ *config.Config, _ *api.OracleAPIResponse, _ time.Time, _ CLIOptions, _ tvl.TVLClient, _ *slog.Logger) error {
+			tvlCalled++
+			return errors.New("tvl failure")
+		},
+	}
+
+	err := runOnceWithDeps(context.Background(), cfg, CLIOptions{}, deps)
+	if err != nil {
+		t.Fatalf("expected main to succeed despite tvl failure, got %v", err)
+	}
+	if tvlCalled != 1 {
+		t.Fatalf("expected tvl runner called once, got %d", tvlCalled)
+	}
+	if !strings.Contains(buf.String(), "tvl_pipeline_failed") {
+		t.Fatalf("expected tvl failure log, got %s", buf.String())
+	}
+}
+
+func TestRunOnceTVLRunsWhenMainFails(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := newLogger(buf)
+	cfg := baseConfig()
+	cfg.TVL.Enabled = true
+
+	state := &stubState{
+		state:         &storage.State{},
+		shouldProcess: true,
+		loadErr:       errors.New("state load failed"),
+	}
+	tvlCalled := 0
+
+	deps := runDeps{
+		client: stubClient{res: &api.FetchResult{OracleResponse: &api.OracleAPIResponse{}}},
+		agg:    stubAgg{result: &aggregator.AggregationResult{Timestamp: 123}},
+		sm:     state,
+		generateFull: func(*aggregator.AggregationResult, []aggregator.Snapshot, []aggregator.ChartDataPoint, *config.Config) *models.FullOutput {
+			return &models.FullOutput{}
+		},
+		generateSummary: func(*aggregator.AggregationResult, *config.Config) *models.SummaryOutput {
+			return &models.SummaryOutput{}
+		},
+		writeOutputs: func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error {
+			return nil
+		},
+		now:    func() time.Time { return time.Unix(700, 0) },
+		logger: logger,
+		tvlRunner: func(_ context.Context, _ *config.Config, _ *api.OracleAPIResponse, _ time.Time, _ CLIOptions, _ tvl.TVLClient, _ *slog.Logger) error {
+			tvlCalled++
+			return nil
+		},
+	}
+
+	err := runOnceWithDeps(context.Background(), cfg, CLIOptions{}, deps)
+	if err == nil {
+		t.Fatalf("expected main error to propagate")
+	}
+	if tvlCalled != 1 {
+		t.Fatalf("expected tvl runner called even when main fails, got %d", tvlCalled)
 	}
 }
 
