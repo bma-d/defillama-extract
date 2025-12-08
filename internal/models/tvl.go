@@ -26,3 +26,28 @@ type MergedProtocol struct {
 	DocsProof       *string `json:"docs_proof"`
 	GitHubProof     *string `json:"github_proof"`
 }
+
+// TVLHistoryItem represents a single point in a protocol's TVL history. Both
+// the Unix timestamp and a YYYY-MM-DD string are included to simplify
+// downstream consumption without filtering.
+type TVLHistoryItem struct {
+	Date      string  `json:"date"`
+	Timestamp int64   `json:"timestamp"`
+	TVL       float64 `json:"tvl"`
+}
+
+// TVLOutputProtocol is the contract for per-protocol entries in tvl-data.json.
+// IntegrationDate is nullable to preserve the distinction between missing and
+// zero values. TVLHistory must contain the full, unfiltered history.
+type TVLOutputProtocol struct {
+	Name            string           `json:"name"`
+	Slug            string           `json:"slug"`
+	Source          string           `json:"source"`
+	IsOngoing       bool             `json:"is_ongoing"`
+	SimpleTVSRatio  float64          `json:"simple_tvs_ratio"`
+	IntegrationDate *int64           `json:"integration_date"`
+	DocsProof       *string          `json:"docs_proof"`
+	GitHubProof     *string          `json:"github_proof"`
+	CurrentTVL      float64          `json:"current_tvl"`
+	TVLHistory      []TVLHistoryItem `json:"tvl_history"`
+}
