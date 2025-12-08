@@ -27,6 +27,19 @@ type Protocol struct {
 	URL      string   `json:"url,omitempty"`
 }
 
+// ProtocolTVLResponse represents the payload from GET /protocol/{slug}.
+type ProtocolTVLResponse struct {
+	Name             string             `json:"name"`
+	TVL              []TVLDataPoint     `json:"tvl"`
+	CurrentChainTvls map[string]float64 `json:"currentChainTvls"`
+}
+
+// TVLDataPoint represents a single point in a protocol's TVL history.
+type TVLDataPoint struct {
+	Date              int64   `json:"date"`
+	TotalLiquidityUSD float64 `json:"totalLiquidityUSD"`
+}
+
 // protocolList flexibly unmarshals either a bare array or an envelope containing
 // a top-level "protocols" field. The DefiLlama endpoint has shipped both shapes
 // historically, so decoding must tolerate either form.

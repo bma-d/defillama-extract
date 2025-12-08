@@ -24,18 +24,22 @@ const userAgentValue = "defillama-extract/1.0"
 type contextKey string
 
 const attemptContextKey contextKey = "api_attempt"
+const protocolRateLimitInterval = 200 * time.Millisecond
 
 // Client wraps http.Client with configuration needed for DefiLlama requests.
 type Client struct {
-	httpClient   *http.Client
-	oraclesURL   string
-	protocolsURL string
-	userAgent    string
-	maxRetries   int
-	retryDelay   time.Duration
-	logger       *slog.Logger
-	rng          *rand.Rand
-	rngMu        sync.Mutex
+	httpClient                  *http.Client
+	oraclesURL                  string
+	protocolsURL                string
+	protocolTVLEndpointTemplate string
+	userAgent                   string
+	maxRetries                  int
+	retryDelay                  time.Duration
+	logger                      *slog.Logger
+	rng                         *rand.Rand
+	rngMu                       sync.Mutex
+	protocolRateMu              sync.Mutex
+	nextProtocolAllowedAt       time.Time
 }
 
 // NewClient constructs a Client using API configuration. Nil logger falls back to slog.Default().
@@ -55,14 +59,15 @@ func NewClient(cfg *config.APIConfig, logger *slog.Logger) *Client {
 	}
 
 	return &Client{
-		httpClient:   &http.Client{Timeout: cfg.Timeout},
-		oraclesURL:   oraclesURL,
-		protocolsURL: protocolsURL,
-		userAgent:    userAgentValue,
-		maxRetries:   cfg.MaxRetries,
-		retryDelay:   cfg.RetryDelay,
-		logger:       logger,
-		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
+		httpClient:                  &http.Client{Timeout: cfg.Timeout},
+		oraclesURL:                  oraclesURL,
+		protocolsURL:                protocolsURL,
+		protocolTVLEndpointTemplate: ProtocolTVLEndpointTemplate,
+		userAgent:                   userAgentValue,
+		maxRetries:                  cfg.MaxRetries,
+		retryDelay:                  cfg.RetryDelay,
+		logger:                      logger,
+		rng:                         rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
@@ -187,6 +192,43 @@ func isRetryable(statusCode int, err error) bool {
 	return errors.As(err, &opErr)
 }
 
+func isNotFoundAPIError(err error) bool {
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.StatusCode == http.StatusNotFound
+	}
+
+	return false
+}
+
+func (c *Client) waitForProtocolRateLimit(ctx context.Context) error {
+	c.protocolRateMu.Lock()
+	now := time.Now()
+	waitUntil := now
+
+	if c.nextProtocolAllowedAt.After(now) {
+		waitUntil = c.nextProtocolAllowedAt
+	}
+
+	c.nextProtocolAllowedAt = waitUntil.Add(protocolRateLimitInterval)
+	c.protocolRateMu.Unlock()
+
+	wait := time.Until(waitUntil)
+	if wait <= 0 {
+		return nil
+	}
+
+	timer := time.NewTimer(wait)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
 func (c *Client) calculateBackoff(attempt int, baseDelay time.Duration) time.Duration {
 	exponential := baseDelay * time.Duration(1<<attempt)
 	c.rngMu.Lock()
@@ -282,6 +324,37 @@ func (c *Client) FetchProtocols(ctx context.Context) ([]Protocol, error) {
 	}
 
 	return []Protocol(protocols), nil
+}
+
+// FetchProtocolTVL retrieves historical TVL data for a protocol from DefiLlama /protocol/{slug} endpoint.
+func (c *Client) FetchProtocolTVL(ctx context.Context, slug string) (*ProtocolTVLResponse, error) {
+	if err := c.waitForProtocolRateLimit(ctx); err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf(c.protocolTVLEndpointTemplate, slug)
+	var response ProtocolTVLResponse
+
+	err := c.doWithRetry(ctx, func(ctx context.Context) error {
+		return c.doRequest(ctx, url, &response)
+	})
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return nil, ctx.Err()
+		}
+
+		if isNotFoundAPIError(err) {
+			c.logger.Warn("protocol_not_found",
+				"slug", slug,
+				"status_code", http.StatusNotFound,
+			)
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("fetch protocol TVL %s: %w", slug, err)
+	}
+
+	return &response, nil
 }
 
 // FetchAll retrieves oracle and protocol data concurrently using errgroup.

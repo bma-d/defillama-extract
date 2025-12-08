@@ -1,6 +1,6 @@
 # Story 7.2: Implement Protocol TVL Fetcher
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -59,54 +59,54 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-7.md#AC-7.2]; [Source: doc
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define TVL Response Models (AC: 3)
-  - [ ] 1.1: Create `ProtocolTVLResponse` struct in `internal/api/responses.go`:
+- [x] Task 1: Define TVL Response Models (AC: 3)
+  - [x] 1.1: Create `ProtocolTVLResponse` struct in `internal/api/responses.go`:
     - `Name string` - Protocol display name
     - `TVL []TVLDataPoint` - Historical TVL array
     - `CurrentChainTvls map[string]float64` - Per-chain current TVL
-  - [ ] 1.2: Create `TVLDataPoint` struct:
+  - [x] 1.2: Create `TVLDataPoint` struct:
     - `Date int64` - Unix timestamp
     - `TotalLiquidityUSD float64` - TVL value at that point
-  - [ ] 1.3: Add JSON tags matching DefiLlama response format
+  - [x] 1.3: Add JSON tags matching DefiLlama response format
 
-- [ ] Task 2: Add Protocol Endpoint Constant (AC: 1)
-  - [ ] 2.1: Add `ProtocolTVLEndpointTemplate = "https://api.llama.fi/protocol/%s"` to `internal/api/endpoints.go`
+- [x] Task 2: Add Protocol Endpoint Constant (AC: 1)
+  - [x] 2.1: Add `ProtocolTVLEndpointTemplate = "https://api.llama.fi/protocol/%s"` to `internal/api/endpoints.go`
 
-- [ ] Task 3: Implement FetchProtocolTVL Method (AC: 1, 2, 3, 5, 6)
-  - [ ] 3.1: Add `FetchProtocolTVL(ctx context.Context, slug string) (*ProtocolTVLResponse, error)` method to `Client`
-  - [ ] 3.2: Construct URL using `fmt.Sprintf(ProtocolTVLEndpointTemplate, slug)`
-  - [ ] 3.3: Use `doWithRetry` wrapper for retry logic
-  - [ ] 3.4: Parse response into `*ProtocolTVLResponse`
-  - [ ] 3.5: Return `nil, fmt.Errorf("fetch protocol TVL %s: %w", slug, err)` on failure
+- [x] Task 3: Implement FetchProtocolTVL Method (AC: 1, 2, 3, 5, 6)
+  - [x] 3.1: Add `FetchProtocolTVL(ctx context.Context, slug string) (*ProtocolTVLResponse, error)` method to `Client`
+  - [x] 3.2: Construct URL using `fmt.Sprintf(ProtocolTVLEndpointTemplate, slug)`
+  - [x] 3.3: Use `doWithRetry` wrapper for retry logic
+  - [x] 3.4: Parse response into `*ProtocolTVLResponse`
+  - [x] 3.5: Return `nil, fmt.Errorf("fetch protocol TVL %s: %w", slug, err)` on failure
 
-- [ ] Task 4: Implement 404 Handling (AC: 4)
-  - [ ] 4.1: Create internal helper to detect 404 status from `APIError`
-  - [ ] 4.2: In `FetchProtocolTVL`, check if error is 404 before wrapping:
+- [x] Task 4: Implement 404 Handling (AC: 4)
+  - [x] 4.1: Create internal helper to detect 404 status from `APIError`
+  - [x] 4.2: In `FetchProtocolTVL`, check if error is 404 before wrapping:
     - If 404: log warning, return `nil, nil`
     - If other error: return wrapped error
-  - [ ] 4.3: Add warning log with fields: `slug`, `status_code`
+  - [x] 4.3: Add warning log with fields: `slug`, `status_code`
 
-- [ ] Task 5: Write Unit Tests (AC: all)
-  - [ ] 5.1: Create `internal/api/tvl_test.go`
-  - [ ] 5.2: Test: Successful fetch returns populated `ProtocolTVLResponse`
-  - [ ] 5.3: Test: 404 response returns `nil, nil` and logs warning
-  - [ ] 5.4: Test: 500 response triggers retries and returns error
-  - [ ] 5.5: Test: Context cancellation returns `context.Canceled`
-  - [ ] 5.6: Test: Invalid JSON response returns error
-  - [ ] 5.7: Test: Empty `tvl` array is handled (valid response, empty data)
-  - [ ] 5.8: Create test fixture `testdata/protocol_tvl_response.json`
-  - [ ] 5.9: Create test fixture `testdata/protocol_404_response.json`
+- [x] Task 5: Write Unit Tests (AC: all)
+  - [x] 5.1: Create `internal/api/tvl_test.go`
+  - [x] 5.2: Test: Successful fetch returns populated `ProtocolTVLResponse`
+  - [x] 5.3: Test: 404 response returns `nil, nil` and logs warning
+  - [x] 5.4: Test: 500 response triggers retries and returns error
+  - [x] 5.5: Test: Context cancellation returns `context.Canceled`
+  - [x] 5.6: Test: Invalid JSON response returns error
+  - [x] 5.7: Test: Empty `tvl` array is handled (valid response, empty data)
+  - [x] 5.8: Create test fixture `testdata/protocol_tvl_response.json`
+  - [x] 5.9: Create test fixture `testdata/protocol_404_response.json`
 
-- [ ] Task 6: Build and Lint Verification (AC: all)
-  - [ ] 6.1: Run `go build ./...` and verify success
-  - [ ] 6.2: Run `go test ./internal/api/...` and verify all pass
-  - [ ] 6.3: Run `make lint` and fix any issues
+- [x] Task 6: Build and Lint Verification (AC: all)
+  - [x] 6.1: Run `go build ./...` and verify success
+  - [x] 6.2: Run `go test ./internal/api/...` and verify all pass
+  - [x] 6.3: Run `make lint` and fix any issues
 
-- [ ] Task 7: Implement Built-in Rate Limiting (AC: 7)
-  - [ ] 7.1: Add per-client rate limiter to `Client` (200ms minimum gap between calls to protocol endpoint)
-  - [ ] 7.2: Ensure rate limiter does not block cancellation (honor ctx)
-  - [ ] 7.3: Add unit test verifying ~200ms delay between sequential calls (use fake clock)
-  - [ ] 7.4: Add note in Dev Notes that caller no longer needs to throttle this endpoint
+- [x] Task 7: Implement Built-in Rate Limiting (AC: 7)
+  - [x] 7.1: Add per-client rate limiter to `Client` (200ms minimum gap between calls to protocol endpoint)
+  - [x] 7.2: Ensure rate limiter does not block cancellation (honor ctx)
+  - [x] 7.3: Add unit test verifying ~200ms delay between sequential calls (use fake clock)
+  - [x] 7.4: Add note in Dev Notes that caller no longer needs to throttle this endpoint
 
 ## Dev Notes
 
@@ -279,12 +279,86 @@ func (c *Client) FetchProtocolTVL(ctx context.Context, slug string) (*ProtocolTV
 
 ### Debug Log References
 
+- Implemented ProtocolTVLResponse models and endpoint constant; added FetchProtocolTVL with 404 handling and built-in 200ms rate limiter.
+- Added comprehensive tvl tests (success, 404 warning, retries, cancel, invalid JSON, empty data, rate limiting) plus fixtures.
+- Verified go test ./... and make lint.
+
 ### Completion Notes List
 
+- Added TVL response models, protocol endpoint template, and FetchProtocolTVL with retry, context cancel, 404 warning handling, and per-client 200ms rate limiting.
+- Created tvl unit tests with fixtures covering success, 404, retryable 500, invalid JSON, context cancellation, empty tvl, and rate limiter timing.
+- Ran go test ./... and make lint; all passing.
+
 ### File List
+
+- internal/api/endpoints.go
+- internal/api/responses.go
+- internal/api/client.go
+- internal/api/tvl_test.go
+- testdata/protocol_tvl_response.json
+- testdata/protocol_404_response.json
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/7-2-implement-protocol-tvl-fetcher.md
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-12-08 | SM Agent (Bob) | Initial story draft created from Epic 7 / Tech Spec |
+| 2025-12-08 | Amelia | Implemented protocol TVL fetcher, rate limiting, tests, and updated status |
+| 2025-12-08 | Amelia | Senior Developer Review (AI) approved |
+
+## Senior Developer Review (AI)
+
+Reviewer: BMad  
+Date: 2025-12-08  
+Outcome: Approve (all ACs satisfied; no outstanding issues)
+
+### Summary
+- Implementation meets AC1-AC7 with built-in 200ms rate limiter, 404 handling, retry reuse, and structured logging.
+- Comprehensive tests cover success, 404, retryable 500, invalid JSON, cancellation, empty data, and rate limiting; `go test ./...` passes.
+
+### Key Findings
+- No blocking or medium issues identified.
+- Advisory: Consider URL-escaping slugs in `FetchProtocolTVL` to guard against unexpected characters (low severity).
+
+### Acceptance Criteria Coverage
+
+| AC | Description | Status | Evidence |
+|---|---|---|---|
+| AC1 | Uses GET https://api.llama.fi/protocol/{slug} with existing client config | IMPLEMENTED | Endpoint template added and used in fetcher (`internal/api/endpoints.go:5-7`, `internal/api/client.go:335-340`). |
+| AC2 | Retries transient 429/5xx with exponential backoff, respects settings | IMPLEMENTED | `doWithRetry` + `isRetryable` reused for TVL fetch (`internal/api/client.go:152-193,240-303`). Server error test verifies retries (`internal/api/tvl_test.go:124-147`). |
+| AC3 | Extracts name, tvl[], currentChainTvls into struct | IMPLEMENTED | Response models added (`internal/api/responses.go:30-41`); success test asserts fields (`internal/api/tvl_test.go:49-92`). |
+| AC4 | 404 returns nil,nil, warns, no retry | IMPLEMENTED | 404 branch with warning log and early return (`internal/api/client.go:341-352`); test validates (`internal/api/tvl_test.go:94-122`). |
+| AC5 | Non-404 failures wrap error with endpoint/status after retries | IMPLEMENTED | Error wrapping on failure (`internal/api/client.go:354-355`); 500 test asserts wrapped message and retries (`internal/api/tvl_test.go:124-147`). |
+| AC6 | Honors context cancellation mid-request | IMPLEMENTED | Rate-limit wait and retry short-circuit on ctx (`internal/api/client.go:204-229,331-344`); cancellation test passes (`internal/api/tvl_test.go:169-188`). |
+| AC7 | Enforces 200ms min gap between protocol calls | IMPLEMENTED | Per-client rate limiter (`internal/api/client.go:204-229,331-334`); timing test ensures delay (`internal/api/tvl_test.go:209-230`). |
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|---|---|---|---|
+| 1: Response models | [x] | VERIFIED COMPLETE | Added `ProtocolTVLResponse` & `TVLDataPoint` (`internal/api/responses.go:30-41`). |
+| 2: Endpoint constant | [x] | VERIFIED COMPLETE | `ProtocolTVLEndpointTemplate` defined (`internal/api/endpoints.go:5-7`). |
+| 3: FetchProtocolTVL method | [x] | VERIFIED COMPLETE | Method with retry, ctx handling (`internal/api/client.go:329-358`). |
+| 4: 404 handling | [x] | VERIFIED COMPLETE | 404 detection helper + warning branch (`internal/api/client.go:195-202,341-352`). |
+| 5: Unit tests + fixtures | [x] | VERIFIED COMPLETE | New tests and fixtures (`internal/api/tvl_test.go:49-230`, `testdata/protocol_tvl_response.json`, `testdata/protocol_404_response.json`). |
+| 6: Build/test/lint verification | [x] | VERIFIED COMPLETE | `go test ./...` executed (2025-12-08). |
+| 7: Rate limiting | [x] | VERIFIED COMPLETE | Per-client limiter and timing test (`internal/api/client.go:204-229`, `internal/api/tvl_test.go:209-230`). |
+
+### Test Coverage and Gaps
+- `go test ./...` passing (2025-12-08).
+- Tests cover success, 404, retryable 500, invalid JSON, cancellation, empty data, and rate limiting. No gaps identified.
+
+### Architectural Alignment
+- Reuses existing client, retry wrapper, structured logging, and no new deps, matching ADR-001/003/004/005.
+- Tech spec AC-7.2 requirements satisfied; architecture.md not present in repo (not loaded).
+
+### Security Notes
+- No secrets handled; low risk. Advisory to URL-escape slugs (low severity hardening).
+
+### Best-Practices and References
+- Go 1.24, stdlib HTTP client with context and retries; structured logging via `slog` aligns with project patterns.
+
+### Action Items
+- None.

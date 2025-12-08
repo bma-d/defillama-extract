@@ -1,0 +1,10 @@
+{
+  "name": "Drift Trade",
+  "tvl": [
+    {"date": 1704067200, "totalLiquidityUSD": 150000000},
+    {"date": 1704153600, "totalLiquidityUSD": 155000000}
+  ],
+  "currentChainTvls": {
+    "Solana": 677000000
+  }
+}
