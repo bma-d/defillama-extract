@@ -1,0 +1,70 @@
+[
+  {
+    "slug": "drift",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 0.5,
+    "docs_proof": "https://docs.drift.trade/trading/market-specs#switchboard",
+    "github_proof": "https://github.com/drift-labs/drift-py/blob/2e595c576b436ef23422d4cd932fe8d5318c04ae/sdk/constants.py#L215"
+  },
+  {
+    "slug": "thala",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 0.5,
+    "docs_proof": "https://docs.thala.fi/overview/move-dollar-mod/oracles#switchboard",
+    "github_proof": "https://github.com/ThalaLabs/sbv2-movement"
+  },
+  {
+    "slug": "save-protocol",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "docs_proof": "https://docs.save.finance/getting-started/faq#what-oracles-does-solend-use",
+    "github_proof": "https://github.com/solendprotocol/solana-program-library/blob/d04ce00bbf4356c4fd32b3be38eb9760b696bb3e/token-lending/oracles/src/switchboard.rs#L41"
+  },
+  {
+    "slug": "aries-markets",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "docs_proof": "https://docs.ariesmarkets.xyz/aries-markets/protocol-parameters/oracles",
+    "github_proof": "https://github.com/Aries-Markets/sbv2-aptos"
+  },
+  {
+    "slug": "colend-protocol",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "docs_proof": "https://colend.gitbook.io/home/resour,ces/oracles#integration-of-complementary-oracles"
+  },
+  {
+    "slug": "marinade-liquid-staking",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "docs_proof": "https://docs.marinade.finance/marinade-protocol/protocol-overview/marinade-liquid/msol-token"
+  },
+  {
+    "slug": "suilend-protocol",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "docs_proof": "https://docs.suilend.fi/security/risks",
+    "github_proof": "https://github.com/suilend/suilend/blob/6177c96749f92e91295f42b93e818f6fc3e99663/contracts/oracles/sources/switchboard.move#L1"
+  },
+  {
+    "slug": "echelon-market",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "docs_proof": "https://docs.echelon.market/echelon/core/oracles"
+  },
+  {
+    "slug": "etherfuse",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "github_proof": "https://github.com/etherfuse/prices/blob/c34e3a013763a0862d61797febaf05d2226d1e1e/src/main.rs#L18"
+  }
+]

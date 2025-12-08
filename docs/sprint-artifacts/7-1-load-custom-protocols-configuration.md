@@ -1,6 +1,6 @@
 # Story 7.1: Load Custom Protocols Configuration
 
-Status: drafted
+Status: ready-for-dev
 
 ## Story
 
@@ -236,7 +236,7 @@ TVLConfig{
 
 ### Context Reference
 
-<!-- Path(s) to story context XML will be added here by context workflow -->
+- docs/sprint-artifacts/7-1-load-custom-protocols-configuration.context.xml
 
 ### Agent Model Used
 

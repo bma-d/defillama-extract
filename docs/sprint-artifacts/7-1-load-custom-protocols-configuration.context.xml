@@ -1,0 +1,224 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>1</storyId>
+    <title>Load Custom Protocols Configuration</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-1-load-custom-protocols-configuration.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>service operator</asA>
+    <iWant>the extractor to load and validate a custom protocols configuration file</iWant>
+    <soThat>I can track Switchboard integrations that DefiLlama doesn't auto-detect, with proof references and TVS ratio configuration</soThat>
+    <tasks>
+      <task id="1" title="Define Data Models">
+        <subtask id="1.1">Create internal/models/tvl.go with CustomProtocol struct matching JSON schema</subtask>
+        <subtask id="1.2">Add JSON tags with hyphenated keys (is-ongoing, simple-tvs-ratio)</subtask>
+        <subtask id="1.3">Use pointer types for optional fields (Date, DocsProof, GitHubProof)</subtask>
+        <subtask id="1.4">Add doc comments explaining each field's purpose</subtask>
+      </task>
+      <task id="2" title="Extend Configuration">
+        <subtask id="2.1">Add TVLConfig struct to internal/config/config.go with CustomProtocolsPath and Enabled fields</subtask>
+        <subtask id="2.2">Add TVL TVLConfig field to main Config struct</subtask>
+        <subtask id="2.3">Set defaults in config loading</subtask>
+        <subtask id="2.4">Update configs/config.yaml with new TVL section</subtask>
+      </task>
+      <task id="3" title="Implement CustomLoader">
+        <subtask id="3.1">Create internal/tvl/doc.go with package documentation</subtask>
+        <subtask id="3.2">Create internal/tvl/custom.go with CustomLoader struct</subtask>
+        <subtask id="3.3">Implement NewCustomLoader(configPath string, logger *slog.Logger) *CustomLoader</subtask>
+        <subtask id="3.4">Implement Load(ctx context.Context) ([]CustomProtocol, error) method</subtask>
+        <subtask id="3.5">Implement logging for load summary</subtask>
+      </task>
+      <task id="4" title="Implement Validation">
+        <subtask id="4.1">Create Validate(p CustomProtocol) error method on CustomLoader</subtask>
+        <subtask id="4.2">Validate slug is non-empty</subtask>
+        <subtask id="4.3">Validate simple-tvs-ratio is between 0 and 1</subtask>
+        <subtask id="4.4">Return descriptive error messages for each validation failure</subtask>
+        <subtask id="4.5">Call validation for each protocol in Load(), return first error</subtask>
+      </task>
+      <task id="5" title="Create Sample Configuration">
+        <subtask id="5.1">Create config/ directory if not exists</subtask>
+        <subtask id="5.2">Create config/custom-protocols.json.example with sample entries</subtask>
+        <subtask id="5.3">Document schema and field descriptions</subtask>
+      </task>
+      <task id="6" title="Write Unit Tests">
+        <subtask id="6.1">Create internal/tvl/custom_test.go</subtask>
+        <subtask id="6.2">Test: Valid JSON with multiple protocols - all loaded</subtask>
+        <subtask id="6.3">Test: File not found - empty slice, no error, INFO logged</subtask>
+        <subtask id="6.4">Test: Invalid JSON - error returned with parse message</subtask>
+        <subtask id="6.5">Test: Missing required field (slug empty) - validation error</subtask>
+        <subtask id="6.6">Test: simple-tvs-ratio out of range (1.5) - validation error</subtask>
+        <subtask id="6.7">Test: live: false entries - filtered out</subtask>
+        <subtask id="6.8">Test: All entries live: false - empty slice returned</subtask>
+        <subtask id="6.9">Create test fixtures in testdata/tvl/</subtask>
+      </task>
+      <task id="7" title="Build and Lint Verification">
+        <subtask id="7.1">Run go build ./... and verify success</subtask>
+        <subtask id="7.2">Run go test ./... and verify all pass</subtask>
+        <subtask id="7.3">Run make lint and fix any issues</subtask>
+        <subtask id="7.4">Verify no import cycles with new internal/tvl package</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" title="Load from Configurable Path">
+      <given>the service starts with TVL pipeline enabled</given>
+      <when>LoadCustomProtocols() is called</when>
+      <then>it reads from the configured path (default: config/custom-protocols.json)</then>
+      <and>the path is configurable via tvl.custom_protocols_path in YAML config</and>
+    </criterion>
+    <criterion id="AC2" title="Return Valid CustomProtocol Slice">
+      <given>a valid custom-protocols.json file exists</given>
+      <when>LoadCustomProtocols() is called</when>
+      <then>it returns []CustomProtocol containing all validated entries where live: true</then>
+      <and>each entry has properly typed fields matching the schema</and>
+    </criterion>
+    <criterion id="AC3" title="Handle Missing File Gracefully">
+      <given>the custom-protocols.json file does not exist</given>
+      <when>LoadCustomProtocols() is called</when>
+      <then>it returns an empty slice (not an error)</then>
+      <and>logs an INFO message: custom_protocols_not_found path=&lt;path&gt; reason="file not found"</and>
+    </criterion>
+    <criterion id="AC4" title="Return Error on Invalid JSON">
+      <given>the custom-protocols.json file exists but contains invalid JSON</given>
+      <when>LoadCustomProtocols() is called</when>
+      <then>it returns an error with message: parse custom protocols: &lt;json error&gt;</then>
+      <and>the error wraps the underlying JSON parse error</and>
+    </criterion>
+    <criterion id="AC5" title="Validate Required Fields">
+      <given>a custom-protocols.json entry is being validated</given>
+      <when>validation runs</when>
+      <then>required fields are validated: slug (non-empty), is-ongoing (bool), live (bool), simple-tvs-ratio (float 0-1)</then>
+      <and>missing or invalid required fields return error: invalid protocol &lt;slug&gt;: &lt;field&gt; &lt;reason&gt;</and>
+    </criterion>
+    <criterion id="AC6" title="Filter Non-Live Protocols">
+      <given>the custom-protocols.json contains entries with live: false</given>
+      <when>LoadCustomProtocols() is called</when>
+      <then>those entries are excluded from the returned slice</then>
+      <and>they are counted in the filtered count for logging</and>
+    </criterion>
+    <criterion id="AC7" title="Log Load Summary">
+      <given>LoadCustomProtocols() completes successfully</given>
+      <when>protocols are loaded</when>
+      <then>it logs: custom_protocols_loaded total=&lt;N&gt; filtered=&lt;M&gt; config_path=&lt;path&gt;</then>
+      <and>total is entries with live: true and filtered is entries with live: false</and>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-7.md" title="Epic 7 Technical Specification" section="Detailed Design - CustomLoader">
+        <snippet>CustomLoader struct with Load() and Validate() methods. Reads from configurable path, validates required fields, filters live: false entries, logs load summary.</snippet>
+      </doc>
+      <doc path="docs/epics/epic-7-custom-protocols-tvl-charting.md" title="Epic 7: Custom Protocols &amp; Per-Protocol TVL Charting" section="Story 7.1">
+        <snippet>Load custom protocols configuration file for tracking Switchboard integrations not auto-detected by DefiLlama. JSON schema with slug, is-ongoing, live, date, simple-tvs-ratio, proof URLs.</snippet>
+      </doc>
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="Architecture Decision Records" section="ADR-001 through ADR-005">
+        <snippet>Use Go stdlib (encoding/json, os), explicit error returns with wrapping, structured logging with slog, minimal external dependencies.</snippet>
+      </doc>
+      <doc path="docs/architecture/implementation-patterns.md" title="Implementation Patterns" section="Dependency Injection, Context Propagation">
+        <snippet>Constructor functions for explicit dependencies, context.Context as first parameter for I/O functions.</snippet>
+      </doc>
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization">
+        <snippet>Table-driven tests, test fixtures in testdata/, coverage for error handling paths.</snippet>
+      </doc>
+      <doc path="docs/architecture/data-architecture.md" title="Data Architecture" section="Output Models">
+        <snippet>Data models live in internal/models/. Follow existing patterns from output.go.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file path="internal/config/config.go" kind="config" symbol="Config, Load, Validate" lines="1-186" reason="Add TVLConfig struct and TVL field to main Config struct. Follow existing pattern for nested config structs and validation."/>
+      <file path="internal/models/output.go" kind="models" symbol="OracleInfo, OutputMetadata, FullOutput" lines="1-67" reason="Reference for adding new TVL-specific models in internal/models/tvl.go following same patterns."/>
+      <file path="internal/api/client.go" kind="client" symbol="Client, NewClient, doRequest" lines="1-150" reason="Reference for constructor pattern, slog logger injection, and error handling with fmt.Errorf wrapping."/>
+      <file path="internal/storage/writer.go" kind="storage" symbol="WriteAtomic, WriteJSON" lines="232-292" reason="Reference for atomic file operations pattern to be used in future stories."/>
+      <file path="internal/aggregator/tvs.go" kind="aggregator" symbol="ExtractProtocolTVS" lines="1-67" reason="Reference from Story 6.1 for new package structure pattern (tvs.go in aggregator = custom.go in tvl)."/>
+      <file path="internal/aggregator/tvs_test.go" kind="test" symbol="TestExtractProtocolTVS_*" lines="1-78" reason="Reference for table-driven test patterns to follow in custom_test.go."/>
+      <file path="configs/config.yaml" kind="config" symbol="yaml config" lines="1-44" reason="Add TVL configuration section with custom_protocols_path and enabled fields."/>
+    </code>
+    <dependencies>
+      <ecosystem name="go">
+        <package name="go" version="1.24.0" />
+        <package name="golang.org/x/sync" version="v0.18.0" note="errgroup for concurrency" />
+        <package name="gopkg.in/yaml.v3" version="v3.0.1" note="YAML config parsing" />
+      </ecosystem>
+      <stdlib>
+        <package name="encoding/json" note="JSON parsing for custom-protocols.json" />
+        <package name="os" note="File reading, os.ErrNotExist checking" />
+        <package name="fmt" note="Error wrapping with fmt.Errorf" />
+        <package name="log/slog" note="Structured logging" />
+        <package name="context" note="Context propagation" />
+        <package name="errors" note="errors.Is for sentinel error checking" />
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-001">Use stdlib encoding/json for JSON parsing, os for file operations - no external JSON libraries</constraint>
+    <constraint source="ADR-003">Explicit error returns with wrapping via fmt.Errorf("...: %w", err) - no panics</constraint>
+    <constraint source="ADR-004">Structured logging with slog and fields - log custom_protocols_loaded and custom_protocols_not_found with structured attributes</constraint>
+    <constraint source="ADR-005">No new external dependencies - use only stdlib and existing deps</constraint>
+    <constraint source="Tech Spec">CustomProtocol struct must use JSON tags with hyphenated keys matching config schema (is-ongoing, simple-tvs-ratio)</constraint>
+    <constraint source="Story 6.1 Pattern">New package internal/tvl/ follows established pattern - doc.go, custom.go, custom_test.go</constraint>
+    <constraint source="Dev Notes">Test fixtures go in testdata/tvl/ directory following project convention</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="CustomLoader" kind="struct">
+      <signature>type CustomLoader struct { configPath string; logger *slog.Logger }</signature>
+      <path>internal/tvl/custom.go</path>
+    </interface>
+    <interface name="NewCustomLoader" kind="constructor">
+      <signature>func NewCustomLoader(configPath string, logger *slog.Logger) *CustomLoader</signature>
+      <path>internal/tvl/custom.go</path>
+    </interface>
+    <interface name="CustomLoader.Load" kind="method">
+      <signature>func (l *CustomLoader) Load(ctx context.Context) ([]CustomProtocol, error)</signature>
+      <path>internal/tvl/custom.go</path>
+    </interface>
+    <interface name="CustomLoader.Validate" kind="method">
+      <signature>func (l *CustomLoader) Validate(p CustomProtocol) error</signature>
+      <path>internal/tvl/custom.go</path>
+    </interface>
+    <interface name="CustomProtocol" kind="struct">
+      <signature>type CustomProtocol struct { Slug string `json:"slug"`; IsOngoing bool `json:"is-ongoing"`; Live bool `json:"live"`; Date *int64 `json:"date,omitempty"`; SimpleTVSRatio float64 `json:"simple-tvs-ratio"`; DocsProof *string `json:"docs_proof,omitempty"`; GitHubProof *string `json:"github_proof,omitempty"` }</signature>
+      <path>internal/models/tvl.go</path>
+    </interface>
+    <interface name="TVLConfig" kind="struct">
+      <signature>type TVLConfig struct { CustomProtocolsPath string `yaml:"custom_protocols_path"`; Enabled bool `yaml:"enabled"` }</signature>
+      <path>internal/config/config.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Table-driven unit tests using Go testing package. Test files co-located with source (*_test.go). Use testdata/ for fixtures. Cover all error handling paths. Follow patterns established in internal/aggregator/tvs_test.go.
+    </standards>
+    <locations>
+      <location>internal/tvl/custom_test.go</location>
+      <location>testdata/tvl/valid_custom_protocols.json</location>
+      <location>testdata/tvl/invalid_custom_protocols.json</location>
+      <location>testdata/tvl/empty_custom_protocols.json</location>
+      <location>testdata/tvl/missing_slug.json</location>
+      <location>testdata/tvl/ratio_out_of_range.json</location>
+      <location>testdata/tvl/all_live_false.json</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test Load() reads from configPath passed to constructor</idea>
+      <idea ac="AC2">Test valid JSON returns []CustomProtocol with correct field types</idea>
+      <idea ac="AC3">Test missing file returns empty slice, not error; verify INFO log emitted</idea>
+      <idea ac="AC4">Test invalid JSON returns error with "parse custom protocols:" prefix</idea>
+      <idea ac="AC5">Test empty slug returns validation error; test ratio &lt;0 or &gt;1 returns error</idea>
+      <idea ac="AC6">Test live: false entries excluded; verify count in log matches filtered</idea>
+      <idea ac="AC7">Test successful load emits log with total, filtered, config_path fields</idea>
+      <idea ac="edge">Test empty JSON array [] returns empty slice</idea>
+      <idea ac="edge">Test boundary values: ratio=0, ratio=1, ratio=0.5 all valid</idea>
+      <idea ac="edge">Test ratio=-0.1 and ratio=1.1 return validation errors</idea>
+      <idea ac="edge">Test all optional fields missing still loads successfully</idea>
+    </ideas>
+  </tests>
+</story-context>
