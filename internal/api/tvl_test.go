@@ -122,6 +122,11 @@ func TestFetchProtocolTVL_NotFound(t *testing.T) {
 }
 
 func TestFetchProtocolTVL_ServerErrorRetries(t *testing.T) {
+	// Override cache dir to ensure no fallback during error tests
+	origCacheDir := protocolTVLCacheDir
+	protocolTVLCacheDir = filepath.Join(t.TempDir(), "nonexistent")
+	t.Cleanup(func() { protocolTVLCacheDir = origCacheDir })
+
 	attempts := 0
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -148,6 +153,11 @@ func TestFetchProtocolTVL_ServerErrorRetries(t *testing.T) {
 }
 
 func TestFetchProtocolTVL_InvalidJSON(t *testing.T) {
+	// Override cache dir to ensure no fallback during error tests
+	origCacheDir := protocolTVLCacheDir
+	protocolTVLCacheDir = filepath.Join(t.TempDir(), "nonexistent")
+	t.Cleanup(func() { protocolTVLCacheDir = origCacheDir })
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"name":`))
@@ -227,5 +237,41 @@ func TestFetchProtocolTVL_RateLimiting(t *testing.T) {
 	elapsed := time.Since(start)
 	if elapsed < 180*time.Millisecond {
 		t.Fatalf("expected rate limiter to enforce delay, elapsed %v", elapsed)
+	}
+}
+
+func TestFetchProtocolTVL_FallbackCache(t *testing.T) {
+	// Set up temp cache directory with a valid cache file
+	tmpDir := t.TempDir()
+	origCacheDir := protocolTVLCacheDir
+	protocolTVLCacheDir = tmpDir
+	t.Cleanup(func() { protocolTVLCacheDir = origCacheDir })
+
+	// Write cache file for slug "cached-proto"
+	cacheData := `{"name":"Cached Protocol","tvl":[{"date":1704067200,"totalLiquidityUSD":12345.67}],"currentChainTvls":{"Ethereum":12345.67}}`
+	cachePath := filepath.Join(tmpDir, "cached-proto.json")
+	if err := os.WriteFile(cachePath, []byte(cacheData), 0o644); err != nil {
+		t.Fatalf("failed to write cache: %v", err)
+	}
+
+	// Server returns error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(server.Close)
+
+	client := newTestTVLClient(t, server.URL+"/%s", 0)
+
+	resp, err := client.FetchProtocolTVL(context.Background(), "cached-proto")
+	if err != nil {
+		t.Fatalf("expected fallback to cache, got error: %v", err)
+	}
+
+	if resp == nil || resp.Name != "Cached Protocol" {
+		t.Fatalf("expected cached protocol, got %+v", resp)
+	}
+
+	if len(resp.TVL) != 1 || resp.TVL[0].TotalLiquidityUSD != 12345.67 {
+		t.Fatalf("expected cached TVL data, got %+v", resp.TVL)
 	}
 }

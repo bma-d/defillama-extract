@@ -833,7 +833,6 @@ func TestRunOnceCancellationDuringWriteOutputsLeavesNoFiles(t *testing.T) {
 	dir := t.TempDir()
 	cfg.Output.Directory = dir
 	cfg.Output.FullFile = "full.json"
-	cfg.Output.MinFile = "min.json"
 	cfg.Output.SummaryFile = "summary.json"
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -865,7 +864,7 @@ func TestRunOnceCancellationDuringWriteOutputsLeavesNoFiles(t *testing.T) {
 		t.Fatalf("expected cancellation error, got %v", err)
 	}
 
-	for _, name := range []string{cfg.Output.FullFile, cfg.Output.MinFile, cfg.Output.SummaryFile} {
+	for _, name := range []string{cfg.Output.FullFile, cfg.Output.SummaryFile} {
 		if _, statErr := os.Stat(filepath.Join(dir, name)); !os.IsNotExist(statErr) {
 			t.Fatalf("expected no file written on cancel: %s", name)
 		}

@@ -15,12 +15,11 @@ import (
 )
 
 const (
-	outputVersion          = "1.0.0"
-	dataSource             = "DefiLlama API"
-	extractorVersion       = "1.0.0"
-	fullOutputFileName     = "switchboard-oracle-data.json"
-	minifiedOutputFileName = "switchboard-oracle-data.min.json"
-	summaryOutputFileName  = "switchboard-summary.json"
+	outputVersion         = "1.0.0"
+	dataSource            = "DefiLlama API"
+	extractorVersion      = "1.0.0"
+	fullOutputFileName    = "switchboard-oracle-data.json"
+	summaryOutputFileName = "switchboard-summary.json"
 )
 
 var defaultUpdateFrequency = 2 * time.Hour
@@ -157,7 +156,7 @@ func WriteJSON(path string, data interface{}, indent bool) error {
 	return WriteAtomic(path, payload, 0o644)
 }
 
-// WriteAllOutputs writes full (indented), minified (compact), and summary outputs atomically.
+// WriteAllOutputs writes full (indented) and summary outputs atomically.
 // All writes are gated by the provided context; if the context is cancelled, no files are persisted.
 func WriteAllOutputs(ctx context.Context, outputDir string, cfg *config.Config, full *models.FullOutput, summary *models.SummaryOutput) error {
 	if ctx == nil {
@@ -178,11 +177,9 @@ func WriteAllOutputs(ctx context.Context, outputDir string, cfg *config.Config, 
 	}
 
 	fullFile := resolveFileName(cfg.Output.FullFile, fullOutputFileName)
-	minFile := resolveFileName(cfg.Output.MinFile, minifiedOutputFileName)
 	summaryFile := resolveFileName(cfg.Output.SummaryFile, summaryOutputFileName)
 
 	fullPath := filepath.Join(outputDir, fullFile)
-	minifiedPath := filepath.Join(outputDir, minFile)
 	summaryPath := filepath.Join(outputDir, summaryFile)
 
 	written := []string{}
@@ -212,11 +209,6 @@ func WriteAllOutputs(ctx context.Context, outputDir string, cfg *config.Config, 
 	}
 
 	if err := write(fullPath, full, true); err != nil {
-		cleanup()
-		return err
-	}
-
-	if err := write(minifiedPath, full, false); err != nil {
 		cleanup()
 		return err
 	}

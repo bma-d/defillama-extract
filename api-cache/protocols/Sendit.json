@@ -1,0 +1,318 @@
+{
+  "name": "Sendit",
+  "tvl": [
+    {
+      "date": 1758672000,
+      "totalLiquidityUSD": 4923602
+    },
+    {
+      "date": 1758758400,
+      "totalLiquidityUSD": 5450926
+    },
+    {
+      "date": 1758844800,
+      "totalLiquidityUSD": 5263619
+    },
+    {
+      "date": 1758931200,
+      "totalLiquidityUSD": 7031088
+    },
+    {
+      "date": 1759017600,
+      "totalLiquidityUSD": 7798061
+    },
+    {
+      "date": 1759104000,
+      "totalLiquidityUSD": 8256806
+    },
+    {
+      "date": 1759190400,
+      "totalLiquidityUSD": 9021856
+    },
+    {
+      "date": 1759276800,
+      "totalLiquidityUSD": 9523041
+    },
+    {
+      "date": 1759363200,
+      "totalLiquidityUSD": 10918814
+    },
+    {
+      "date": 1759449600,
+      "totalLiquidityUSD": 11803397
+    },
+    {
+      "date": 1759536000,
+      "totalLiquidityUSD": 12480696
+    },
+    {
+      "date": 1759622400,
+      "totalLiquidityUSD": 11280158
+    },
+    {
+      "date": 1759708800,
+      "totalLiquidityUSD": 10688900
+    },
+    {
+      "date": 1759795200,
+      "totalLiquidityUSD": 11849173
+    },
+    {
+      "date": 1759881600,
+      "totalLiquidityUSD": 12845392
+    },
+    {
+      "date": 1759968000,
+      "totalLiquidityUSD": 13664732
+    },
+    {
+      "date": 1760054400,
+      "totalLiquidityUSD": 15375700
+    },
+    {
+      "date": 1760140800,
+      "totalLiquidityUSD": 10936824
+    },
+    {
+      "date": 1760227200,
+      "totalLiquidityUSD": 9891574
+    },
+    {
+      "date": 1760313600,
+      "totalLiquidityUSD": 14728708
+    },
+    {
+      "date": 1760400000,
+      "totalLiquidityUSD": 20535800
+    },
+    {
+      "date": 1760486400,
+      "totalLiquidityUSD": 17953322
+    },
+    {
+      "date": 1760572800,
+      "totalLiquidityUSD": 16594036
+    },
+    {
+      "date": 1760659200,
+      "totalLiquidityUSD": 16384742
+    },
+    {
+      "date": 1760745600,
+      "totalLiquidityUSD": 15219176
+    },
+    {
+      "date": 1760832000,
+      "totalLiquidityUSD": 15526906
+    },
+    {
+      "date": 1760918400,
+      "totalLiquidityUSD": 15043622
+    },
+    {
+      "date": 1761004800,
+      "totalLiquidityUSD": 17695763
+    },
+    {
+      "date": 1761091200,
+      "totalLiquidityUSD": 16007658
+    },
+    {
+      "date": 1761177600,
+      "totalLiquidityUSD": 15101401
+    },
+    {
+      "date": 1761264000,
+      "totalLiquidityUSD": 15971173
+    },
+    {
+      "date": 1761350400,
+      "totalLiquidityUSD": 16922622
+    },
+    {
+      "date": 1761436800,
+      "totalLiquidityUSD": 17135003
+    },
+    {
+      "date": 1761523200,
+      "totalLiquidityUSD": 18227082
+    },
+    {
+      "date": 1761609600,
+      "totalLiquidityUSD": 16223695
+    },
+    {
+      "date": 1761696000,
+      "totalLiquidityUSD": 15626005
+    },
+    {
+      "date": 1761782400,
+      "totalLiquidityUSD": 18328502
+    },
+    {
+      "date": 1761868800,
+      "totalLiquidityUSD": 16351246
+    },
+    {
+      "date": 1761955200,
+      "totalLiquidityUSD": 13857659
+    },
+    {
+      "date": 1762041600,
+      "totalLiquidityUSD": 13720250
+    },
+    {
+      "date": 1762128000,
+      "totalLiquidityUSD": 12906373
+    },
+    {
+      "date": 1762214400,
+      "totalLiquidityUSD": 10656101
+    },
+    {
+      "date": 1762300800,
+      "totalLiquidityUSD": 6503883
+    },
+    {
+      "date": 1762387200,
+      "totalLiquidityUSD": 7600021
+    },
+    {
+      "date": 1762473600,
+      "totalLiquidityUSD": 6605036
+    },
+    {
+      "date": 1762560000,
+      "totalLiquidityUSD": 7900525
+    },
+    {
+      "date": 1762646400,
+      "totalLiquidityUSD": 7215632
+    },
+    {
+      "date": 1762732800,
+      "totalLiquidityUSD": 8679481
+    },
+    {
+      "date": 1762819200,
+      "totalLiquidityUSD": 8848252
+    },
+    {
+      "date": 1762905600,
+      "totalLiquidityUSD": 6746267
+    },
+    {
+      "date": 1762992000,
+      "totalLiquidityUSD": 7014641
+    },
+    {
+      "date": 1763078400,
+      "totalLiquidityUSD": 6488196
+    },
+    {
+      "date": 1763164800,
+      "totalLiquidityUSD": 5662026
+    },
+    {
+      "date": 1763251200,
+      "totalLiquidityUSD": 5863456
+    },
+    {
+      "date": 1763337600,
+      "totalLiquidityUSD": 4991412
+    },
+    {
+      "date": 1763424000,
+      "totalLiquidityUSD": 4676866
+    },
+    {
+      "date": 1763510400,
+      "totalLiquidityUSD": 5288896
+    },
+    {
+      "date": 1763596800,
+      "totalLiquidityUSD": 5322925
+    },
+    {
+      "date": 1763683200,
+      "totalLiquidityUSD": 4792153
+    },
+    {
+      "date": 1763769600,
+      "totalLiquidityUSD": 4190109
+    },
+    {
+      "date": 1763856000,
+      "totalLiquidityUSD": 3929532
+    },
+    {
+      "date": 1763942400,
+      "totalLiquidityUSD": 4081700
+    },
+    {
+      "date": 1764028800,
+      "totalLiquidityUSD": 4378897
+    },
+    {
+      "date": 1764115200,
+      "totalLiquidityUSD": 4278080
+    },
+    {
+      "date": 1764201600,
+      "totalLiquidityUSD": 4315683
+    },
+    {
+      "date": 1764288000,
+      "totalLiquidityUSD": 4353047
+    },
+    {
+      "date": 1764374400,
+      "totalLiquidityUSD": 4345916
+    },
+    {
+      "date": 1764460800,
+      "totalLiquidityUSD": 4243243
+    },
+    {
+      "date": 1764547200,
+      "totalLiquidityUSD": 4089803
+    },
+    {
+      "date": 1764633600,
+      "totalLiquidityUSD": 3749588
+    },
+    {
+      "date": 1764720000,
+      "totalLiquidityUSD": 4143045
+    },
+    {
+      "date": 1764806400,
+      "totalLiquidityUSD": 4332318
+    },
+    {
+      "date": 1764892800,
+      "totalLiquidityUSD": 3993009
+    },
+    {
+      "date": 1764979200,
+      "totalLiquidityUSD": 1688436
+    },
+    {
+      "date": 1765065600,
+      "totalLiquidityUSD": 1637534
+    },
+    {
+      "date": 1765152000,
+      "totalLiquidityUSD": 1914891
+    },
+    {
+      "date": 1765190411,
+      "totalLiquidityUSD": 2012788
+    }
+  ],
+  "currentChainTvls": {
+    "Solana": 2012788.00703,
+    "Solana-borrowed": 343556.73783,
+    "borrowed": 343556.73783
+  }
+}

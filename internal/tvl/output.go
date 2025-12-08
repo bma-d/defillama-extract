@@ -3,7 +3,6 @@ package tvl
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -81,8 +80,8 @@ func GenerateTVLOutput(protocols []models.MergedProtocol, tvlData map[string]*ap
 	return result
 }
 
-// WriteTVLOutputs writes both indented and minified output files atomically.
-// Context cancellation is honored between writes to prevent partial state.
+// WriteTVLOutputs writes the TVL output file atomically.
+// Context cancellation is honored to prevent partial state.
 func WriteTVLOutputs(ctx context.Context, outputDir string, output *models.TVLOutput) error {
 	if ctx == nil {
 		ctx = context.Background()
@@ -96,41 +95,8 @@ func WriteTVLOutputs(ctx context.Context, outputDir string, output *models.TVLOu
 	}
 
 	fullPath := filepath.Join(outputDir, "tvl-data.json")
-	minPath := filepath.Join(outputDir, "tvl-data.min.json")
 
-	written := []string{}
-	cleanup := func() {
-		for i := len(written) - 1; i >= 0; i-- {
-			_ = os.Remove(written[i])
-		}
-	}
-
-	write := func(path string, data interface{}, indent bool) error {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-
-		if err := storage.WriteJSON(path, data, indent); err != nil {
-			return err
-		}
-
-		written = append(written, path)
-
-		if err := ctx.Err(); err != nil {
-			cleanup()
-			return err
-		}
-
-		return nil
-	}
-
-	if err := write(fullPath, output, true); err != nil {
-		cleanup()
-		return err
-	}
-
-	if err := write(minPath, output, false); err != nil {
-		cleanup()
+	if err := storage.WriteJSON(fullPath, output, true); err != nil {
 		return err
 	}
 

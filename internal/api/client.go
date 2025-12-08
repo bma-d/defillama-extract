@@ -24,6 +24,8 @@ import (
 const userAgentValue = "defillama-extract/1.0"
 
 var oraclesCachePath = filepath.Join("api-cache", "oracles.json")
+var protocolsCachePath = filepath.Join("api-cache", "lite-protocols2.json")
+var protocolTVLCacheDir = filepath.Join("api-cache", "protocols")
 var oraclesMinInterval = 4 * time.Second
 
 type contextKey string
@@ -48,6 +50,8 @@ type Client struct {
 	oracleRateMu                sync.Mutex
 	nextOracleAllowedAt         time.Time
 	minOracleInterval           time.Duration
+	headerRandomizer            *HeaderRandomizer
+	randomizeHeaders            bool
 }
 
 // NewClient constructs a Client using API configuration. Nil logger falls back to slog.Default().
@@ -66,8 +70,14 @@ func NewClient(cfg *config.APIConfig, logger *slog.Logger) *Client {
 		protocolsURL = ProtocolsEndpoint
 	}
 
+	// Use browser-like transport for better compatibility with Cloudflare
+	httpClient := &http.Client{
+		Timeout:   cfg.Timeout,
+		Transport: NewBrowserTransport(),
+	}
+
 	return &Client{
-		httpClient:                  &http.Client{Timeout: cfg.Timeout},
+		httpClient:                  httpClient,
 		oraclesURL:                  oraclesURL,
 		protocolsURL:                protocolsURL,
 		protocolTVLEndpointTemplate: ProtocolTVLEndpointTemplate,
@@ -77,6 +87,8 @@ func NewClient(cfg *config.APIConfig, logger *slog.Logger) *Client {
 		logger:                      logger,
 		rng:                         rand.New(rand.NewSource(time.Now().UnixNano())),
 		minOracleInterval:           oraclesMinInterval,
+		headerRandomizer:            NewHeaderRandomizer(),
+		randomizeHeaders:            cfg.RandomizeHeaders,
 	}
 }
 
@@ -106,7 +118,11 @@ func (c *Client) doRequest(ctx context.Context, url string, target any) error {
 		return fmt.Errorf("create request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", c.userAgent)
+	if c.randomizeHeaders {
+		c.headerRandomizer.ApplyHeadersForAPI(req)
+	} else {
+		req.Header.Set("User-Agent", c.userAgent)
+	}
 
 	c.logger.Debug("starting API request",
 		"url", url,
@@ -135,13 +151,17 @@ func (c *Client) doRequest(ctx context.Context, url string, target any) error {
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		err := fmt.Errorf("unexpected status: %d", resp.StatusCode)
-		c.logger.Warn("API request failed",
+		logAttrs := []any{
 			"url", url,
 			"status", resp.StatusCode,
 			"attempt", attempt,
 			"duration_ms", duration.Milliseconds(),
 			"error", err,
-		)
+		}
+		if resp.StatusCode == StatusWebServerDown {
+			logAttrs = append(logAttrs, "geo_blocked", true)
+		}
+		c.logger.Warn("API request failed", logAttrs...)
 		return &APIError{
 			Endpoint:   url,
 			StatusCode: resp.StatusCode,
@@ -202,6 +222,90 @@ func (c *Client) saveOraclesCache(resp *OracleAPIResponse) error {
 	return nil
 }
 
+func (c *Client) loadProtocolsCache() ([]Protocol, error) {
+	data, err := os.ReadFile(protocolsCachePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var protocols protocolList
+	if err := json.Unmarshal(data, &protocols); err != nil {
+		return nil, err
+	}
+
+	return []Protocol(protocols), nil
+}
+
+func (c *Client) saveProtocolsCache(protocols []Protocol) error {
+	if protocols == nil {
+		return errors.New("nil protocols response")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(protocolsCachePath), 0o755); err != nil {
+		c.logger.Warn("protocols_cache_write_failed", "path", protocolsCachePath, "error", err)
+		return err
+	}
+
+	data, err := json.MarshalIndent(protocolList(protocols), "", "  ")
+	if err != nil {
+		c.logger.Warn("protocols_cache_marshal_failed", "error", err)
+		return err
+	}
+
+	if err := os.WriteFile(protocolsCachePath, data, 0o644); err != nil {
+		c.logger.Warn("protocols_cache_write_failed", "path", protocolsCachePath, "error", err)
+		return err
+	}
+
+	c.logger.Debug("protocols_cache_updated", "path", protocolsCachePath)
+	return nil
+}
+
+func protocolTVLCachePath(slug string) string {
+	return filepath.Join(protocolTVLCacheDir, slug+".json")
+}
+
+func (c *Client) loadProtocolTVLCache(slug string) (*ProtocolTVLResponse, error) {
+	cachePath := protocolTVLCachePath(slug)
+	data, err := os.ReadFile(cachePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp ProtocolTVLResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+func (c *Client) saveProtocolTVLCache(slug string, resp *ProtocolTVLResponse) error {
+	if resp == nil {
+		return errors.New("nil protocol TVL response")
+	}
+
+	cachePath := protocolTVLCachePath(slug)
+	if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err != nil {
+		c.logger.Warn("protocol_tvl_cache_write_failed", "path", cachePath, "error", err)
+		return err
+	}
+
+	data, err := json.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		c.logger.Warn("protocol_tvl_cache_marshal_failed", "slug", slug, "error", err)
+		return err
+	}
+
+	if err := os.WriteFile(cachePath, data, 0o644); err != nil {
+		c.logger.Warn("protocol_tvl_cache_write_failed", "path", cachePath, "error", err)
+		return err
+	}
+
+	c.logger.Debug("protocol_tvl_cache_updated", "path", cachePath)
+	return nil
+}
+
 func (c *Client) waitForOracleRateLimit(ctx context.Context) error {
 	c.oracleRateMu.Lock()
 	now := time.Now()
@@ -227,13 +331,16 @@ func (c *Client) waitForOracleRateLimit(ctx context.Context) error {
 	}
 }
 
+// StatusWebServerDown is Cloudflare's 521 status code for origin server down/geo-blocked.
+const StatusWebServerDown = 521
+
 func isRetryable(statusCode int, err error) bool {
 	if err == nil {
 		return false
 	}
 
 	switch statusCode {
-	case http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+	case http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout, StatusWebServerDown:
 		return true
 	case http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound:
 		return false
@@ -409,8 +516,19 @@ func (c *Client) FetchProtocols(ctx context.Context) ([]Protocol, error) {
 	if err := c.doWithRetry(ctx, func(ctx context.Context) error {
 		return c.doRequest(ctx, c.protocolsURL, &protocols)
 	}); err != nil {
+		cached, cacheErr := c.loadProtocolsCache()
+		if cacheErr == nil {
+			c.logger.Warn("protocols_fallback_cache_used",
+				"path", protocolsCachePath,
+				"error", err,
+			)
+			return cached, nil
+		}
+
 		return nil, fmt.Errorf("fetch protocols: %w", err)
 	}
+
+	_ = c.saveProtocolsCache([]Protocol(protocols))
 
 	return []Protocol(protocols), nil
 }
@@ -440,8 +558,21 @@ func (c *Client) FetchProtocolTVL(ctx context.Context, slug string) (*ProtocolTV
 			return nil, nil
 		}
 
+		// Try cache fallback
+		cached, cacheErr := c.loadProtocolTVLCache(slug)
+		if cacheErr == nil {
+			c.logger.Warn("protocol_tvl_fallback_cache_used",
+				"slug", slug,
+				"path", protocolTVLCachePath(slug),
+				"error", err,
+			)
+			return cached, nil
+		}
+
 		return nil, fmt.Errorf("fetch protocol TVL %s: %w", slug, err)
 	}
+
+	_ = c.saveProtocolTVLCache(slug, &response)
 
 	return &response, nil
 }

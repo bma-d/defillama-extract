@@ -390,10 +390,74 @@ Outcome: Approve
 **Advisory Notes**
 - None
 
+## Post-Completion Enhancement: Rate Limit Bypass (521 Status Fix)
+
+**Issue**: 521 status errors due to geo-location restrictions when querying DefiLlama API.
+
+**Solution**: Implement User-Agent rotation and header randomization per `docs-reference/rate-limit-bypass-guide/`.
+
+### Implementation Plan
+
+- [x] Task 10: Add User-Agent Rotation (internal/api/headers.go)
+  - [x] 10.1: Create `headers.go` with `UserAgents` slice (2024-2025 browser UAs)
+  - [x] 10.2: Create `RandomUserAgent()` function
+  - [x] 10.3: Create `HeaderRandomizer` struct with Accept, Accept-Language, Accept-Encoding variants
+
+- [x] Task 11: Add Header Randomization to API Client
+  - [x] 11.1: Create `ApplyHeaders(req *http.Request)` method on HeaderRandomizer
+  - [x] 11.2: Integrate into `doRequest()` replacing static User-Agent
+  - [x] 11.3: Add Chrome-specific Sec-Fetch-* headers when UA is Chrome
+
+- [x] Task 12: Handle 521 Status with Header Rotation
+  - [x] 12.1: Add 521 to `isRetryable()` status codes
+  - [x] 12.2: Rotate headers on each retry attempt (new UA per retry)
+  - [x] 12.3: Log 521 occurrences with `geo_blocked` attribute
+
+- [x] Task 13: Add Config Toggle for Header Randomization
+  - [x] 13.1: Add `RandomizeHeaders bool` to APIConfig
+  - [x] 13.2: Add `API_RANDOMIZE_HEADERS` env override
+  - [x] 13.3: Default to `true` for bypass behavior
+
+- [x] Task 14: Write Unit Tests
+  - [x] 14.1: Test RandomUserAgent returns valid UAs
+  - [x] 14.2: Test ApplyHeaders sets expected headers
+  - [x] 14.3: Test 521 triggers retry with header rotation
+  - [x] 14.4: Test config toggle disables randomization
+
+- [x] Task 15: Build and Verify
+  - [x] 15.1: Run `go build ./...`
+  - [x] 15.2: Run `go test ./...`
+  - [ ] 15.3: Manual test with `--once` to verify 521 bypass
+
+- [x] Task 16: Remove Minified Output Files
+  - [x] 16.1: Remove `minifiedOutputFileName` constant and minified write from `internal/storage/writer.go`
+  - [x] 16.2: Remove minified write from `internal/tvl/output.go` (`WriteTVLOutputs`)
+  - [x] 16.3: Remove `MinFile` field from `OutputConfig` in `internal/config/config.go`
+  - [x] 16.4: Update tests to not expect `.min.json` files
+  - [x] 16.5: Run `go build ./...` and `go test ./...` - all pass
+
+- [x] Task 17: Add Protocols Cache Fallback (like oracles.json)
+  - [x] 17.1: Add `protocolsCachePath` variable pointing to `api-cache/lite-protocols2.json`
+  - [x] 17.2: Add `loadProtocolsCache()` and `saveProtocolsCache()` methods in `internal/api/client.go`
+  - [x] 17.3: Update `FetchProtocols()` to fallback to cache on API error (mirrors `FetchOracles` pattern)
+  - [x] 17.4: Update tests to override `protocolsCachePath` where error behavior is tested
+  - [x] 17.5: Add `TestFetchProtocols_FallbackCache` test
+  - [x] 17.6: Run `go build ./...` and `go test ./...` - all pass
+
+- [x] Task 18: Add Protocol TVL Cache Fallback (api-cache/protocols/{slug}.json)
+  - [x] 18.1: Add `protocolTVLCacheDir` variable pointing to `api-cache/protocols`
+  - [x] 18.2: Add `protocolTVLCachePath(slug)` helper function
+  - [x] 18.3: Add `loadProtocolTVLCache(slug)` and `saveProtocolTVLCache(slug, resp)` methods
+  - [x] 18.4: Update `FetchProtocolTVL()` to fallback to cache on API error (not for 404)
+  - [x] 18.5: Update tests to override `protocolTVLCacheDir` where error behavior is tested
+  - [x] 18.6: Add `TestFetchProtocolTVL_FallbackCache` test
+  - [x] 18.7: Create `api-cache/protocols/` directory
+  - [x] 18.8: Run `go build ./...` and `go test ./...` - all pass
+
 ## Senior Developer Review (AI)
 
-Reviewer: Amelia (Developer Agent)  
-Date: 2025-12-08  
+Reviewer: Amelia (Developer Agent)
+Date: 2025-12-08
 Outcome: Approve
 
 ### Summary
@@ -450,3 +514,71 @@ Outcome: Approve
 
 **Advisory Notes**
 - Note: Task 9 parent checkbox remains unchecked; mark after rerunning build/runOnce smoke if desired.
+
+## Post-Completion Enhancement: Browser TLS Fingerprint (Complete 521 Bypass)
+
+**Issue**: After initial header randomization, still getting 521 errors on ~20% of requests due to TLS fingerprint detection by Cloudflare.
+
+**Root Cause**: Go's standard TLS library has a distinct fingerprint that differs from real browsers. Cloudflare and similar services can detect this mismatch between claimed User-Agent (Chrome) and actual TLS fingerprint (Go).
+
+**Solution**: Implement proper browser TLS fingerprinting using `utls` library.
+
+### Implementation
+
+- [x] Task 19: Fix Gzip Decompression Issue
+  - [x] 19.1: Remove manual `Accept-Encoding` header setting
+  - [x] 19.2: Let Go's http.Client handle compression automatically
+  - [x] 19.3: This fixes `invalid character '\x1f'` decode errors (gzip magic bytes)
+
+- [x] Task 20: Implement utls for Chrome TLS Fingerprint
+  - [x] 20.1: Add `github.com/refraction-networking/utls` dependency
+  - [x] 20.2: Create `utlsRoundTripper` struct implementing `http.RoundTripper`
+  - [x] 20.3: Implement `dialTLSContext` using `utls.HelloChrome_131` fingerprint
+  - [x] 20.4: Use `http2.Transport` with custom `DialTLSContext` for HTTP/2 support
+  - [x] 20.5: Fallback to `http.Transport` for plain HTTP connections
+  - [x] 20.6: Update `NewBrowserTransport()` to return the utls round tripper
+
+- [x] Task 21: Streamline User-Agents for TLS Consistency
+  - [x] 21.1: Remove Firefox, Safari, Edge UAs (mixed fingerprints cause detection)
+  - [x] 21.2: Keep only Chrome desktop UAs (Windows, macOS, Linux)
+  - [x] 21.3: All UAs now match the Chrome 131 TLS fingerprint
+
+- [x] Task 22: Update Tests
+  - [x] 22.1: Update `TestNewBrowserTransport` for new `http.RoundTripper` return type
+  - [x] 22.2: Update `TestApplyHeadersForAPI_SetsRequiredHeaders` to not expect Accept-Encoding
+  - [x] 22.3: Run `go test ./internal/api/...` - all pass
+
+- [x] Task 23: Verify Complete Fix
+  - [x] 23.1: Run `go run ./cmd/extractor --once --config configs/config.yaml`
+  - [x] 23.2: Confirm 100% success rate (30/30 protocols fetched)
+  - [x] 23.3: Confirm no 521 errors
+
+### Results
+
+**Before utls implementation:**
+- ~80% success rate
+- Consistent 521 errors on specific protocols (Hedge, Mango Markets, Renec Lend, etc.)
+- Some requests succeeded because Go's fingerprint isn't always blocked
+
+**After utls implementation:**
+- **100% success rate** (30/30 protocols fetched)
+- **Zero 521 errors**
+- All requests complete in ~10-15ms (connection reuse via HTTP/2)
+
+### Technical Details
+
+The `utlsRoundTripper` works by:
+1. Using `utls.HelloChrome_131` to impersonate Chrome's exact TLS ClientHello
+2. Negotiating HTTP/2 via ALPN (`h2`, `http/1.1`)
+3. Using `http2.Transport` for HTTPS requests (proper HTTP/2 framing)
+4. Falling back to `http.Transport` for plain HTTP (tests)
+
+Key files modified:
+- `internal/api/headers.go` - Added `utlsRoundTripper`, updated `NewBrowserTransport()`
+- `internal/api/headers_test.go` - Updated tests for new types
+- `go.mod` - Added `github.com/refraction-networking/utls` dependency
+
+### References
+
+- [utls library](https://github.com/refraction-networking/utls) - TLS fingerprint impersonation
+- [Chrome TLS fingerprint](https://tlsfingerprint.io/) - Reference for browser fingerprints

@@ -1,0 +1,100 @@
+{
+  "name": "Etherfuse",
+  "tvl": [
+    {
+      "date": 1762992000,
+      "totalLiquidityUSD": 25155
+    },
+    {
+      "date": 1763078400,
+      "totalLiquidityUSD": 25155
+    },
+    {
+      "date": 1763164800,
+      "totalLiquidityUSD": 25156
+    },
+    {
+      "date": 1763251200,
+      "totalLiquidityUSD": 25158
+    },
+    {
+      "date": 1763337600,
+      "totalLiquidityUSD": 25157
+    },
+    {
+      "date": 1763424000,
+      "totalLiquidityUSD": 30154
+    },
+    {
+      "date": 1763510400,
+      "totalLiquidityUSD": 25157
+    },
+    {
+      "date": 1763596800,
+      "totalLiquidityUSD": 25153
+    },
+    {
+      "date": 1763683200,
+      "totalLiquidityUSD": 25168
+    },
+    {
+      "date": 1763769600,
+      "totalLiquidityUSD": 25166
+    },
+    {
+      "date": 1763856000,
+      "totalLiquidityUSD": 25163
+    },
+    {
+      "date": 1763942400,
+      "totalLiquidityUSD": 25167
+    },
+    {
+      "date": 1764028800,
+      "totalLiquidityUSD": 25163
+    },
+    {
+      "date": 1764115200,
+      "totalLiquidityUSD": 25166
+    },
+    {
+      "date": 1764201600,
+      "totalLiquidityUSD": 25166
+    },
+    {
+      "date": 1764288000,
+      "totalLiquidityUSD": 25168
+    },
+    {
+      "date": 1764374400,
+      "totalLiquidityUSD": 25169
+    },
+    {
+      "date": 1764460800,
+      "totalLiquidityUSD": 25169
+    },
+    {
+      "date": 1764547200,
+      "totalLiquidityUSD": 25167
+    },
+    {
+      "date": 1764633600,
+      "totalLiquidityUSD": 25642
+    },
+    {
+      "date": 1764720000,
+      "totalLiquidityUSD": 25953
+    },
+    {
+      "date": 1764806400,
+      "totalLiquidityUSD": 26053
+    },
+    {
+      "date": 1764892800,
+      "totalLiquidityUSD": 28489
+    }
+  ],
+  "currentChainTvls": {
+    "Solana": 28489.91723
+  }
+}

@@ -75,6 +75,11 @@ func TestFetchProtocols_SetsUserAgent(t *testing.T) {
 }
 
 func TestFetchProtocols_StatusErrors(t *testing.T) {
+	// Temporarily override cache path to ensure no fallback during error tests
+	origCachePath := protocolsCachePath
+	protocolsCachePath = filepath.Join(t.TempDir(), "nonexistent", "protocols.json")
+	t.Cleanup(func() { protocolsCachePath = origCachePath })
+
 	cases := []int{http.StatusInternalServerError, http.StatusNotFound}
 
 	for _, status := range cases {
@@ -97,6 +102,11 @@ func TestFetchProtocols_StatusErrors(t *testing.T) {
 }
 
 func TestFetchProtocols_MalformedJSON(t *testing.T) {
+	// Temporarily override cache path to ensure no fallback during error tests
+	origCachePath := protocolsCachePath
+	protocolsCachePath = filepath.Join(t.TempDir(), "nonexistent", "protocols.json")
+	t.Cleanup(func() { protocolsCachePath = origCachePath })
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"id":`))
@@ -116,6 +126,11 @@ func TestFetchProtocols_MalformedJSON(t *testing.T) {
 }
 
 func TestFetchProtocols_ContextCancellation(t *testing.T) {
+	// Temporarily override cache path to ensure no fallback during error tests
+	origCachePath := protocolsCachePath
+	protocolsCachePath = filepath.Join(t.TempDir(), "nonexistent", "protocols.json")
+	t.Cleanup(func() { protocolsCachePath = origCachePath })
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		<-r.Context().Done()
 	}))
@@ -155,5 +170,38 @@ func TestFetchProtocols_EmptyArray(t *testing.T) {
 
 	if len(resp) != 0 {
 		t.Fatalf("expected empty slice, got %d entries", len(resp))
+	}
+}
+
+func TestFetchProtocols_FallbackCache(t *testing.T) {
+	// Set up temp cache directory with a valid cache file
+	tmpDir := t.TempDir()
+	cachePath := filepath.Join(tmpDir, "protocols.json")
+
+	origCachePath := protocolsCachePath
+	protocolsCachePath = cachePath
+	t.Cleanup(func() { protocolsCachePath = origCachePath })
+
+	// Write cache file
+	cacheData := `[{"id":"cached-proto","name":"Cached Protocol","symbol":"CACHE","category":"Cache"}]`
+	if err := os.WriteFile(cachePath, []byte(cacheData), 0o644); err != nil {
+		t.Fatalf("failed to write cache: %v", err)
+	}
+
+	// Server returns error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(server.Close)
+
+	client := newProtocolTestClient(server.URL)
+
+	resp, err := client.FetchProtocols(context.Background())
+	if err != nil {
+		t.Fatalf("expected fallback to cache, got error: %v", err)
+	}
+
+	if len(resp) != 1 || resp[0].ID != "cached-proto" {
+		t.Fatalf("expected cached protocol, got %+v", resp)
 	}
 }

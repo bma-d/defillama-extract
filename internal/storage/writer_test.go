@@ -62,7 +62,6 @@ func sampleConfig() *config.Config {
 		Output: config.OutputConfig{
 			Directory:   "data",
 			FullFile:    "switchboard-oracle-data.json",
-			MinFile:     "switchboard-oracle-data.min.json",
 			SummaryFile: "switchboard-summary.json",
 		},
 		Scheduler: config.SchedulerConfig{
@@ -203,32 +202,24 @@ func TestWriteAllOutputs_WritesAllFilesAndMatchesData(t *testing.T) {
 	}
 
 	fullPath := filepath.Join(dir, fullOutputFileName)
-	minPath := filepath.Join(dir, minifiedOutputFileName)
 	summaryPath := filepath.Join(dir, summaryOutputFileName)
 
-	for _, p := range []string{fullPath, minPath, summaryPath} {
+	for _, p := range []string{fullPath, summaryPath} {
 		if _, err := os.Stat(p); err != nil {
 			t.Fatalf("expected file written: %s, err: %v", p, err)
 		}
 	}
 
 	fullDataIndented, _ := os.ReadFile(fullPath)
-	fullDataMin, _ := os.ReadFile(minPath)
 
 	var parsedIndented map[string]interface{}
-	var parsedMin map[string]interface{}
 	if err := json.Unmarshal(fullDataIndented, &parsedIndented); err != nil {
 		t.Fatalf("unmarshal indented: %v", err)
 	}
-	if err := json.Unmarshal(fullDataMin, &parsedMin); err != nil {
-		t.Fatalf("unmarshal minified: %v", err)
-	}
-	if !reflect.DeepEqual(parsedIndented, parsedMin) {
-		t.Fatalf("minified and indented outputs differ")
-	}
 
-	if strings.Contains(string(fullDataMin), "\n") || strings.Contains(string(fullDataMin), "  ") {
-		t.Fatalf("minified output contains whitespace")
+	// Verify indented output has formatting
+	if !strings.Contains(string(fullDataIndented), "\n") || !strings.Contains(string(fullDataIndented), "  ") {
+		t.Fatalf("full output missing expected formatting")
 	}
 
 	summaryBytes, _ := os.ReadFile(summaryPath)
@@ -241,7 +232,6 @@ func TestWriteAllOutputs_RespectsConfigFilenames(t *testing.T) {
 	dir := t.TempDir()
 	cfg := sampleConfig()
 	cfg.Output.FullFile = "custom-full.json"
-	cfg.Output.MinFile = "custom-min.json"
 	cfg.Output.SummaryFile = "custom-summary.json"
 
 	full := GenerateFullOutput(sampleAggregationResult(), nil, chartHistorySample(), cfg)
@@ -253,7 +243,6 @@ func TestWriteAllOutputs_RespectsConfigFilenames(t *testing.T) {
 
 	customPaths := []string{
 		filepath.Join(dir, cfg.Output.FullFile),
-		filepath.Join(dir, cfg.Output.MinFile),
 		filepath.Join(dir, cfg.Output.SummaryFile),
 	}
 
@@ -265,7 +254,6 @@ func TestWriteAllOutputs_RespectsConfigFilenames(t *testing.T) {
 
 	defaultPaths := []string{
 		filepath.Join(dir, fullOutputFileName),
-		filepath.Join(dir, minifiedOutputFileName),
 		filepath.Join(dir, summaryOutputFileName),
 	}
 
@@ -292,7 +280,6 @@ func TestWriteAllOutputs_CancelsBeforeWritesAndLeavesNoFiles(t *testing.T) {
 
 	paths := []string{
 		filepath.Join(dir, resolveFileName(cfg.Output.FullFile, fullOutputFileName)),
-		filepath.Join(dir, resolveFileName(cfg.Output.MinFile, minifiedOutputFileName)),
 		filepath.Join(dir, resolveFileName(cfg.Output.SummaryFile, summaryOutputFileName)),
 	}
 

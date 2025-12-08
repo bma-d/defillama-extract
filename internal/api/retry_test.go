@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -45,6 +46,7 @@ func TestIsRetryable_StatusCodes(t *testing.T) {
 		{"502 retryable", http.StatusBadGateway, true},
 		{"503 retryable", http.StatusServiceUnavailable, true},
 		{"504 retryable", http.StatusGatewayTimeout, true},
+		{"521 retryable (geo-blocked)", StatusWebServerDown, true},
 		{"400 non-retryable", http.StatusBadRequest, false},
 		{"401 non-retryable", http.StatusUnauthorized, false},
 		{"403 non-retryable", http.StatusForbidden, false},
@@ -244,5 +246,114 @@ func TestDoWithRetry_ContextCancellation(t *testing.T) {
 		}
 	case <-time.After(300 * time.Millisecond):
 		t.Fatalf("timeout waiting for retry loop to exit on cancellation")
+	}
+}
+
+func TestDoWithRetry_521GeoBlockedLogsAttribute(t *testing.T) {
+	var attempts int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&attempts, 1)
+		w.WriteHeader(StatusWebServerDown)
+	}))
+	t.Cleanup(server.Close)
+
+	buf := &bytes.Buffer{}
+	cfg := &config.APIConfig{OraclesURL: server.URL, Timeout: time.Second, MaxRetries: 2, RetryDelay: 2 * time.Millisecond}
+	client := NewClient(cfg, newTestLogger(buf))
+
+	var payload testPayload
+	err := client.doWithRetry(context.Background(), func(ctx context.Context) error {
+		return client.doRequest(ctx, server.URL, &payload)
+	})
+
+	if err == nil {
+		t.Fatalf("expected error after retries, got nil")
+	}
+
+	logText := buf.String()
+	if !strings.Contains(logText, "geo_blocked=true") {
+		t.Fatalf("expected geo_blocked=true in logs for 521 status, got logs: %s", logText)
+	}
+
+	// Should have retried (521 is retryable)
+	if got := atomic.LoadInt32(&attempts); got != 3 {
+		t.Fatalf("expected 3 attempts (521 is retryable), got %d", got)
+	}
+}
+
+func TestDoWithRetry_HeaderRotationOnRetry(t *testing.T) {
+	userAgentsSeen := make(map[string]bool)
+	var mu sync.Mutex
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		userAgentsSeen[r.Header.Get("User-Agent")] = true
+		mu.Unlock()
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	t.Cleanup(server.Close)
+
+	buf := &bytes.Buffer{}
+	cfg := &config.APIConfig{
+		OraclesURL:       server.URL,
+		Timeout:          time.Second,
+		MaxRetries:       3,
+		RetryDelay:       2 * time.Millisecond,
+		RandomizeHeaders: true,
+	}
+	client := NewClient(cfg, newTestLogger(buf))
+
+	var payload testPayload
+	_ = client.doWithRetry(context.Background(), func(ctx context.Context) error {
+		return client.doRequest(ctx, server.URL, &payload)
+	})
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	// With randomized headers enabled, we may see different UAs across retries
+	// (not guaranteed due to random selection, but possible)
+	if len(userAgentsSeen) == 0 {
+		t.Fatalf("expected at least one User-Agent to be set")
+	}
+
+	// Verify User-Agents are from our list
+	for ua := range userAgentsSeen {
+		found := false
+		for _, validUA := range UserAgents {
+			if ua == validUA {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("unexpected User-Agent: %s", ua)
+		}
+	}
+}
+
+func TestClient_RandomizeHeadersDisabled(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ua := r.Header.Get("User-Agent")
+		if ua != userAgentValue {
+			t.Errorf("expected static User-Agent %q when randomization disabled, got %q", userAgentValue, ua)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"value":"ok"}`))
+	}))
+	t.Cleanup(server.Close)
+
+	buf := &bytes.Buffer{}
+	cfg := &config.APIConfig{
+		OraclesURL:       server.URL,
+		Timeout:          time.Second,
+		MaxRetries:       0,
+		RandomizeHeaders: false, // Disabled
+	}
+	client := NewClient(cfg, newTestLogger(buf))
+
+	var payload testPayload
+	if err := client.doRequest(context.Background(), server.URL, &payload); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

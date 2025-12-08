@@ -28,17 +28,17 @@ type OracleConfig struct {
 }
 
 type APIConfig struct {
-	OraclesURL   string        `yaml:"oracles_url"`
-	ProtocolsURL string        `yaml:"protocols_url"`
-	Timeout      time.Duration `yaml:"timeout"`
-	MaxRetries   int           `yaml:"max_retries"`
-	RetryDelay   time.Duration `yaml:"retry_delay"`
+	OraclesURL       string        `yaml:"oracles_url"`
+	ProtocolsURL     string        `yaml:"protocols_url"`
+	Timeout          time.Duration `yaml:"timeout"`
+	MaxRetries       int           `yaml:"max_retries"`
+	RetryDelay       time.Duration `yaml:"retry_delay"`
+	RandomizeHeaders bool          `yaml:"randomize_headers"`
 }
 
 type OutputConfig struct {
 	Directory   string `yaml:"directory"`
 	FullFile    string `yaml:"full_file"`
-	MinFile     string `yaml:"min_file"`
 	SummaryFile string `yaml:"summary_file"`
 	StateFile   string `yaml:"state_file"`
 }
@@ -98,6 +98,9 @@ func applyEnvOverrides(cfg *Config) {
 	if v := os.Getenv("TVL_ENABLED"); v != "" {
 		cfg.TVL.Enabled = strings.ToLower(v) == "true"
 	}
+	if v := os.Getenv("API_RANDOMIZE_HEADERS"); v != "" {
+		cfg.API.RandomizeHeaders = strings.ToLower(v) == "true"
+	}
 }
 
 // defaultConfig returns configuration populated with documented defaults.
@@ -109,16 +112,16 @@ func defaultConfig() Config {
 			Documentation: "",
 		},
 		API: APIConfig{
-			OraclesURL:   "https://api.llama.fi/oracles",
-			ProtocolsURL: "https://api.llama.fi/lite/protocols2?b=2",
-			Timeout:      30 * time.Second,
-			MaxRetries:   3,
-			RetryDelay:   1 * time.Second,
+			OraclesURL:       "https://api.llama.fi/oracles",
+			ProtocolsURL:     "https://api.llama.fi/lite/protocols2?b=2",
+			Timeout:          30 * time.Second,
+			MaxRetries:       3,
+			RetryDelay:       1 * time.Second,
+			RandomizeHeaders: true,
 		},
 		Output: OutputConfig{
 			Directory:   "data",
 			FullFile:    "switchboard-oracle-data.json",
-			MinFile:     "switchboard-oracle-data.min.json",
 			SummaryFile: "switchboard-summary.json",
 			StateFile:   "state.json",
 		},

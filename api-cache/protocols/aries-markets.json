@@ -1,0 +1,4570 @@
+{
+  "name": "Aries Markets",
+  "tvl": [
+    {
+      "date": 1666828800,
+      "totalLiquidityUSD": 317356
+    },
+    {
+      "date": 1666915200,
+      "totalLiquidityUSD": 318902
+    },
+    {
+      "date": 1667001600,
+      "totalLiquidityUSD": 322864
+    },
+    {
+      "date": 1667088000,
+      "totalLiquidityUSD": 327134
+    },
+    {
+      "date": 1667174400,
+      "totalLiquidityUSD": 322395
+    },
+    {
+      "date": 1667260800,
+      "totalLiquidityUSD": 324131
+    },
+    {
+      "date": 1667347200,
+      "totalLiquidityUSD": 330309
+    },
+    {
+      "date": 1667433600,
+      "totalLiquidityUSD": 327095
+    },
+    {
+      "date": 1667520000,
+      "totalLiquidityUSD": 331096
+    },
+    {
+      "date": 1667606400,
+      "totalLiquidityUSD": 341613
+    },
+    {
+      "date": 1667692800,
+      "totalLiquidityUSD": 363569
+    },
+    {
+      "date": 1667779200,
+      "totalLiquidityUSD": 352000
+    },
+    {
+      "date": 1667865600,
+      "totalLiquidityUSD": 332369
+    },
+    {
+      "date": 1667952000,
+      "totalLiquidityUSD": 310280
+    },
+    {
+      "date": 1668038400,
+      "totalLiquidityUSD": 278863
+    },
+    {
+      "date": 1668124800,
+      "totalLiquidityUSD": 364535
+    },
+    {
+      "date": 1668211200,
+      "totalLiquidityUSD": 355021
+    },
+    {
+      "date": 1668297600,
+      "totalLiquidityUSD": 279152
+    },
+    {
+      "date": 1668384000,
+      "totalLiquidityUSD": 268721
+    },
+    {
+      "date": 1668470400,
+      "totalLiquidityUSD": 281686
+    },
+    {
+      "date": 1668556800,
+      "totalLiquidityUSD": 420930
+    },
+    {
+      "date": 1668643200,
+      "totalLiquidityUSD": 462165
+    },
+    {
+      "date": 1668729600,
+      "totalLiquidityUSD": 459657
+    },
+    {
+      "date": 1668816000,
+      "totalLiquidityUSD": 514251
+    },
+    {
+      "date": 1668902400,
+      "totalLiquidityUSD": 511155
+    },
+    {
+      "date": 1668988800,
+      "totalLiquidityUSD": 502904
+    },
+    {
+      "date": 1669075200,
+      "totalLiquidityUSD": 491753
+    },
+    {
+      "date": 1669161600,
+      "totalLiquidityUSD": 500624
+    },
+    {
+      "date": 1669248000,
+      "totalLiquidityUSD": 511982
+    },
+    {
+      "date": 1669334400,
+      "totalLiquidityUSD": 506729
+    },
+    {
+      "date": 1669420800,
+      "totalLiquidityUSD": 517885
+    },
+    {
+      "date": 1669507200,
+      "totalLiquidityUSD": 529747
+    },
+    {
+      "date": 1669593600,
+      "totalLiquidityUSD": 558661
+    },
+    {
+      "date": 1669680000,
+      "totalLiquidityUSD": 557503
+    },
+    {
+      "date": 1669766400,
+      "totalLiquidityUSD": 574902
+    },
+    {
+      "date": 1669852800,
+      "totalLiquidityUSD": 573542
+    },
+    {
+      "date": 1669939200,
+      "totalLiquidityUSD": 572132
+    },
+    {
+      "date": 1670025600,
+      "totalLiquidityUSD": 618204
+    },
+    {
+      "date": 1670112000,
+      "totalLiquidityUSD": 612308
+    },
+    {
+      "date": 1670198400,
+      "totalLiquidityUSD": 621043
+    },
+    {
+      "date": 1670284800,
+      "totalLiquidityUSD": 634555
+    },
+    {
+      "date": 1670371200,
+      "totalLiquidityUSD": 622169
+    },
+    {
+      "date": 1670457600,
+      "totalLiquidityUSD": 617010
+    },
+    {
+      "date": 1670544000,
+      "totalLiquidityUSD": 622811
+    },
+    {
+      "date": 1670630400,
+      "totalLiquidityUSD": 619022
+    },
+    {
+      "date": 1670716800,
+      "totalLiquidityUSD": 622631
+    },
+    {
+      "date": 1670803200,
+      "totalLiquidityUSD": 617996
+    },
+    {
+      "date": 1670889600,
+      "totalLiquidityUSD": 611220
+    },
+    {
+      "date": 1670976000,
+      "totalLiquidityUSD": 621237
+    },
+    {
+      "date": 1671062400,
+      "totalLiquidityUSD": 619310
+    },
+    {
+      "date": 1671148800,
+      "totalLiquidityUSD": 619513
+    },
+    {
+      "date": 1671235200,
+      "totalLiquidityUSD": 593623
+    },
+    {
+      "date": 1671321600,
+      "totalLiquidityUSD": 605933
+    },
+    {
+      "date": 1671408000,
+      "totalLiquidityUSD": 607035
+    },
+    {
+      "date": 1671494400,
+      "totalLiquidityUSD": 591567
+    },
+    {
+      "date": 1671580800,
+      "totalLiquidityUSD": 594843
+    },
+    {
+      "date": 1671667200,
+      "totalLiquidityUSD": 591926
+    },
+    {
+      "date": 1671753600,
+      "totalLiquidityUSD": 587811
+    },
+    {
+      "date": 1671840000,
+      "totalLiquidityUSD": 586550
+    },
+    {
+      "date": 1671926400,
+      "totalLiquidityUSD": 583741
+    },
+    {
+      "date": 1672012800,
+      "totalLiquidityUSD": 578573
+    },
+    {
+      "date": 1672099200,
+      "totalLiquidityUSD": 580661
+    },
+    {
+      "date": 1672185600,
+      "totalLiquidityUSD": 521960
+    },
+    {
+      "date": 1672272000,
+      "totalLiquidityUSD": 508687
+    },
+    {
+      "date": 1672358400,
+      "totalLiquidityUSD": 538263
+    },
+    {
+      "date": 1672444800,
+      "totalLiquidityUSD": 540041
+    },
+    {
+      "date": 1672531200,
+      "totalLiquidityUSD": 528619
+    },
+    {
+      "date": 1672617600,
+      "totalLiquidityUSD": 530476
+    },
+    {
+      "date": 1672704000,
+      "totalLiquidityUSD": 541744
+    },
+    {
+      "date": 1672790400,
+      "totalLiquidityUSD": 547879
+    },
+    {
+      "date": 1672876800,
+      "totalLiquidityUSD": 548240
+    },
+    {
+      "date": 1672963200,
+      "totalLiquidityUSD": 547513
+    },
+    {
+      "date": 1673049600,
+      "totalLiquidityUSD": 551356
+    },
+    {
+      "date": 1673136000,
+      "totalLiquidityUSD": 547366
+    },
+    {
+      "date": 1673222400,
+      "totalLiquidityUSD": 555533
+    },
+    {
+      "date": 1673308800,
+      "totalLiquidityUSD": 607429
+    },
+    {
+      "date": 1673395200,
+      "totalLiquidityUSD": 609138
+    },
+    {
+      "date": 1673481600,
+      "totalLiquidityUSD": 613595
+    },
+    {
+      "date": 1673568000,
+      "totalLiquidityUSD": 642652
+    },
+    {
+      "date": 1673654400,
+      "totalLiquidityUSD": 679999
+    },
+    {
+      "date": 1673740800,
+      "totalLiquidityUSD": 735111
+    },
+    {
+      "date": 1673827200,
+      "totalLiquidityUSD": 630955
+    },
+    {
+      "date": 1673913600,
+      "totalLiquidityUSD": 633267
+    },
+    {
+      "date": 1674000000,
+      "totalLiquidityUSD": 627789
+    },
+    {
+      "date": 1674086400,
+      "totalLiquidityUSD": 620718
+    },
+    {
+      "date": 1674172800,
+      "totalLiquidityUSD": 672173
+    },
+    {
+      "date": 1674259200,
+      "totalLiquidityUSD": 739333
+    },
+    {
+      "date": 1674345600,
+      "totalLiquidityUSD": 751212
+    },
+    {
+      "date": 1674432000,
+      "totalLiquidityUSD": 794673
+    },
+    {
+      "date": 1674518400,
+      "totalLiquidityUSD": 785998
+    },
+    {
+      "date": 1674604800,
+      "totalLiquidityUSD": 761465
+    },
+    {
+      "date": 1674691200,
+      "totalLiquidityUSD": 896744
+    },
+    {
+      "date": 1674777600,
+      "totalLiquidityUSD": 932059
+    },
+    {
+      "date": 1674864000,
+      "totalLiquidityUSD": 1038063
+    },
+    {
+      "date": 1674950400,
+      "totalLiquidityUSD": 1107651
+    },
+    {
+      "date": 1675036800,
+      "totalLiquidityUSD": 1092744
+    },
+    {
+      "date": 1675123200,
+      "totalLiquidityUSD": 1087992
+    },
+    {
+      "date": 1675209600,
+      "totalLiquidityUSD": 1102540
+    },
+    {
+      "date": 1675296000,
+      "totalLiquidityUSD": 1148112
+    },
+    {
+      "date": 1675382400,
+      "totalLiquidityUSD": 1112427
+    },
+    {
+      "date": 1675468800,
+      "totalLiquidityUSD": 1106767
+    },
+    {
+      "date": 1675555200,
+      "totalLiquidityUSD": 1083163
+    },
+    {
+      "date": 1675641600,
+      "totalLiquidityUSD": 1050475
+    },
+    {
+      "date": 1675728000,
+      "totalLiquidityUSD": 1002737
+    },
+    {
+      "date": 1675814400,
+      "totalLiquidityUSD": 1063736
+    },
+    {
+      "date": 1675900800,
+      "totalLiquidityUSD": 1005823
+    },
+    {
+      "date": 1675987200,
+      "totalLiquidityUSD": 935804
+    },
+    {
+      "date": 1676073600,
+      "totalLiquidityUSD": 859628
+    },
+    {
+      "date": 1676160000,
+      "totalLiquidityUSD": 874925
+    },
+    {
+      "date": 1676246400,
+      "totalLiquidityUSD": 851506
+    },
+    {
+      "date": 1676332800,
+      "totalLiquidityUSD": 865825
+    },
+    {
+      "date": 1676419200,
+      "totalLiquidityUSD": 912889
+    },
+    {
+      "date": 1676505600,
+      "totalLiquidityUSD": 966168
+    },
+    {
+      "date": 1676592000,
+      "totalLiquidityUSD": 928932
+    },
+    {
+      "date": 1676678400,
+      "totalLiquidityUSD": 937390
+    },
+    {
+      "date": 1676764800,
+      "totalLiquidityUSD": 923131
+    },
+    {
+      "date": 1676851200,
+      "totalLiquidityUSD": 927646
+    },
+    {
+      "date": 1676937600,
+      "totalLiquidityUSD": 930512
+    },
+    {
+      "date": 1677024000,
+      "totalLiquidityUSD": 901306
+    },
+    {
+      "date": 1677110400,
+      "totalLiquidityUSD": 921831
+    },
+    {
+      "date": 1677196800,
+      "totalLiquidityUSD": 902603
+    },
+    {
+      "date": 1677283200,
+      "totalLiquidityUSD": 880184
+    },
+    {
+      "date": 1677369600,
+      "totalLiquidityUSD": 863228
+    },
+    {
+      "date": 1677456000,
+      "totalLiquidityUSD": 883402
+    },
+    {
+      "date": 1677542400,
+      "totalLiquidityUSD": 883912
+    },
+    {
+      "date": 1677628800,
+      "totalLiquidityUSD": 871343
+    },
+    {
+      "date": 1677715200,
+      "totalLiquidityUSD": 926503
+    },
+    {
+      "date": 1677801600,
+      "totalLiquidityUSD": 906769
+    },
+    {
+      "date": 1677888000,
+      "totalLiquidityUSD": 874309
+    },
+    {
+      "date": 1677974400,
+      "totalLiquidityUSD": 838068
+    },
+    {
+      "date": 1678060800,
+      "totalLiquidityUSD": 837730
+    },
+    {
+      "date": 1678147200,
+      "totalLiquidityUSD": 842163
+    },
+    {
+      "date": 1678233600,
+      "totalLiquidityUSD": 842621
+    },
+    {
+      "date": 1678320000,
+      "totalLiquidityUSD": 825795
+    },
+    {
+      "date": 1678406400,
+      "totalLiquidityUSD": 834159
+    },
+    {
+      "date": 1678492800,
+      "totalLiquidityUSD": 828096
+    },
+    {
+      "date": 1678579200,
+      "totalLiquidityUSD": 706105
+    },
+    {
+      "date": 1678665600,
+      "totalLiquidityUSD": 775705
+    },
+    {
+      "date": 1678752000,
+      "totalLiquidityUSD": 789171
+    },
+    {
+      "date": 1678838400,
+      "totalLiquidityUSD": 814437
+    },
+    {
+      "date": 1678924800,
+      "totalLiquidityUSD": 776550
+    },
+    {
+      "date": 1679011200,
+      "totalLiquidityUSD": 781675
+    },
+    {
+      "date": 1679097600,
+      "totalLiquidityUSD": 833369
+    },
+    {
+      "date": 1679184000,
+      "totalLiquidityUSD": 805046
+    },
+    {
+      "date": 1679270400,
+      "totalLiquidityUSD": 795733
+    },
+    {
+      "date": 1679356800,
+      "totalLiquidityUSD": 776429
+    },
+    {
+      "date": 1679443200,
+      "totalLiquidityUSD": 780774
+    },
+    {
+      "date": 1679529600,
+      "totalLiquidityUSD": 794330
+    },
+    {
+      "date": 1679616000,
+      "totalLiquidityUSD": 802475
+    },
+    {
+      "date": 1679702400,
+      "totalLiquidityUSD": 771404
+    },
+    {
+      "date": 1679788800,
+      "totalLiquidityUSD": 764585
+    },
+    {
+      "date": 1679875200,
+      "totalLiquidityUSD": 774708
+    },
+    {
+      "date": 1679961600,
+      "totalLiquidityUSD": 741442
+    },
+    {
+      "date": 1680048000,
+      "totalLiquidityUSD": 751840
+    },
+    {
+      "date": 1680134400,
+      "totalLiquidityUSD": 756908
+    },
+    {
+      "date": 1680220800,
+      "totalLiquidityUSD": 753761
+    },
+    {
+      "date": 1680307200,
+      "totalLiquidityUSD": 764546
+    },
+    {
+      "date": 1680393600,
+      "totalLiquidityUSD": 755971
+    },
+    {
+      "date": 1680480000,
+      "totalLiquidityUSD": 777001
+    },
+    {
+      "date": 1680566400,
+      "totalLiquidityUSD": 756289
+    },
+    {
+      "date": 1680652800,
+      "totalLiquidityUSD": 776424
+    },
+    {
+      "date": 1680739200,
+      "totalLiquidityUSD": 773145
+    },
+    {
+      "date": 1680825600,
+      "totalLiquidityUSD": 775597
+    },
+    {
+      "date": 1680912000,
+      "totalLiquidityUSD": 797823
+    },
+    {
+      "date": 1680998400,
+      "totalLiquidityUSD": 796627
+    },
+    {
+      "date": 1681084800,
+      "totalLiquidityUSD": 777173
+    },
+    {
+      "date": 1681171200,
+      "totalLiquidityUSD": 791647
+    },
+    {
+      "date": 1681257600,
+      "totalLiquidityUSD": 811288
+    },
+    {
+      "date": 1681344000,
+      "totalLiquidityUSD": 796669
+    },
+    {
+      "date": 1681430400,
+      "totalLiquidityUSD": 861356
+    },
+    {
+      "date": 1681516800,
+      "totalLiquidityUSD": 871181
+    },
+    {
+      "date": 1681603200,
+      "totalLiquidityUSD": 856105
+    },
+    {
+      "date": 1681689600,
+      "totalLiquidityUSD": 846093
+    },
+    {
+      "date": 1681776000,
+      "totalLiquidityUSD": 845260
+    },
+    {
+      "date": 1681862400,
+      "totalLiquidityUSD": 869199
+    },
+    {
+      "date": 1681948800,
+      "totalLiquidityUSD": 821105
+    },
+    {
+      "date": 1682035200,
+      "totalLiquidityUSD": 809466
+    },
+    {
+      "date": 1682121600,
+      "totalLiquidityUSD": 767442
+    },
+    {
+      "date": 1682208000,
+      "totalLiquidityUSD": 776230
+    },
+    {
+      "date": 1682294400,
+      "totalLiquidityUSD": 779437
+    },
+    {
+      "date": 1682380800,
+      "totalLiquidityUSD": 777436
+    },
+    {
+      "date": 1682467200,
+      "totalLiquidityUSD": 791940
+    },
+    {
+      "date": 1682553600,
+      "totalLiquidityUSD": 786994
+    },
+    {
+      "date": 1682640000,
+      "totalLiquidityUSD": 776071
+    },
+    {
+      "date": 1682726400,
+      "totalLiquidityUSD": 771413
+    },
+    {
+      "date": 1682812800,
+      "totalLiquidityUSD": 786214
+    },
+    {
+      "date": 1682899200,
+      "totalLiquidityUSD": 772535
+    },
+    {
+      "date": 1682985600,
+      "totalLiquidityUSD": 765571
+    },
+    {
+      "date": 1683072000,
+      "totalLiquidityUSD": 764510
+    },
+    {
+      "date": 1683158400,
+      "totalLiquidityUSD": 770702
+    },
+    {
+      "date": 1683244800,
+      "totalLiquidityUSD": 759903
+    },
+    {
+      "date": 1683331200,
+      "totalLiquidityUSD": 776842
+    },
+    {
+      "date": 1683417600,
+      "totalLiquidityUSD": 752139
+    },
+    {
+      "date": 1683504000,
+      "totalLiquidityUSD": 745005
+    },
+    {
+      "date": 1683590400,
+      "totalLiquidityUSD": 730264
+    },
+    {
+      "date": 1683676800,
+      "totalLiquidityUSD": 729813
+    },
+    {
+      "date": 1683763200,
+      "totalLiquidityUSD": 701435
+    },
+    {
+      "date": 1683849600,
+      "totalLiquidityUSD": 685421
+    },
+    {
+      "date": 1683936000,
+      "totalLiquidityUSD": 687382
+    },
+    {
+      "date": 1684022400,
+      "totalLiquidityUSD": 681997
+    },
+    {
+      "date": 1684108800,
+      "totalLiquidityUSD": 683009
+    },
+    {
+      "date": 1684195200,
+      "totalLiquidityUSD": 687836
+    },
+    {
+      "date": 1684281600,
+      "totalLiquidityUSD": 684676
+    },
+    {
+      "date": 1684368000,
+      "totalLiquidityUSD": 688238
+    },
+    {
+      "date": 1684454400,
+      "totalLiquidityUSD": 681637
+    },
+    {
+      "date": 1684540800,
+      "totalLiquidityUSD": 678410
+    },
+    {
+      "date": 1684627200,
+      "totalLiquidityUSD": 683636
+    },
+    {
+      "date": 1684713600,
+      "totalLiquidityUSD": 669867
+    },
+    {
+      "date": 1684800000,
+      "totalLiquidityUSD": 668826
+    },
+    {
+      "date": 1684886400,
+      "totalLiquidityUSD": 682009
+    },
+    {
+      "date": 1684972800,
+      "totalLiquidityUSD": 665810
+    },
+    {
+      "date": 1685059200,
+      "totalLiquidityUSD": 664618
+    },
+    {
+      "date": 1685145600,
+      "totalLiquidityUSD": 669766
+    },
+    {
+      "date": 1685232000,
+      "totalLiquidityUSD": 675321
+    },
+    {
+      "date": 1685318400,
+      "totalLiquidityUSD": 676465
+    },
+    {
+      "date": 1685404800,
+      "totalLiquidityUSD": 670964
+    },
+    {
+      "date": 1685491200,
+      "totalLiquidityUSD": 669908
+    },
+    {
+      "date": 1685577600,
+      "totalLiquidityUSD": 660042
+    },
+    {
+      "date": 1685664000,
+      "totalLiquidityUSD": 664185
+    },
+    {
+      "date": 1685750400,
+      "totalLiquidityUSD": 679187
+    },
+    {
+      "date": 1685836800,
+      "totalLiquidityUSD": 675588
+    },
+    {
+      "date": 1685923200,
+      "totalLiquidityUSD": 674178
+    },
+    {
+      "date": 1686009600,
+      "totalLiquidityUSD": 645249
+    },
+    {
+      "date": 1686096000,
+      "totalLiquidityUSD": 618829
+    },
+    {
+      "date": 1686182400,
+      "totalLiquidityUSD": 601675
+    },
+    {
+      "date": 1686268800,
+      "totalLiquidityUSD": 603113
+    },
+    {
+      "date": 1686355200,
+      "totalLiquidityUSD": 592014
+    },
+    {
+      "date": 1686441600,
+      "totalLiquidityUSD": 557954
+    },
+    {
+      "date": 1686528000,
+      "totalLiquidityUSD": 570520
+    },
+    {
+      "date": 1686614400,
+      "totalLiquidityUSD": 567241
+    },
+    {
+      "date": 1686700800,
+      "totalLiquidityUSD": 570614
+    },
+    {
+      "date": 1686787200,
+      "totalLiquidityUSD": 557829
+    },
+    {
+      "date": 1686873600,
+      "totalLiquidityUSD": 557621
+    },
+    {
+      "date": 1686960000,
+      "totalLiquidityUSD": 590066
+    },
+    {
+      "date": 1687046400,
+      "totalLiquidityUSD": 622521
+    },
+    {
+      "date": 1687132800,
+      "totalLiquidityUSD": 616794
+    },
+    {
+      "date": 1687219200,
+      "totalLiquidityUSD": 626794
+    },
+    {
+      "date": 1687305600,
+      "totalLiquidityUSD": 638319
+    },
+    {
+      "date": 1687392000,
+      "totalLiquidityUSD": 666212
+    },
+    {
+      "date": 1687478400,
+      "totalLiquidityUSD": 653557
+    },
+    {
+      "date": 1687564800,
+      "totalLiquidityUSD": 665850
+    },
+    {
+      "date": 1687651200,
+      "totalLiquidityUSD": 662453
+    },
+    {
+      "date": 1687737600,
+      "totalLiquidityUSD": 687621
+    },
+    {
+      "date": 1687824000,
+      "totalLiquidityUSD": 679811
+    },
+    {
+      "date": 1687910400,
+      "totalLiquidityUSD": 656146
+    },
+    {
+      "date": 1687996800,
+      "totalLiquidityUSD": 644752
+    },
+    {
+      "date": 1688083200,
+      "totalLiquidityUSD": 660232
+    },
+    {
+      "date": 1688169600,
+      "totalLiquidityUSD": 695630
+    },
+    {
+      "date": 1688256000,
+      "totalLiquidityUSD": 698346
+    },
+    {
+      "date": 1688342400,
+      "totalLiquidityUSD": 701869
+    },
+    {
+      "date": 1688428800,
+      "totalLiquidityUSD": 719540
+    },
+    {
+      "date": 1688515200,
+      "totalLiquidityUSD": 719279
+    },
+    {
+      "date": 1688601600,
+      "totalLiquidityUSD": 711083
+    },
+    {
+      "date": 1688688000,
+      "totalLiquidityUSD": 702807
+    },
+    {
+      "date": 1688774400,
+      "totalLiquidityUSD": 709990
+    },
+    {
+      "date": 1688860800,
+      "totalLiquidityUSD": 705719
+    },
+    {
+      "date": 1688947200,
+      "totalLiquidityUSD": 690992
+    },
+    {
+      "date": 1689033600,
+      "totalLiquidityUSD": 693528
+    },
+    {
+      "date": 1689120000,
+      "totalLiquidityUSD": 628688
+    },
+    {
+      "date": 1689206400,
+      "totalLiquidityUSD": 622383
+    },
+    {
+      "date": 1689292800,
+      "totalLiquidityUSD": 675077
+    },
+    {
+      "date": 1689379200,
+      "totalLiquidityUSD": 649749
+    },
+    {
+      "date": 1689465600,
+      "totalLiquidityUSD": 653817
+    },
+    {
+      "date": 1689552000,
+      "totalLiquidityUSD": 654229
+    },
+    {
+      "date": 1689638400,
+      "totalLiquidityUSD": 665283
+    },
+    {
+      "date": 1689724800,
+      "totalLiquidityUSD": 655882
+    },
+    {
+      "date": 1689811200,
+      "totalLiquidityUSD": 858570
+    },
+    {
+      "date": 1689897600,
+      "totalLiquidityUSD": 846300
+    },
+    {
+      "date": 1689984000,
+      "totalLiquidityUSD": 864512
+    },
+    {
+      "date": 1690070400,
+      "totalLiquidityUSD": 856761
+    },
+    {
+      "date": 1690156800,
+      "totalLiquidityUSD": 857533
+    },
+    {
+      "date": 1690243200,
+      "totalLiquidityUSD": 818500
+    },
+    {
+      "date": 1690329600,
+      "totalLiquidityUSD": 818227
+    },
+    {
+      "date": 1690416000,
+      "totalLiquidityUSD": 835743
+    },
+    {
+      "date": 1690502400,
+      "totalLiquidityUSD": 837544
+    },
+    {
+      "date": 1690588800,
+      "totalLiquidityUSD": 838295
+    },
+    {
+      "date": 1690675200,
+      "totalLiquidityUSD": 843102
+    },
+    {
+      "date": 1690761600,
+      "totalLiquidityUSD": 831380
+    },
+    {
+      "date": 1690848000,
+      "totalLiquidityUSD": 832962
+    },
+    {
+      "date": 1690934400,
+      "totalLiquidityUSD": 833963
+    },
+    {
+      "date": 1691020800,
+      "totalLiquidityUSD": 824851
+    },
+    {
+      "date": 1691107200,
+      "totalLiquidityUSD": 818149
+    },
+    {
+      "date": 1691193600,
+      "totalLiquidityUSD": 1057986
+    },
+    {
+      "date": 1691280000,
+      "totalLiquidityUSD": 1064475
+    },
+    {
+      "date": 1691366400,
+      "totalLiquidityUSD": 1064962
+    },
+    {
+      "date": 1691452800,
+      "totalLiquidityUSD": 1065012
+    },
+    {
+      "date": 1691539200,
+      "totalLiquidityUSD": 1047480
+    },
+    {
+      "date": 1691625600,
+      "totalLiquidityUSD": 1357122
+    },
+    {
+      "date": 1691712000,
+      "totalLiquidityUSD": 1341661
+    },
+    {
+      "date": 1691798400,
+      "totalLiquidityUSD": 1345216
+    },
+    {
+      "date": 1691884800,
+      "totalLiquidityUSD": 1345551
+    },
+    {
+      "date": 1691971200,
+      "totalLiquidityUSD": 1335587
+    },
+    {
+      "date": 1692057600,
+      "totalLiquidityUSD": 1340044
+    },
+    {
+      "date": 1692144000,
+      "totalLiquidityUSD": 1306546
+    },
+    {
+      "date": 1692230400,
+      "totalLiquidityUSD": 1279761
+    },
+    {
+      "date": 1692316800,
+      "totalLiquidityUSD": 1244891
+    },
+    {
+      "date": 1692403200,
+      "totalLiquidityUSD": 1256596
+    },
+    {
+      "date": 1692489600,
+      "totalLiquidityUSD": 1269067
+    },
+    {
+      "date": 1692576000,
+      "totalLiquidityUSD": 1270136
+    },
+    {
+      "date": 1692662400,
+      "totalLiquidityUSD": 1263060
+    },
+    {
+      "date": 1692748800,
+      "totalLiquidityUSD": 1255991
+    },
+    {
+      "date": 1692835200,
+      "totalLiquidityUSD": 1271322
+    },
+    {
+      "date": 1692921600,
+      "totalLiquidityUSD": 1253426
+    },
+    {
+      "date": 1693008000,
+      "totalLiquidityUSD": 1244473
+    },
+    {
+      "date": 1693094400,
+      "totalLiquidityUSD": 1245639
+    },
+    {
+      "date": 1693180800,
+      "totalLiquidityUSD": 1249574
+    },
+    {
+      "date": 1693267200,
+      "totalLiquidityUSD": 1363016
+    },
+    {
+      "date": 1693353600,
+      "totalLiquidityUSD": 1391243
+    },
+    {
+      "date": 1693440000,
+      "totalLiquidityUSD": 1375051
+    },
+    {
+      "date": 1693526400,
+      "totalLiquidityUSD": 1346853
+    },
+    {
+      "date": 1693612800,
+      "totalLiquidityUSD": 1343191
+    },
+    {
+      "date": 1693699200,
+      "totalLiquidityUSD": 1346069
+    },
+    {
+      "date": 1693785600,
+      "totalLiquidityUSD": 1354769
+    },
+    {
+      "date": 1693872000,
+      "totalLiquidityUSD": 1360866
+    },
+    {
+      "date": 1693958400,
+      "totalLiquidityUSD": 1492000
+    },
+    {
+      "date": 1694044800,
+      "totalLiquidityUSD": 1493740
+    },
+    {
+      "date": 1694131200,
+      "totalLiquidityUSD": 1527723
+    },
+    {
+      "date": 1694217600,
+      "totalLiquidityUSD": 1521008
+    },
+    {
+      "date": 1694304000,
+      "totalLiquidityUSD": 1519760
+    },
+    {
+      "date": 1694390400,
+      "totalLiquidityUSD": 1498413
+    },
+    {
+      "date": 1694476800,
+      "totalLiquidityUSD": 1550305
+    },
+    {
+      "date": 1694563200,
+      "totalLiquidityUSD": 1553896
+    },
+    {
+      "date": 1694649600,
+      "totalLiquidityUSD": 1578869
+    },
+    {
+      "date": 1694736000,
+      "totalLiquidityUSD": 1588544
+    },
+    {
+      "date": 1694822400,
+      "totalLiquidityUSD": 1597792
+    },
+    {
+      "date": 1694908800,
+      "totalLiquidityUSD": 1592611
+    },
+    {
+      "date": 1694995200,
+      "totalLiquidityUSD": 1579000
+    },
+    {
+      "date": 1695081600,
+      "totalLiquidityUSD": 1581148
+    },
+    {
+      "date": 1695168000,
+      "totalLiquidityUSD": 1588487
+    },
+    {
+      "date": 1695254400,
+      "totalLiquidityUSD": 1596207
+    },
+    {
+      "date": 1695340800,
+      "totalLiquidityUSD": 1571453
+    },
+    {
+      "date": 1695427200,
+      "totalLiquidityUSD": 1581104
+    },
+    {
+      "date": 1695513600,
+      "totalLiquidityUSD": 1579487
+    },
+    {
+      "date": 1695600000,
+      "totalLiquidityUSD": 1640113
+    },
+    {
+      "date": 1695686400,
+      "totalLiquidityUSD": 1635297
+    },
+    {
+      "date": 1695772800,
+      "totalLiquidityUSD": 1602277
+    },
+    {
+      "date": 1695859200,
+      "totalLiquidityUSD": 1616234
+    },
+    {
+      "date": 1695945600,
+      "totalLiquidityUSD": 1630787
+    },
+    {
+      "date": 1696032000,
+      "totalLiquidityUSD": 1640893
+    },
+    {
+      "date": 1696118400,
+      "totalLiquidityUSD": 1656969
+    },
+    {
+      "date": 1696204800,
+      "totalLiquidityUSD": 1697432
+    },
+    {
+      "date": 1696291200,
+      "totalLiquidityUSD": 1643807
+    },
+    {
+      "date": 1696377600,
+      "totalLiquidityUSD": 1877316
+    },
+    {
+      "date": 1696464000,
+      "totalLiquidityUSD": 1891493
+    },
+    {
+      "date": 1696550400,
+      "totalLiquidityUSD": 1868915
+    },
+    {
+      "date": 1696636800,
+      "totalLiquidityUSD": 1895316
+    },
+    {
+      "date": 1696723200,
+      "totalLiquidityUSD": 1873304
+    },
+    {
+      "date": 1696809600,
+      "totalLiquidityUSD": 1849454
+    },
+    {
+      "date": 1696896000,
+      "totalLiquidityUSD": 1802573
+    },
+    {
+      "date": 1696982400,
+      "totalLiquidityUSD": 1857938
+    },
+    {
+      "date": 1697068800,
+      "totalLiquidityUSD": 1867851
+    },
+    {
+      "date": 1697155200,
+      "totalLiquidityUSD": 1875995
+    },
+    {
+      "date": 1697241600,
+      "totalLiquidityUSD": 2417423
+    },
+    {
+      "date": 1697328000,
+      "totalLiquidityUSD": 2426990
+    },
+    {
+      "date": 1697414400,
+      "totalLiquidityUSD": 2431813
+    },
+    {
+      "date": 1697500800,
+      "totalLiquidityUSD": 2466425
+    },
+    {
+      "date": 1697587200,
+      "totalLiquidityUSD": 3725610
+    },
+    {
+      "date": 1697673600,
+      "totalLiquidityUSD": 4445773
+    },
+    {
+      "date": 1697760000,
+      "totalLiquidityUSD": 8147544
+    },
+    {
+      "date": 1697846400,
+      "totalLiquidityUSD": 7840347
+    },
+    {
+      "date": 1697932800,
+      "totalLiquidityUSD": 8391240
+    },
+    {
+      "date": 1698019200,
+      "totalLiquidityUSD": 9080565
+    },
+    {
+      "date": 1698105600,
+      "totalLiquidityUSD": 9354477
+    },
+    {
+      "date": 1698192000,
+      "totalLiquidityUSD": 9426561
+    },
+    {
+      "date": 1698278400,
+      "totalLiquidityUSD": 10206806
+    },
+    {
+      "date": 1698364800,
+      "totalLiquidityUSD": 9625936
+    },
+    {
+      "date": 1698451200,
+      "totalLiquidityUSD": 9955326
+    },
+    {
+      "date": 1698537600,
+      "totalLiquidityUSD": 10134330
+    },
+    {
+      "date": 1698624000,
+      "totalLiquidityUSD": 10093114
+    },
+    {
+      "date": 1698710400,
+      "totalLiquidityUSD": 10628970
+    },
+    {
+      "date": 1698796800,
+      "totalLiquidityUSD": 10418842
+    },
+    {
+      "date": 1698883200,
+      "totalLiquidityUSD": 10513180
+    },
+    {
+      "date": 1698969600,
+      "totalLiquidityUSD": 9967456
+    },
+    {
+      "date": 1699056000,
+      "totalLiquidityUSD": 10332956
+    },
+    {
+      "date": 1699142400,
+      "totalLiquidityUSD": 10577932
+    },
+    {
+      "date": 1699228800,
+      "totalLiquidityUSD": 10362694
+    },
+    {
+      "date": 1699315200,
+      "totalLiquidityUSD": 11082788
+    },
+    {
+      "date": 1699401600,
+      "totalLiquidityUSD": 10726765
+    },
+    {
+      "date": 1699488000,
+      "totalLiquidityUSD": 10888868
+    },
+    {
+      "date": 1699574400,
+      "totalLiquidityUSD": 11101036
+    },
+    {
+      "date": 1699660800,
+      "totalLiquidityUSD": 11086089
+    },
+    {
+      "date": 1699747200,
+      "totalLiquidityUSD": 11240864
+    },
+    {
+      "date": 1699833600,
+      "totalLiquidityUSD": 11386296
+    },
+    {
+      "date": 1699920000,
+      "totalLiquidityUSD": 10701556
+    },
+    {
+      "date": 1700006400,
+      "totalLiquidityUSD": 10601377
+    },
+    {
+      "date": 1700092800,
+      "totalLiquidityUSD": 11141034
+    },
+    {
+      "date": 1700179200,
+      "totalLiquidityUSD": 10601733
+    },
+    {
+      "date": 1700265600,
+      "totalLiquidityUSD": 10205955
+    },
+    {
+      "date": 1700352000,
+      "totalLiquidityUSD": 9973965
+    },
+    {
+      "date": 1700438400,
+      "totalLiquidityUSD": 10703941
+    },
+    {
+      "date": 1700524800,
+      "totalLiquidityUSD": 10705149
+    },
+    {
+      "date": 1700611200,
+      "totalLiquidityUSD": 10122244
+    },
+    {
+      "date": 1700697600,
+      "totalLiquidityUSD": 10756302
+    },
+    {
+      "date": 1700784000,
+      "totalLiquidityUSD": 10743100
+    },
+    {
+      "date": 1700870400,
+      "totalLiquidityUSD": 10908467
+    },
+    {
+      "date": 1700956800,
+      "totalLiquidityUSD": 10915384
+    },
+    {
+      "date": 1701043200,
+      "totalLiquidityUSD": 10719878
+    },
+    {
+      "date": 1701129600,
+      "totalLiquidityUSD": 10344948
+    },
+    {
+      "date": 1701216000,
+      "totalLiquidityUSD": 10461157
+    },
+    {
+      "date": 1701302400,
+      "totalLiquidityUSD": 10427813
+    },
+    {
+      "date": 1701388800,
+      "totalLiquidityUSD": 10400143
+    },
+    {
+      "date": 1701475200,
+      "totalLiquidityUSD": 10528653
+    },
+    {
+      "date": 1701561600,
+      "totalLiquidityUSD": 10885073
+    },
+    {
+      "date": 1701648000,
+      "totalLiquidityUSD": 10792825
+    },
+    {
+      "date": 1701734400,
+      "totalLiquidityUSD": 11987324
+    },
+    {
+      "date": 1701820800,
+      "totalLiquidityUSD": 12212219
+    },
+    {
+      "date": 1701907200,
+      "totalLiquidityUSD": 11694615
+    },
+    {
+      "date": 1701993600,
+      "totalLiquidityUSD": 12573499
+    },
+    {
+      "date": 1702080000,
+      "totalLiquidityUSD": 13299585
+    },
+    {
+      "date": 1702166400,
+      "totalLiquidityUSD": 13026338
+    },
+    {
+      "date": 1702252800,
+      "totalLiquidityUSD": 13453390
+    },
+    {
+      "date": 1702339200,
+      "totalLiquidityUSD": 12582644
+    },
+    {
+      "date": 1702425600,
+      "totalLiquidityUSD": 14324205
+    },
+    {
+      "date": 1702512000,
+      "totalLiquidityUSD": 13657929
+    },
+    {
+      "date": 1702598400,
+      "totalLiquidityUSD": 243664106
+    },
+    {
+      "date": 1702684800,
+      "totalLiquidityUSD": 12735709
+    },
+    {
+      "date": 1702771200,
+      "totalLiquidityUSD": 14848507
+    },
+    {
+      "date": 1702857600,
+      "totalLiquidityUSD": 14648078
+    },
+    {
+      "date": 1702944000,
+      "totalLiquidityUSD": 14389310
+    },
+    {
+      "date": 1703030400,
+      "totalLiquidityUSD": 14606130
+    },
+    {
+      "date": 1703116800,
+      "totalLiquidityUSD": 14718978
+    },
+    {
+      "date": 1703203200,
+      "totalLiquidityUSD": 15884859
+    },
+    {
+      "date": 1703289600,
+      "totalLiquidityUSD": 17831948
+    },
+    {
+      "date": 1703376000,
+      "totalLiquidityUSD": 17338829
+    },
+    {
+      "date": 1703462400,
+      "totalLiquidityUSD": 17240952
+    },
+    {
+      "date": 1703548800,
+      "totalLiquidityUSD": 29444187
+    },
+    {
+      "date": 1703635200,
+      "totalLiquidityUSD": 31130159
+    },
+    {
+      "date": 1703721600,
+      "totalLiquidityUSD": 29979300
+    },
+    {
+      "date": 1703808000,
+      "totalLiquidityUSD": 28362698
+    },
+    {
+      "date": 1703894400,
+      "totalLiquidityUSD": 28451711
+    },
+    {
+      "date": 1703980800,
+      "totalLiquidityUSD": 27904067
+    },
+    {
+      "date": 1704067200,
+      "totalLiquidityUSD": 27679239
+    },
+    {
+      "date": 1704153600,
+      "totalLiquidityUSD": 29073294
+    },
+    {
+      "date": 1704240000,
+      "totalLiquidityUSD": 29822252
+    },
+    {
+      "date": 1704326400,
+      "totalLiquidityUSD": 26849726
+    },
+    {
+      "date": 1704412800,
+      "totalLiquidityUSD": 29906749
+    },
+    {
+      "date": 1704499200,
+      "totalLiquidityUSD": 27641809
+    },
+    {
+      "date": 1704585600,
+      "totalLiquidityUSD": 26876175
+    },
+    {
+      "date": 1704672000,
+      "totalLiquidityUSD": 24701444
+    },
+    {
+      "date": 1704758400,
+      "totalLiquidityUSD": 26124805
+    },
+    {
+      "date": 1704844800,
+      "totalLiquidityUSD": 25230163
+    },
+    {
+      "date": 1704931200,
+      "totalLiquidityUSD": 26370258
+    },
+    {
+      "date": 1705017600,
+      "totalLiquidityUSD": 27699537
+    },
+    {
+      "date": 1705104000,
+      "totalLiquidityUSD": 27515963
+    },
+    {
+      "date": 1705190400,
+      "totalLiquidityUSD": 30301428
+    },
+    {
+      "date": 1705276800,
+      "totalLiquidityUSD": 30380779
+    },
+    {
+      "date": 1705363200,
+      "totalLiquidityUSD": 31087916
+    },
+    {
+      "date": 1705449600,
+      "totalLiquidityUSD": 31258197
+    },
+    {
+      "date": 1705536000,
+      "totalLiquidityUSD": 31086726
+    },
+    {
+      "date": 1705622400,
+      "totalLiquidityUSD": 29562413
+    },
+    {
+      "date": 1705708800,
+      "totalLiquidityUSD": 29559379
+    },
+    {
+      "date": 1705795200,
+      "totalLiquidityUSD": 29627817
+    },
+    {
+      "date": 1705881600,
+      "totalLiquidityUSD": 29137512
+    },
+    {
+      "date": 1705968000,
+      "totalLiquidityUSD": 27961053
+    },
+    {
+      "date": 1706054400,
+      "totalLiquidityUSD": 29723389
+    },
+    {
+      "date": 1706140800,
+      "totalLiquidityUSD": 30105904
+    },
+    {
+      "date": 1706227200,
+      "totalLiquidityUSD": 31624472
+    },
+    {
+      "date": 1706313600,
+      "totalLiquidityUSD": 34548142
+    },
+    {
+      "date": 1706400000,
+      "totalLiquidityUSD": 35695005
+    },
+    {
+      "date": 1706486400,
+      "totalLiquidityUSD": 34946929
+    },
+    {
+      "date": 1706572800,
+      "totalLiquidityUSD": 36384058
+    },
+    {
+      "date": 1706659200,
+      "totalLiquidityUSD": 36546494
+    },
+    {
+      "date": 1706745600,
+      "totalLiquidityUSD": 36688928
+    },
+    {
+      "date": 1706832000,
+      "totalLiquidityUSD": 39946363
+    },
+    {
+      "date": 1706918400,
+      "totalLiquidityUSD": 41248128
+    },
+    {
+      "date": 1707004800,
+      "totalLiquidityUSD": 40852225
+    },
+    {
+      "date": 1707091200,
+      "totalLiquidityUSD": 42364564
+    },
+    {
+      "date": 1707177600,
+      "totalLiquidityUSD": 42874952
+    },
+    {
+      "date": 1707264000,
+      "totalLiquidityUSD": 43129549
+    },
+    {
+      "date": 1707350400,
+      "totalLiquidityUSD": 44562459
+    },
+    {
+      "date": 1707436800,
+      "totalLiquidityUSD": 44760041
+    },
+    {
+      "date": 1707523200,
+      "totalLiquidityUSD": 48204817
+    },
+    {
+      "date": 1707609600,
+      "totalLiquidityUSD": 47955075
+    },
+    {
+      "date": 1707696000,
+      "totalLiquidityUSD": 44189636
+    },
+    {
+      "date": 1707782400,
+      "totalLiquidityUSD": 45405029
+    },
+    {
+      "date": 1707868800,
+      "totalLiquidityUSD": 45412197
+    },
+    {
+      "date": 1707955200,
+      "totalLiquidityUSD": 47061282
+    },
+    {
+      "date": 1708041600,
+      "totalLiquidityUSD": 56563655
+    },
+    {
+      "date": 1708128000,
+      "totalLiquidityUSD": 55064097
+    },
+    {
+      "date": 1708214400,
+      "totalLiquidityUSD": 54048192
+    },
+    {
+      "date": 1708300800,
+      "totalLiquidityUSD": 54620154
+    },
+    {
+      "date": 1708387200,
+      "totalLiquidityUSD": 55926326
+    },
+    {
+      "date": 1708473600,
+      "totalLiquidityUSD": 55409041
+    },
+    {
+      "date": 1708560000,
+      "totalLiquidityUSD": 53632404
+    },
+    {
+      "date": 1708646400,
+      "totalLiquidityUSD": 54374946
+    },
+    {
+      "date": 1708732800,
+      "totalLiquidityUSD": 54018953
+    },
+    {
+      "date": 1708819200,
+      "totalLiquidityUSD": 55622638
+    },
+    {
+      "date": 1708905600,
+      "totalLiquidityUSD": 56678813
+    },
+    {
+      "date": 1708992000,
+      "totalLiquidityUSD": 58889540
+    },
+    {
+      "date": 1709078400,
+      "totalLiquidityUSD": 58487211
+    },
+    {
+      "date": 1709164800,
+      "totalLiquidityUSD": 68190465
+    },
+    {
+      "date": 1709251200,
+      "totalLiquidityUSD": 65987835
+    },
+    {
+      "date": 1709337600,
+      "totalLiquidityUSD": 67059774
+    },
+    {
+      "date": 1709424000,
+      "totalLiquidityUSD": 68309845
+    },
+    {
+      "date": 1709510400,
+      "totalLiquidityUSD": 66209390
+    },
+    {
+      "date": 1709596800,
+      "totalLiquidityUSD": 69078904
+    },
+    {
+      "date": 1709683200,
+      "totalLiquidityUSD": 75123515
+    },
+    {
+      "date": 1709769600,
+      "totalLiquidityUSD": 75817633
+    },
+    {
+      "date": 1709856000,
+      "totalLiquidityUSD": 74840435
+    },
+    {
+      "date": 1709942400,
+      "totalLiquidityUSD": 74934533
+    },
+    {
+      "date": 1710028800,
+      "totalLiquidityUSD": 75394668
+    },
+    {
+      "date": 1710115200,
+      "totalLiquidityUSD": 73969852
+    },
+    {
+      "date": 1710201600,
+      "totalLiquidityUSD": 77334241
+    },
+    {
+      "date": 1710288000,
+      "totalLiquidityUSD": 78328329
+    },
+    {
+      "date": 1710374400,
+      "totalLiquidityUSD": 80321710
+    },
+    {
+      "date": 1710460800,
+      "totalLiquidityUSD": 83493223
+    },
+    {
+      "date": 1710547200,
+      "totalLiquidityUSD": 103057813
+    },
+    {
+      "date": 1710633600,
+      "totalLiquidityUSD": 90511785
+    },
+    {
+      "date": 1710720000,
+      "totalLiquidityUSD": 93997635
+    },
+    {
+      "date": 1710806400,
+      "totalLiquidityUSD": 96814022
+    },
+    {
+      "date": 1710892800,
+      "totalLiquidityUSD": 108229578
+    },
+    {
+      "date": 1710979200,
+      "totalLiquidityUSD": 113687034
+    },
+    {
+      "date": 1711065600,
+      "totalLiquidityUSD": 112108847
+    },
+    {
+      "date": 1711152000,
+      "totalLiquidityUSD": 146370204
+    },
+    {
+      "date": 1711238400,
+      "totalLiquidityUSD": 145488475
+    },
+    {
+      "date": 1711324800,
+      "totalLiquidityUSD": 149069642
+    },
+    {
+      "date": 1711411200,
+      "totalLiquidityUSD": 155717580
+    },
+    {
+      "date": 1711497600,
+      "totalLiquidityUSD": 161326519
+    },
+    {
+      "date": 1711584000,
+      "totalLiquidityUSD": 161032371
+    },
+    {
+      "date": 1711670400,
+      "totalLiquidityUSD": 178105465
+    },
+    {
+      "date": 1711756800,
+      "totalLiquidityUSD": 177905360
+    },
+    {
+      "date": 1711843200,
+      "totalLiquidityUSD": 174212747
+    },
+    {
+      "date": 1711929600,
+      "totalLiquidityUSD": 177089818
+    },
+    {
+      "date": 1712016000,
+      "totalLiquidityUSD": 176550295
+    },
+    {
+      "date": 1712102400,
+      "totalLiquidityUSD": 161064603
+    },
+    {
+      "date": 1712188800,
+      "totalLiquidityUSD": 182250665
+    },
+    {
+      "date": 1712275200,
+      "totalLiquidityUSD": 181726614
+    },
+    {
+      "date": 1712361600,
+      "totalLiquidityUSD": 172502558
+    },
+    {
+      "date": 1712448000,
+      "totalLiquidityUSD": 173613391
+    },
+    {
+      "date": 1712534400,
+      "totalLiquidityUSD": 175929513
+    },
+    {
+      "date": 1712620800,
+      "totalLiquidityUSD": 188099082
+    },
+    {
+      "date": 1712707200,
+      "totalLiquidityUSD": 171275300
+    },
+    {
+      "date": 1712793600,
+      "totalLiquidityUSD": 166519738
+    },
+    {
+      "date": 1712880000,
+      "totalLiquidityUSD": 160462524
+    },
+    {
+      "date": 1712966400,
+      "totalLiquidityUSD": 139054446
+    },
+    {
+      "date": 1713052800,
+      "totalLiquidityUSD": 118997000
+    },
+    {
+      "date": 1713139200,
+      "totalLiquidityUSD": 132240432
+    },
+    {
+      "date": 1713225600,
+      "totalLiquidityUSD": 127046096
+    },
+    {
+      "date": 1713312000,
+      "totalLiquidityUSD": 129913850
+    },
+    {
+      "date": 1713398400,
+      "totalLiquidityUSD": 128036740
+    },
+    {
+      "date": 1713484800,
+      "totalLiquidityUSD": 131847524
+    },
+    {
+      "date": 1713571200,
+      "totalLiquidityUSD": 132637906
+    },
+    {
+      "date": 1713657600,
+      "totalLiquidityUSD": 140336912
+    },
+    {
+      "date": 1713744000,
+      "totalLiquidityUSD": 137287423
+    },
+    {
+      "date": 1713830400,
+      "totalLiquidityUSD": 140277699
+    },
+    {
+      "date": 1713916800,
+      "totalLiquidityUSD": 136564463
+    },
+    {
+      "date": 1714003200,
+      "totalLiquidityUSD": 130604418
+    },
+    {
+      "date": 1714089600,
+      "totalLiquidityUSD": 129057929
+    },
+    {
+      "date": 1714176000,
+      "totalLiquidityUSD": 126223508
+    },
+    {
+      "date": 1714262400,
+      "totalLiquidityUSD": 127497584
+    },
+    {
+      "date": 1714348800,
+      "totalLiquidityUSD": 129451895
+    },
+    {
+      "date": 1714435200,
+      "totalLiquidityUSD": 125696545
+    },
+    {
+      "date": 1714521600,
+      "totalLiquidityUSD": 120335671
+    },
+    {
+      "date": 1714608000,
+      "totalLiquidityUSD": 123020114
+    },
+    {
+      "date": 1714694400,
+      "totalLiquidityUSD": 124071560
+    },
+    {
+      "date": 1714780800,
+      "totalLiquidityUSD": 127334901
+    },
+    {
+      "date": 1714867200,
+      "totalLiquidityUSD": 128161738
+    },
+    {
+      "date": 1714953600,
+      "totalLiquidityUSD": 128847549
+    },
+    {
+      "date": 1715040000,
+      "totalLiquidityUSD": 129315488
+    },
+    {
+      "date": 1715126400,
+      "totalLiquidityUSD": 126643938
+    },
+    {
+      "date": 1715212800,
+      "totalLiquidityUSD": 122896377
+    },
+    {
+      "date": 1715299200,
+      "totalLiquidityUSD": 125996627
+    },
+    {
+      "date": 1715385600,
+      "totalLiquidityUSD": 123551192
+    },
+    {
+      "date": 1715472000,
+      "totalLiquidityUSD": 122590630
+    },
+    {
+      "date": 1715558400,
+      "totalLiquidityUSD": 122276038
+    },
+    {
+      "date": 1715644800,
+      "totalLiquidityUSD": 120870615
+    },
+    {
+      "date": 1715731200,
+      "totalLiquidityUSD": 117225086
+    },
+    {
+      "date": 1715817600,
+      "totalLiquidityUSD": 125681365
+    },
+    {
+      "date": 1715904000,
+      "totalLiquidityUSD": 123449439
+    },
+    {
+      "date": 1715990400,
+      "totalLiquidityUSD": 128313936
+    },
+    {
+      "date": 1716076800,
+      "totalLiquidityUSD": 129324841
+    },
+    {
+      "date": 1716163200,
+      "totalLiquidityUSD": 124677038
+    },
+    {
+      "date": 1716249600,
+      "totalLiquidityUSD": 135950757
+    },
+    {
+      "date": 1716336000,
+      "totalLiquidityUSD": 140877795
+    },
+    {
+      "date": 1716422400,
+      "totalLiquidityUSD": 139814616
+    },
+    {
+      "date": 1716508800,
+      "totalLiquidityUSD": 137947125
+    },
+    {
+      "date": 1716595200,
+      "totalLiquidityUSD": 138571465
+    },
+    {
+      "date": 1716681600,
+      "totalLiquidityUSD": 141531508
+    },
+    {
+      "date": 1716768000,
+      "totalLiquidityUSD": 141823107
+    },
+    {
+      "date": 1716854400,
+      "totalLiquidityUSD": 150635932
+    },
+    {
+      "date": 1716940800,
+      "totalLiquidityUSD": 148000040
+    },
+    {
+      "date": 1717027200,
+      "totalLiquidityUSD": 145068995
+    },
+    {
+      "date": 1717113600,
+      "totalLiquidityUSD": 146279300
+    },
+    {
+      "date": 1717200000,
+      "totalLiquidityUSD": 145779293
+    },
+    {
+      "date": 1717286400,
+      "totalLiquidityUSD": 144265040
+    },
+    {
+      "date": 1717372800,
+      "totalLiquidityUSD": 143566062
+    },
+    {
+      "date": 1717459200,
+      "totalLiquidityUSD": 144732280
+    },
+    {
+      "date": 1717545600,
+      "totalLiquidityUSD": 147603351
+    },
+    {
+      "date": 1717632000,
+      "totalLiquidityUSD": 150640505
+    },
+    {
+      "date": 1717718400,
+      "totalLiquidityUSD": 149438433
+    },
+    {
+      "date": 1717804800,
+      "totalLiquidityUSD": 141729317
+    },
+    {
+      "date": 1717891200,
+      "totalLiquidityUSD": 136704969
+    },
+    {
+      "date": 1717977600,
+      "totalLiquidityUSD": 142022820
+    },
+    {
+      "date": 1718064000,
+      "totalLiquidityUSD": 138186502
+    },
+    {
+      "date": 1718150400,
+      "totalLiquidityUSD": 134710322
+    },
+    {
+      "date": 1718236800,
+      "totalLiquidityUSD": 139168722
+    },
+    {
+      "date": 1718323200,
+      "totalLiquidityUSD": 133788694
+    },
+    {
+      "date": 1718409600,
+      "totalLiquidityUSD": 131454579
+    },
+    {
+      "date": 1718496000,
+      "totalLiquidityUSD": 133594412
+    },
+    {
+      "date": 1718582400,
+      "totalLiquidityUSD": 134194005
+    },
+    {
+      "date": 1718668800,
+      "totalLiquidityUSD": 130326522
+    },
+    {
+      "date": 1718755200,
+      "totalLiquidityUSD": 120294136
+    },
+    {
+      "date": 1718841600,
+      "totalLiquidityUSD": 120758109
+    },
+    {
+      "date": 1718928000,
+      "totalLiquidityUSD": 122574824
+    },
+    {
+      "date": 1719014400,
+      "totalLiquidityUSD": 122842814
+    },
+    {
+      "date": 1719100800,
+      "totalLiquidityUSD": 122682794
+    },
+    {
+      "date": 1719187200,
+      "totalLiquidityUSD": 121060261
+    },
+    {
+      "date": 1719273600,
+      "totalLiquidityUSD": 124425218
+    },
+    {
+      "date": 1719360000,
+      "totalLiquidityUSD": 127107369
+    },
+    {
+      "date": 1719446400,
+      "totalLiquidityUSD": 125479109
+    },
+    {
+      "date": 1719532800,
+      "totalLiquidityUSD": 130334721
+    },
+    {
+      "date": 1719619200,
+      "totalLiquidityUSD": 127668724
+    },
+    {
+      "date": 1719705600,
+      "totalLiquidityUSD": 129147384
+    },
+    {
+      "date": 1719792000,
+      "totalLiquidityUSD": 130783510
+    },
+    {
+      "date": 1719878400,
+      "totalLiquidityUSD": 135485429
+    },
+    {
+      "date": 1719964800,
+      "totalLiquidityUSD": 133607192
+    },
+    {
+      "date": 1720051200,
+      "totalLiquidityUSD": 128096057
+    },
+    {
+      "date": 1720137600,
+      "totalLiquidityUSD": 121759170
+    },
+    {
+      "date": 1720224000,
+      "totalLiquidityUSD": 113710834
+    },
+    {
+      "date": 1720310400,
+      "totalLiquidityUSD": 119120249
+    },
+    {
+      "date": 1720396800,
+      "totalLiquidityUSD": 115033307
+    },
+    {
+      "date": 1720483200,
+      "totalLiquidityUSD": 117121740
+    },
+    {
+      "date": 1720569600,
+      "totalLiquidityUSD": 119323445
+    },
+    {
+      "date": 1720656000,
+      "totalLiquidityUSD": 121166036
+    },
+    {
+      "date": 1720742400,
+      "totalLiquidityUSD": 120884591
+    },
+    {
+      "date": 1720828800,
+      "totalLiquidityUSD": 121758673
+    },
+    {
+      "date": 1720915200,
+      "totalLiquidityUSD": 126222657
+    },
+    {
+      "date": 1721001600,
+      "totalLiquidityUSD": 134853692
+    },
+    {
+      "date": 1721088000,
+      "totalLiquidityUSD": 140154574
+    },
+    {
+      "date": 1721174400,
+      "totalLiquidityUSD": 143053762
+    },
+    {
+      "date": 1721260800,
+      "totalLiquidityUSD": 155624707
+    },
+    {
+      "date": 1721347200,
+      "totalLiquidityUSD": 158776553
+    },
+    {
+      "date": 1721433600,
+      "totalLiquidityUSD": 168170850
+    },
+    {
+      "date": 1721520000,
+      "totalLiquidityUSD": 169121708
+    },
+    {
+      "date": 1721606400,
+      "totalLiquidityUSD": 171698341
+    },
+    {
+      "date": 1721692800,
+      "totalLiquidityUSD": 170030929
+    },
+    {
+      "date": 1721779200,
+      "totalLiquidityUSD": 167555263
+    },
+    {
+      "date": 1721865600,
+      "totalLiquidityUSD": 166381935
+    },
+    {
+      "date": 1721952000,
+      "totalLiquidityUSD": 166634597
+    },
+    {
+      "date": 1722038400,
+      "totalLiquidityUSD": 172183477
+    },
+    {
+      "date": 1722124800,
+      "totalLiquidityUSD": 177783342
+    },
+    {
+      "date": 1722211200,
+      "totalLiquidityUSD": 172600308
+    },
+    {
+      "date": 1722297600,
+      "totalLiquidityUSD": 171547006
+    },
+    {
+      "date": 1722384000,
+      "totalLiquidityUSD": 167694087
+    },
+    {
+      "date": 1722470400,
+      "totalLiquidityUSD": 165972501
+    },
+    {
+      "date": 1722556800,
+      "totalLiquidityUSD": 177631591
+    },
+    {
+      "date": 1722643200,
+      "totalLiquidityUSD": 170223302
+    },
+    {
+      "date": 1722729600,
+      "totalLiquidityUSD": 163018394
+    },
+    {
+      "date": 1722816000,
+      "totalLiquidityUSD": 159081055
+    },
+    {
+      "date": 1722902400,
+      "totalLiquidityUSD": 142389533
+    },
+    {
+      "date": 1722988800,
+      "totalLiquidityUSD": 144406903
+    },
+    {
+      "date": 1723075200,
+      "totalLiquidityUSD": 144007876
+    },
+    {
+      "date": 1723161600,
+      "totalLiquidityUSD": 148991719
+    },
+    {
+      "date": 1723248000,
+      "totalLiquidityUSD": 156630036
+    },
+    {
+      "date": 1723334400,
+      "totalLiquidityUSD": 166223303
+    },
+    {
+      "date": 1723420800,
+      "totalLiquidityUSD": 160484260
+    },
+    {
+      "date": 1723507200,
+      "totalLiquidityUSD": 168972637
+    },
+    {
+      "date": 1723593600,
+      "totalLiquidityUSD": 180120095
+    },
+    {
+      "date": 1723680000,
+      "totalLiquidityUSD": 175181929
+    },
+    {
+      "date": 1723766400,
+      "totalLiquidityUSD": 167742462
+    },
+    {
+      "date": 1723852800,
+      "totalLiquidityUSD": 165998040
+    },
+    {
+      "date": 1723939200,
+      "totalLiquidityUSD": 166643946
+    },
+    {
+      "date": 1724025600,
+      "totalLiquidityUSD": 167569077
+    },
+    {
+      "date": 1724112000,
+      "totalLiquidityUSD": 170397437
+    },
+    {
+      "date": 1724198400,
+      "totalLiquidityUSD": 172724205
+    },
+    {
+      "date": 1724284800,
+      "totalLiquidityUSD": 175471674
+    },
+    {
+      "date": 1724371200,
+      "totalLiquidityUSD": 175988106
+    },
+    {
+      "date": 1724457600,
+      "totalLiquidityUSD": 186377064
+    },
+    {
+      "date": 1724544000,
+      "totalLiquidityUSD": 186569512
+    },
+    {
+      "date": 1724630400,
+      "totalLiquidityUSD": 191992818
+    },
+    {
+      "date": 1724716800,
+      "totalLiquidityUSD": 186031345
+    },
+    {
+      "date": 1724803200,
+      "totalLiquidityUSD": 183577693
+    },
+    {
+      "date": 1724889600,
+      "totalLiquidityUSD": 182452286
+    },
+    {
+      "date": 1724976000,
+      "totalLiquidityUSD": 183969749
+    },
+    {
+      "date": 1725062400,
+      "totalLiquidityUSD": 185500292
+    },
+    {
+      "date": 1725148800,
+      "totalLiquidityUSD": 182685826
+    },
+    {
+      "date": 1725235200,
+      "totalLiquidityUSD": 178257427
+    },
+    {
+      "date": 1725321600,
+      "totalLiquidityUSD": 180505160
+    },
+    {
+      "date": 1725408000,
+      "totalLiquidityUSD": 178268112
+    },
+    {
+      "date": 1725494400,
+      "totalLiquidityUSD": 179225244
+    },
+    {
+      "date": 1725580800,
+      "totalLiquidityUSD": 173913420
+    },
+    {
+      "date": 1725667200,
+      "totalLiquidityUSD": 172723631
+    },
+    {
+      "date": 1725753600,
+      "totalLiquidityUSD": 175540237
+    },
+    {
+      "date": 1725840000,
+      "totalLiquidityUSD": 179834160
+    },
+    {
+      "date": 1725926400,
+      "totalLiquidityUSD": 183197135
+    },
+    {
+      "date": 1726012800,
+      "totalLiquidityUSD": 185261570
+    },
+    {
+      "date": 1726099200,
+      "totalLiquidityUSD": 181564338
+    },
+    {
+      "date": 1726185600,
+      "totalLiquidityUSD": 177437606
+    },
+    {
+      "date": 1726272000,
+      "totalLiquidityUSD": 180195422
+    },
+    {
+      "date": 1726358400,
+      "totalLiquidityUSD": 175757973
+    },
+    {
+      "date": 1726444800,
+      "totalLiquidityUSD": 174652570
+    },
+    {
+      "date": 1726531200,
+      "totalLiquidityUSD": 170693182
+    },
+    {
+      "date": 1726617600,
+      "totalLiquidityUSD": 173437986
+    },
+    {
+      "date": 1726704000,
+      "totalLiquidityUSD": 171671783
+    },
+    {
+      "date": 1726790400,
+      "totalLiquidityUSD": 176330925
+    },
+    {
+      "date": 1726876800,
+      "totalLiquidityUSD": 188709537
+    },
+    {
+      "date": 1726963200,
+      "totalLiquidityUSD": 201917847
+    },
+    {
+      "date": 1727049600,
+      "totalLiquidityUSD": 197567250
+    },
+    {
+      "date": 1727136000,
+      "totalLiquidityUSD": 202889824
+    },
+    {
+      "date": 1727222400,
+      "totalLiquidityUSD": 210331910
+    },
+    {
+      "date": 1727308800,
+      "totalLiquidityUSD": 207716359
+    },
+    {
+      "date": 1727395200,
+      "totalLiquidityUSD": 211141237
+    },
+    {
+      "date": 1727481600,
+      "totalLiquidityUSD": 215451137
+    },
+    {
+      "date": 1727568000,
+      "totalLiquidityUSD": 211400916
+    },
+    {
+      "date": 1727654400,
+      "totalLiquidityUSD": 212355660
+    },
+    {
+      "date": 1727740800,
+      "totalLiquidityUSD": 208927227
+    },
+    {
+      "date": 1727827200,
+      "totalLiquidityUSD": 205875470
+    },
+    {
+      "date": 1727913600,
+      "totalLiquidityUSD": 202970946
+    },
+    {
+      "date": 1728000000,
+      "totalLiquidityUSD": 214325621
+    },
+    {
+      "date": 1728086400,
+      "totalLiquidityUSD": 227598095
+    },
+    {
+      "date": 1728172800,
+      "totalLiquidityUSD": 221912515
+    },
+    {
+      "date": 1728259200,
+      "totalLiquidityUSD": 220807991
+    },
+    {
+      "date": 1728345600,
+      "totalLiquidityUSD": 224921908
+    },
+    {
+      "date": 1728432000,
+      "totalLiquidityUSD": 233762430
+    },
+    {
+      "date": 1728518400,
+      "totalLiquidityUSD": 225620718
+    },
+    {
+      "date": 1728604800,
+      "totalLiquidityUSD": 221656547
+    },
+    {
+      "date": 1728691200,
+      "totalLiquidityUSD": 227158958
+    },
+    {
+      "date": 1728777600,
+      "totalLiquidityUSD": 247356369
+    },
+    {
+      "date": 1728864000,
+      "totalLiquidityUSD": 254236595
+    },
+    {
+      "date": 1728950400,
+      "totalLiquidityUSD": 254670161
+    },
+    {
+      "date": 1729036800,
+      "totalLiquidityUSD": 262013706
+    },
+    {
+      "date": 1729123200,
+      "totalLiquidityUSD": 259139155
+    },
+    {
+      "date": 1729209600,
+      "totalLiquidityUSD": 254680676
+    },
+    {
+      "date": 1729296000,
+      "totalLiquidityUSD": 256888039
+    },
+    {
+      "date": 1729382400,
+      "totalLiquidityUSD": 253482466
+    },
+    {
+      "date": 1729468800,
+      "totalLiquidityUSD": 259996132
+    },
+    {
+      "date": 1729555200,
+      "totalLiquidityUSD": 264908731
+    },
+    {
+      "date": 1729641600,
+      "totalLiquidityUSD": 270398205
+    },
+    {
+      "date": 1729728000,
+      "totalLiquidityUSD": 263513383
+    },
+    {
+      "date": 1729814400,
+      "totalLiquidityUSD": 268861733
+    },
+    {
+      "date": 1729900800,
+      "totalLiquidityUSD": 251288061
+    },
+    {
+      "date": 1729987200,
+      "totalLiquidityUSD": 248824128
+    },
+    {
+      "date": 1730073600,
+      "totalLiquidityUSD": 246887350
+    },
+    {
+      "date": 1730160000,
+      "totalLiquidityUSD": 248112303
+    },
+    {
+      "date": 1730246400,
+      "totalLiquidityUSD": 259977350
+    },
+    {
+      "date": 1730332800,
+      "totalLiquidityUSD": 259609048
+    },
+    {
+      "date": 1730419200,
+      "totalLiquidityUSD": 249922867
+    },
+    {
+      "date": 1730505600,
+      "totalLiquidityUSD": 247342036
+    },
+    {
+      "date": 1730592000,
+      "totalLiquidityUSD": 242980430
+    },
+    {
+      "date": 1730678400,
+      "totalLiquidityUSD": 234520797
+    },
+    {
+      "date": 1730764800,
+      "totalLiquidityUSD": 216198208
+    },
+    {
+      "date": 1730851200,
+      "totalLiquidityUSD": 230923586
+    },
+    {
+      "date": 1730937600,
+      "totalLiquidityUSD": 251666835
+    },
+    {
+      "date": 1731024000,
+      "totalLiquidityUSD": 255238391
+    },
+    {
+      "date": 1731110400,
+      "totalLiquidityUSD": 258293180
+    },
+    {
+      "date": 1731196800,
+      "totalLiquidityUSD": 269716106
+    },
+    {
+      "date": 1731283200,
+      "totalLiquidityUSD": 276747504
+    },
+    {
+      "date": 1731369600,
+      "totalLiquidityUSD": 304591135
+    },
+    {
+      "date": 1731456000,
+      "totalLiquidityUSD": 290678989
+    },
+    {
+      "date": 1731542400,
+      "totalLiquidityUSD": 278894789
+    },
+    {
+      "date": 1731628800,
+      "totalLiquidityUSD": 267035530
+    },
+    {
+      "date": 1731715200,
+      "totalLiquidityUSD": 286479397
+    },
+    {
+      "date": 1731801600,
+      "totalLiquidityUSD": 282258364
+    },
+    {
+      "date": 1731888000,
+      "totalLiquidityUSD": 266504760
+    },
+    {
+      "date": 1731974400,
+      "totalLiquidityUSD": 270751693
+    },
+    {
+      "date": 1732060800,
+      "totalLiquidityUSD": 262001250
+    },
+    {
+      "date": 1732147200,
+      "totalLiquidityUSD": 333057283
+    },
+    {
+      "date": 1732233600,
+      "totalLiquidityUSD": 339075715
+    },
+    {
+      "date": 1732320000,
+      "totalLiquidityUSD": 349471561
+    },
+    {
+      "date": 1732406400,
+      "totalLiquidityUSD": 363911314
+    },
+    {
+      "date": 1732492800,
+      "totalLiquidityUSD": 357892220
+    },
+    {
+      "date": 1732579200,
+      "totalLiquidityUSD": 352592606
+    },
+    {
+      "date": 1732665600,
+      "totalLiquidityUSD": 365237550
+    },
+    {
+      "date": 1732752000,
+      "totalLiquidityUSD": 375716762
+    },
+    {
+      "date": 1732838400,
+      "totalLiquidityUSD": 384623131
+    },
+    {
+      "date": 1732924800,
+      "totalLiquidityUSD": 397311328
+    },
+    {
+      "date": 1733011200,
+      "totalLiquidityUSD": 400368965
+    },
+    {
+      "date": 1733097600,
+      "totalLiquidityUSD": 397929262
+    },
+    {
+      "date": 1733184000,
+      "totalLiquidityUSD": 402587431
+    },
+    {
+      "date": 1733270400,
+      "totalLiquidityUSD": 423033681
+    },
+    {
+      "date": 1733356800,
+      "totalLiquidityUSD": 415884087
+    },
+    {
+      "date": 1733443200,
+      "totalLiquidityUSD": 406955119
+    },
+    {
+      "date": 1733529600,
+      "totalLiquidityUSD": 424743432
+    },
+    {
+      "date": 1733616000,
+      "totalLiquidityUSD": 426998672
+    },
+    {
+      "date": 1733702400,
+      "totalLiquidityUSD": 416879366
+    },
+    {
+      "date": 1733788800,
+      "totalLiquidityUSD": 368670693
+    },
+    {
+      "date": 1733875200,
+      "totalLiquidityUSD": 360048733
+    },
+    {
+      "date": 1733961600,
+      "totalLiquidityUSD": 387688185
+    },
+    {
+      "date": 1734048000,
+      "totalLiquidityUSD": 400779816
+    },
+    {
+      "date": 1734134400,
+      "totalLiquidityUSD": 413253561
+    },
+    {
+      "date": 1734220800,
+      "totalLiquidityUSD": 399003710
+    },
+    {
+      "date": 1734307200,
+      "totalLiquidityUSD": 398248556
+    },
+    {
+      "date": 1734393600,
+      "totalLiquidityUSD": 415464973
+    },
+    {
+      "date": 1734480000,
+      "totalLiquidityUSD": 388458932
+    },
+    {
+      "date": 1734566400,
+      "totalLiquidityUSD": 371235875
+    },
+    {
+      "date": 1734652800,
+      "totalLiquidityUSD": 359430167
+    },
+    {
+      "date": 1734739200,
+      "totalLiquidityUSD": 340856180
+    },
+    {
+      "date": 1734825600,
+      "totalLiquidityUSD": 314342066
+    },
+    {
+      "date": 1734912000,
+      "totalLiquidityUSD": 313046995
+    },
+    {
+      "date": 1734998400,
+      "totalLiquidityUSD": 321656318
+    },
+    {
+      "date": 1735084800,
+      "totalLiquidityUSD": 321148154
+    },
+    {
+      "date": 1735171200,
+      "totalLiquidityUSD": 312455947
+    },
+    {
+      "date": 1735257600,
+      "totalLiquidityUSD": 294792896
+    },
+    {
+      "date": 1735344000,
+      "totalLiquidityUSD": 293859148
+    },
+    {
+      "date": 1735430400,
+      "totalLiquidityUSD": 305082371
+    },
+    {
+      "date": 1735516800,
+      "totalLiquidityUSD": 297494108
+    },
+    {
+      "date": 1735603200,
+      "totalLiquidityUSD": 300657523
+    },
+    {
+      "date": 1735689600,
+      "totalLiquidityUSD": 297009397
+    },
+    {
+      "date": 1735776000,
+      "totalLiquidityUSD": 303028725
+    },
+    {
+      "date": 1735862400,
+      "totalLiquidityUSD": 308321659
+    },
+    {
+      "date": 1735948800,
+      "totalLiquidityUSD": 322789623
+    },
+    {
+      "date": 1736035200,
+      "totalLiquidityUSD": 334947805
+    },
+    {
+      "date": 1736121600,
+      "totalLiquidityUSD": 335309364
+    },
+    {
+      "date": 1736208000,
+      "totalLiquidityUSD": 350314705
+    },
+    {
+      "date": 1736294400,
+      "totalLiquidityUSD": 339496402
+    },
+    {
+      "date": 1736380800,
+      "totalLiquidityUSD": 333953999
+    },
+    {
+      "date": 1736467200,
+      "totalLiquidityUSD": 323554364
+    },
+    {
+      "date": 1736553600,
+      "totalLiquidityUSD": 335008851
+    },
+    {
+      "date": 1736640000,
+      "totalLiquidityUSD": 337775028
+    },
+    {
+      "date": 1736726400,
+      "totalLiquidityUSD": 328025014
+    },
+    {
+      "date": 1736812800,
+      "totalLiquidityUSD": 316644069
+    },
+    {
+      "date": 1736899200,
+      "totalLiquidityUSD": 327311598
+    },
+    {
+      "date": 1736985600,
+      "totalLiquidityUSD": 334044133
+    },
+    {
+      "date": 1737072000,
+      "totalLiquidityUSD": 331219379
+    },
+    {
+      "date": 1737158400,
+      "totalLiquidityUSD": 344799631
+    },
+    {
+      "date": 1737244800,
+      "totalLiquidityUSD": 332257973
+    },
+    {
+      "date": 1737331200,
+      "totalLiquidityUSD": 326677266
+    },
+    {
+      "date": 1737417600,
+      "totalLiquidityUSD": 324775739
+    },
+    {
+      "date": 1737504000,
+      "totalLiquidityUSD": 329584983
+    },
+    {
+      "date": 1737590400,
+      "totalLiquidityUSD": 325609148
+    },
+    {
+      "date": 1737676800,
+      "totalLiquidityUSD": 324198333
+    },
+    {
+      "date": 1737763200,
+      "totalLiquidityUSD": 319149825
+    },
+    {
+      "date": 1737849600,
+      "totalLiquidityUSD": 317362780
+    },
+    {
+      "date": 1737936000,
+      "totalLiquidityUSD": 313559061
+    },
+    {
+      "date": 1738022400,
+      "totalLiquidityUSD": 304150232
+    },
+    {
+      "date": 1738108800,
+      "totalLiquidityUSD": 294702917
+    },
+    {
+      "date": 1738195200,
+      "totalLiquidityUSD": 291630912
+    },
+    {
+      "date": 1738281600,
+      "totalLiquidityUSD": 299436185
+    },
+    {
+      "date": 1738368000,
+      "totalLiquidityUSD": 301542955
+    },
+    {
+      "date": 1738454400,
+      "totalLiquidityUSD": 292897757
+    },
+    {
+      "date": 1738540800,
+      "totalLiquidityUSD": 263847842
+    },
+    {
+      "date": 1738627200,
+      "totalLiquidityUSD": 245429075
+    },
+    {
+      "date": 1738713600,
+      "totalLiquidityUSD": 237624734
+    },
+    {
+      "date": 1738800000,
+      "totalLiquidityUSD": 249756120
+    },
+    {
+      "date": 1738886400,
+      "totalLiquidityUSD": 231462210
+    },
+    {
+      "date": 1738972800,
+      "totalLiquidityUSD": 276511087
+    },
+    {
+      "date": 1739059200,
+      "totalLiquidityUSD": 278992511
+    },
+    {
+      "date": 1739145600,
+      "totalLiquidityUSD": 283374694
+    },
+    {
+      "date": 1739232000,
+      "totalLiquidityUSD": 289180582
+    },
+    {
+      "date": 1739318400,
+      "totalLiquidityUSD": 290205395
+    },
+    {
+      "date": 1739404800,
+      "totalLiquidityUSD": 296709293
+    },
+    {
+      "date": 1739491200,
+      "totalLiquidityUSD": 297866582
+    },
+    {
+      "date": 1739577600,
+      "totalLiquidityUSD": 304149559
+    },
+    {
+      "date": 1739664000,
+      "totalLiquidityUSD": 304220553
+    },
+    {
+      "date": 1739750400,
+      "totalLiquidityUSD": 301276402
+    },
+    {
+      "date": 1739836800,
+      "totalLiquidityUSD": 300339367
+    },
+    {
+      "date": 1739923200,
+      "totalLiquidityUSD": 291040175
+    },
+    {
+      "date": 1740009600,
+      "totalLiquidityUSD": 308785315
+    },
+    {
+      "date": 1740096000,
+      "totalLiquidityUSD": 313156661
+    },
+    {
+      "date": 1740182400,
+      "totalLiquidityUSD": 310408382
+    },
+    {
+      "date": 1740268800,
+      "totalLiquidityUSD": 312202531
+    },
+    {
+      "date": 1740355200,
+      "totalLiquidityUSD": 312386768
+    },
+    {
+      "date": 1740441600,
+      "totalLiquidityUSD": 293153058
+    },
+    {
+      "date": 1740528000,
+      "totalLiquidityUSD": 294749459
+    },
+    {
+      "date": 1740614400,
+      "totalLiquidityUSD": 284135945
+    },
+    {
+      "date": 1740700800,
+      "totalLiquidityUSD": 289388085
+    },
+    {
+      "date": 1740787200,
+      "totalLiquidityUSD": 331583117
+    },
+    {
+      "date": 1740873600,
+      "totalLiquidityUSD": 338048455
+    },
+    {
+      "date": 1740960000,
+      "totalLiquidityUSD": 345115221
+    },
+    {
+      "date": 1741046400,
+      "totalLiquidityUSD": 330530692
+    },
+    {
+      "date": 1741132800,
+      "totalLiquidityUSD": 321085060
+    },
+    {
+      "date": 1741219200,
+      "totalLiquidityUSD": 330938210
+    },
+    {
+      "date": 1741305600,
+      "totalLiquidityUSD": 326545363
+    },
+    {
+      "date": 1741392000,
+      "totalLiquidityUSD": 331086712
+    },
+    {
+      "date": 1741478400,
+      "totalLiquidityUSD": 326190562
+    },
+    {
+      "date": 1741564800,
+      "totalLiquidityUSD": 324376580
+    },
+    {
+      "date": 1741651200,
+      "totalLiquidityUSD": 317830459
+    },
+    {
+      "date": 1741737600,
+      "totalLiquidityUSD": 320825181
+    },
+    {
+      "date": 1741824000,
+      "totalLiquidityUSD": 314025411
+    },
+    {
+      "date": 1741910400,
+      "totalLiquidityUSD": 313888784
+    },
+    {
+      "date": 1741996800,
+      "totalLiquidityUSD": 342952364
+    },
+    {
+      "date": 1742083200,
+      "totalLiquidityUSD": 333875571
+    },
+    {
+      "date": 1742169600,
+      "totalLiquidityUSD": 332925507
+    },
+    {
+      "date": 1742256000,
+      "totalLiquidityUSD": 342719013
+    },
+    {
+      "date": 1742342400,
+      "totalLiquidityUSD": 338203037
+    },
+    {
+      "date": 1742428800,
+      "totalLiquidityUSD": 337971583
+    },
+    {
+      "date": 1742515200,
+      "totalLiquidityUSD": 307859154
+    },
+    {
+      "date": 1742601600,
+      "totalLiquidityUSD": 313604433
+    },
+    {
+      "date": 1742688000,
+      "totalLiquidityUSD": 313575256
+    },
+    {
+      "date": 1742774400,
+      "totalLiquidityUSD": 315267017
+    },
+    {
+      "date": 1742860800,
+      "totalLiquidityUSD": 379203081
+    },
+    {
+      "date": 1742947200,
+      "totalLiquidityUSD": 391070440
+    },
+    {
+      "date": 1743033600,
+      "totalLiquidityUSD": 408511875
+    },
+    {
+      "date": 1743120000,
+      "totalLiquidityUSD": 378006950
+    },
+    {
+      "date": 1743206400,
+      "totalLiquidityUSD": 336890882
+    },
+    {
+      "date": 1743292800,
+      "totalLiquidityUSD": 334768526
+    },
+    {
+      "date": 1743379200,
+      "totalLiquidityUSD": 383629511
+    },
+    {
+      "date": 1743465600,
+      "totalLiquidityUSD": 392265553
+    },
+    {
+      "date": 1743552000,
+      "totalLiquidityUSD": 394112942
+    },
+    {
+      "date": 1743638400,
+      "totalLiquidityUSD": 384861468
+    },
+    {
+      "date": 1743724800,
+      "totalLiquidityUSD": 387324345
+    },
+    {
+      "date": 1743811200,
+      "totalLiquidityUSD": 382326454
+    },
+    {
+      "date": 1743897600,
+      "totalLiquidityUSD": 379125203
+    },
+    {
+      "date": 1743984000,
+      "totalLiquidityUSD": 361118053
+    },
+    {
+      "date": 1744070400,
+      "totalLiquidityUSD": 366689741
+    },
+    {
+      "date": 1744156800,
+      "totalLiquidityUSD": 362421223
+    },
+    {
+      "date": 1744243200,
+      "totalLiquidityUSD": 362896946
+    },
+    {
+      "date": 1744329600,
+      "totalLiquidityUSD": 316153540
+    },
+    {
+      "date": 1744416000,
+      "totalLiquidityUSD": 323211873
+    },
+    {
+      "date": 1744502400,
+      "totalLiquidityUSD": 330323416
+    },
+    {
+      "date": 1744588800,
+      "totalLiquidityUSD": 323623695
+    },
+    {
+      "date": 1744675200,
+      "totalLiquidityUSD": 316699428
+    },
+    {
+      "date": 1744761600,
+      "totalLiquidityUSD": 374232636
+    },
+    {
+      "date": 1744848000,
+      "totalLiquidityUSD": 343922586
+    },
+    {
+      "date": 1744934400,
+      "totalLiquidityUSD": 335937847
+    },
+    {
+      "date": 1745020800,
+      "totalLiquidityUSD": 320158766
+    },
+    {
+      "date": 1745107200,
+      "totalLiquidityUSD": 325716379
+    },
+    {
+      "date": 1745193600,
+      "totalLiquidityUSD": 349147674
+    },
+    {
+      "date": 1745280000,
+      "totalLiquidityUSD": 342602478
+    },
+    {
+      "date": 1745366400,
+      "totalLiquidityUSD": 356716228
+    },
+    {
+      "date": 1745452800,
+      "totalLiquidityUSD": 354085343
+    },
+    {
+      "date": 1745539200,
+      "totalLiquidityUSD": 362253031
+    },
+    {
+      "date": 1745625600,
+      "totalLiquidityUSD": 377839137
+    },
+    {
+      "date": 1745712000,
+      "totalLiquidityUSD": 377378307
+    },
+    {
+      "date": 1745798400,
+      "totalLiquidityUSD": 383670668
+    },
+    {
+      "date": 1745884800,
+      "totalLiquidityUSD": 397155158
+    },
+    {
+      "date": 1745971200,
+      "totalLiquidityUSD": 398462947
+    },
+    {
+      "date": 1746057600,
+      "totalLiquidityUSD": 396951230
+    },
+    {
+      "date": 1746144000,
+      "totalLiquidityUSD": 420404801
+    },
+    {
+      "date": 1746230400,
+      "totalLiquidityUSD": 421154222
+    },
+    {
+      "date": 1746316800,
+      "totalLiquidityUSD": 414420659
+    },
+    {
+      "date": 1746403200,
+      "totalLiquidityUSD": 401565478
+    },
+    {
+      "date": 1746489600,
+      "totalLiquidityUSD": 383405546
+    },
+    {
+      "date": 1746576000,
+      "totalLiquidityUSD": 360025916
+    },
+    {
+      "date": 1746662400,
+      "totalLiquidityUSD": 378205965
+    },
+    {
+      "date": 1746748800,
+      "totalLiquidityUSD": 397755795
+    },
+    {
+      "date": 1746835200,
+      "totalLiquidityUSD": 429896621
+    },
+    {
+      "date": 1746921600,
+      "totalLiquidityUSD": 434235293
+    },
+    {
+      "date": 1747008000,
+      "totalLiquidityUSD": 417745021
+    },
+    {
+      "date": 1747094400,
+      "totalLiquidityUSD": 437113934
+    },
+    {
+      "date": 1747180800,
+      "totalLiquidityUSD": 431096072
+    },
+    {
+      "date": 1747267200,
+      "totalLiquidityUSD": 424852298
+    },
+    {
+      "date": 1747353600,
+      "totalLiquidityUSD": 428684638
+    },
+    {
+      "date": 1747440000,
+      "totalLiquidityUSD": 443847473
+    },
+    {
+      "date": 1747526400,
+      "totalLiquidityUSD": 441703821
+    },
+    {
+      "date": 1747612800,
+      "totalLiquidityUSD": 444255892
+    },
+    {
+      "date": 1747699200,
+      "totalLiquidityUSD": 435898826
+    },
+    {
+      "date": 1747785600,
+      "totalLiquidityUSD": 429789025
+    },
+    {
+      "date": 1747872000,
+      "totalLiquidityUSD": 412031963
+    },
+    {
+      "date": 1747958400,
+      "totalLiquidityUSD": 325129172
+    },
+    {
+      "date": 1748044800,
+      "totalLiquidityUSD": 315754259
+    },
+    {
+      "date": 1748131200,
+      "totalLiquidityUSD": 313689298
+    },
+    {
+      "date": 1748217600,
+      "totalLiquidityUSD": 314204273
+    },
+    {
+      "date": 1748304000,
+      "totalLiquidityUSD": 331894093
+    },
+    {
+      "date": 1748390400,
+      "totalLiquidityUSD": 342467967
+    },
+    {
+      "date": 1748476800,
+      "totalLiquidityUSD": 350531659
+    },
+    {
+      "date": 1748563200,
+      "totalLiquidityUSD": 361817230
+    },
+    {
+      "date": 1748649600,
+      "totalLiquidityUSD": 347386088
+    },
+    {
+      "date": 1748736000,
+      "totalLiquidityUSD": 354993327
+    },
+    {
+      "date": 1748822400,
+      "totalLiquidityUSD": 354221071
+    },
+    {
+      "date": 1748908800,
+      "totalLiquidityUSD": 355871069
+    },
+    {
+      "date": 1748995200,
+      "totalLiquidityUSD": 365798704
+    },
+    {
+      "date": 1749081600,
+      "totalLiquidityUSD": 360298715
+    },
+    {
+      "date": 1749168000,
+      "totalLiquidityUSD": 342204499
+    },
+    {
+      "date": 1749254400,
+      "totalLiquidityUSD": 338239176
+    },
+    {
+      "date": 1749340800,
+      "totalLiquidityUSD": 340703151
+    },
+    {
+      "date": 1749427200,
+      "totalLiquidityUSD": 336255846
+    },
+    {
+      "date": 1749513600,
+      "totalLiquidityUSD": 327813979
+    },
+    {
+      "date": 1749600000,
+      "totalLiquidityUSD": 321644965
+    },
+    {
+      "date": 1749686400,
+      "totalLiquidityUSD": 318466191
+    },
+    {
+      "date": 1749772800,
+      "totalLiquidityUSD": 308477987
+    },
+    {
+      "date": 1749859200,
+      "totalLiquidityUSD": 299422576
+    },
+    {
+      "date": 1749945600,
+      "totalLiquidityUSD": 287016208
+    },
+    {
+      "date": 1750032000,
+      "totalLiquidityUSD": 281330548
+    },
+    {
+      "date": 1750118400,
+      "totalLiquidityUSD": 289905654
+    },
+    {
+      "date": 1750204800,
+      "totalLiquidityUSD": 284459211
+    },
+    {
+      "date": 1750291200,
+      "totalLiquidityUSD": 278169559
+    },
+    {
+      "date": 1750377600,
+      "totalLiquidityUSD": 281157934
+    },
+    {
+      "date": 1750464000,
+      "totalLiquidityUSD": 282343518
+    },
+    {
+      "date": 1750550400,
+      "totalLiquidityUSD": 276796227
+    },
+    {
+      "date": 1750636800,
+      "totalLiquidityUSD": 257212353
+    },
+    {
+      "date": 1750723200,
+      "totalLiquidityUSD": 265286200
+    },
+    {
+      "date": 1750809600,
+      "totalLiquidityUSD": 280796241
+    },
+    {
+      "date": 1750896000,
+      "totalLiquidityUSD": 283797368
+    },
+    {
+      "date": 1750982400,
+      "totalLiquidityUSD": 279254835
+    },
+    {
+      "date": 1751068800,
+      "totalLiquidityUSD": 286747761
+    },
+    {
+      "date": 1751155200,
+      "totalLiquidityUSD": 289014496
+    },
+    {
+      "date": 1751241600,
+      "totalLiquidityUSD": 288129869
+    },
+    {
+      "date": 1751328000,
+      "totalLiquidityUSD": 312936519
+    },
+    {
+      "date": 1751414400,
+      "totalLiquidityUSD": 301596323
+    },
+    {
+      "date": 1751500800,
+      "totalLiquidityUSD": 295099192
+    },
+    {
+      "date": 1751587200,
+      "totalLiquidityUSD": 294407070
+    },
+    {
+      "date": 1751673600,
+      "totalLiquidityUSD": 285039287
+    },
+    {
+      "date": 1751760000,
+      "totalLiquidityUSD": 293052494
+    },
+    {
+      "date": 1751846400,
+      "totalLiquidityUSD": 288608079
+    },
+    {
+      "date": 1751932800,
+      "totalLiquidityUSD": 268294393
+    },
+    {
+      "date": 1752019200,
+      "totalLiquidityUSD": 280649050
+    },
+    {
+      "date": 1752105600,
+      "totalLiquidityUSD": 250253371
+    },
+    {
+      "date": 1752192000,
+      "totalLiquidityUSD": 251867771
+    },
+    {
+      "date": 1752278400,
+      "totalLiquidityUSD": 267739336
+    },
+    {
+      "date": 1752364800,
+      "totalLiquidityUSD": 252992647
+    },
+    {
+      "date": 1752451200,
+      "totalLiquidityUSD": 254890927
+    },
+    {
+      "date": 1752537600,
+      "totalLiquidityUSD": 255476636
+    },
+    {
+      "date": 1752624000,
+      "totalLiquidityUSD": 251411914
+    },
+    {
+      "date": 1752710400,
+      "totalLiquidityUSD": 245100204
+    },
+    {
+      "date": 1752796800,
+      "totalLiquidityUSD": 259811954
+    },
+    {
+      "date": 1752883200,
+      "totalLiquidityUSD": 263683057
+    },
+    {
+      "date": 1752969600,
+      "totalLiquidityUSD": 255897686
+    },
+    {
+      "date": 1753056000,
+      "totalLiquidityUSD": 254530788
+    },
+    {
+      "date": 1753142400,
+      "totalLiquidityUSD": 260156345
+    },
+    {
+      "date": 1753228800,
+      "totalLiquidityUSD": 242645764
+    },
+    {
+      "date": 1753315200,
+      "totalLiquidityUSD": 233120871
+    },
+    {
+      "date": 1753401600,
+      "totalLiquidityUSD": 227958933
+    },
+    {
+      "date": 1753488000,
+      "totalLiquidityUSD": 223665173
+    },
+    {
+      "date": 1753574400,
+      "totalLiquidityUSD": 219535738
+    },
+    {
+      "date": 1753660800,
+      "totalLiquidityUSD": 220303067
+    },
+    {
+      "date": 1753747200,
+      "totalLiquidityUSD": 217954174
+    },
+    {
+      "date": 1753833600,
+      "totalLiquidityUSD": 216381803
+    },
+    {
+      "date": 1753920000,
+      "totalLiquidityUSD": 214080114
+    },
+    {
+      "date": 1754006400,
+      "totalLiquidityUSD": 207831688
+    },
+    {
+      "date": 1754092800,
+      "totalLiquidityUSD": 211046844
+    },
+    {
+      "date": 1754179200,
+      "totalLiquidityUSD": 208362392
+    },
+    {
+      "date": 1754265600,
+      "totalLiquidityUSD": 212311710
+    },
+    {
+      "date": 1754352000,
+      "totalLiquidityUSD": 198249479
+    },
+    {
+      "date": 1754438400,
+      "totalLiquidityUSD": 196372870
+    },
+    {
+      "date": 1754524800,
+      "totalLiquidityUSD": 199155444
+    },
+    {
+      "date": 1754611200,
+      "totalLiquidityUSD": 198333820
+    },
+    {
+      "date": 1754697600,
+      "totalLiquidityUSD": 208625652
+    },
+    {
+      "date": 1754784000,
+      "totalLiquidityUSD": 207709872
+    },
+    {
+      "date": 1754870400,
+      "totalLiquidityUSD": 206945051
+    },
+    {
+      "date": 1754956800,
+      "totalLiquidityUSD": 200462241
+    },
+    {
+      "date": 1755043200,
+      "totalLiquidityUSD": 204573201
+    },
+    {
+      "date": 1755129600,
+      "totalLiquidityUSD": 212378828
+    },
+    {
+      "date": 1755216000,
+      "totalLiquidityUSD": 205111229
+    },
+    {
+      "date": 1755302400,
+      "totalLiquidityUSD": 202546705
+    },
+    {
+      "date": 1755388800,
+      "totalLiquidityUSD": 202483771
+    },
+    {
+      "date": 1755475200,
+      "totalLiquidityUSD": 202902566
+    },
+    {
+      "date": 1755561600,
+      "totalLiquidityUSD": 200904661
+    },
+    {
+      "date": 1755648000,
+      "totalLiquidityUSD": 201593234
+    },
+    {
+      "date": 1755734400,
+      "totalLiquidityUSD": 200293835
+    },
+    {
+      "date": 1755820800,
+      "totalLiquidityUSD": 202382455
+    },
+    {
+      "date": 1755907200,
+      "totalLiquidityUSD": 215634254
+    },
+    {
+      "date": 1755993600,
+      "totalLiquidityUSD": 217869581
+    },
+    {
+      "date": 1756080000,
+      "totalLiquidityUSD": 215071346
+    },
+    {
+      "date": 1756166400,
+      "totalLiquidityUSD": 180163534
+    },
+    {
+      "date": 1756252800,
+      "totalLiquidityUSD": 162390660
+    },
+    {
+      "date": 1756339200,
+      "totalLiquidityUSD": 159483712
+    },
+    {
+      "date": 1756425600,
+      "totalLiquidityUSD": 157169480
+    },
+    {
+      "date": 1756512000,
+      "totalLiquidityUSD": 146506452
+    },
+    {
+      "date": 1756598400,
+      "totalLiquidityUSD": 148451091
+    },
+    {
+      "date": 1756684800,
+      "totalLiquidityUSD": 147031863
+    },
+    {
+      "date": 1756771200,
+      "totalLiquidityUSD": 149742982
+    },
+    {
+      "date": 1756857600,
+      "totalLiquidityUSD": 150870721
+    },
+    {
+      "date": 1756944000,
+      "totalLiquidityUSD": 131191697
+    },
+    {
+      "date": 1757030400,
+      "totalLiquidityUSD": 119154435
+    },
+    {
+      "date": 1757116800,
+      "totalLiquidityUSD": 119045987
+    },
+    {
+      "date": 1757203200,
+      "totalLiquidityUSD": 115069852
+    },
+    {
+      "date": 1757289600,
+      "totalLiquidityUSD": 113385038
+    },
+    {
+      "date": 1757376000,
+      "totalLiquidityUSD": 115015349
+    },
+    {
+      "date": 1757462400,
+      "totalLiquidityUSD": 113994150
+    },
+    {
+      "date": 1757548800,
+      "totalLiquidityUSD": 115672832
+    },
+    {
+      "date": 1757635200,
+      "totalLiquidityUSD": 113752758
+    },
+    {
+      "date": 1757721600,
+      "totalLiquidityUSD": 115134182
+    },
+    {
+      "date": 1757808000,
+      "totalLiquidityUSD": 114857924
+    },
+    {
+      "date": 1757894400,
+      "totalLiquidityUSD": 111919740
+    },
+    {
+      "date": 1757980800,
+      "totalLiquidityUSD": 108259262
+    },
+    {
+      "date": 1758067200,
+      "totalLiquidityUSD": 103803683
+    },
+    {
+      "date": 1758153600,
+      "totalLiquidityUSD": 102330559
+    },
+    {
+      "date": 1758240000,
+      "totalLiquidityUSD": 102298505
+    },
+    {
+      "date": 1758326400,
+      "totalLiquidityUSD": 99976224
+    },
+    {
+      "date": 1758412800,
+      "totalLiquidityUSD": 100640442
+    },
+    {
+      "date": 1758499200,
+      "totalLiquidityUSD": 101686376
+    },
+    {
+      "date": 1758585600,
+      "totalLiquidityUSD": 96304994
+    },
+    {
+      "date": 1758672000,
+      "totalLiquidityUSD": 92930847
+    },
+    {
+      "date": 1758758400,
+      "totalLiquidityUSD": 89900853
+    },
+    {
+      "date": 1758844800,
+      "totalLiquidityUSD": 82173390
+    },
+    {
+      "date": 1758931200,
+      "totalLiquidityUSD": 78374528
+    },
+    {
+      "date": 1759017600,
+      "totalLiquidityUSD": 78619084
+    },
+    {
+      "date": 1759104000,
+      "totalLiquidityUSD": 78427685
+    },
+    {
+      "date": 1759190400,
+      "totalLiquidityUSD": 78391420
+    },
+    {
+      "date": 1759276800,
+      "totalLiquidityUSD": 78968802
+    },
+    {
+      "date": 1759363200,
+      "totalLiquidityUSD": 84425360
+    },
+    {
+      "date": 1759449600,
+      "totalLiquidityUSD": 86926945
+    },
+    {
+      "date": 1759536000,
+      "totalLiquidityUSD": 90080632
+    },
+    {
+      "date": 1759622400,
+      "totalLiquidityUSD": 86716670
+    },
+    {
+      "date": 1759708800,
+      "totalLiquidityUSD": 88982854
+    },
+    {
+      "date": 1759795200,
+      "totalLiquidityUSD": 87132147
+    },
+    {
+      "date": 1759881600,
+      "totalLiquidityUSD": 88160030
+    },
+    {
+      "date": 1759968000,
+      "totalLiquidityUSD": 73189280
+    },
+    {
+      "date": 1760054400,
+      "totalLiquidityUSD": 84833667
+    },
+    {
+      "date": 1760140800,
+      "totalLiquidityUSD": 70292599
+    },
+    {
+      "date": 1760227200,
+      "totalLiquidityUSD": 68062201
+    },
+    {
+      "date": 1760313600,
+      "totalLiquidityUSD": 76069619
+    },
+    {
+      "date": 1760400000,
+      "totalLiquidityUSD": 76917020
+    },
+    {
+      "date": 1760486400,
+      "totalLiquidityUSD": 73931338
+    },
+    {
+      "date": 1760572800,
+      "totalLiquidityUSD": 68839178
+    },
+    {
+      "date": 1760659200,
+      "totalLiquidityUSD": 65236482
+    },
+    {
+      "date": 1760745600,
+      "totalLiquidityUSD": 62003668
+    },
+    {
+      "date": 1760832000,
+      "totalLiquidityUSD": 61442317
+    },
+    {
+      "date": 1760918400,
+      "totalLiquidityUSD": 61153624
+    },
+    {
+      "date": 1761004800,
+      "totalLiquidityUSD": 61080890
+    },
+    {
+      "date": 1761091200,
+      "totalLiquidityUSD": 59764467
+    },
+    {
+      "date": 1761177600,
+      "totalLiquidityUSD": 59814576
+    },
+    {
+      "date": 1761264000,
+      "totalLiquidityUSD": 60316768
+    },
+    {
+      "date": 1761350400,
+      "totalLiquidityUSD": 61064772
+    },
+    {
+      "date": 1761436800,
+      "totalLiquidityUSD": 53135897
+    },
+    {
+      "date": 1761523200,
+      "totalLiquidityUSD": 56364423
+    },
+    {
+      "date": 1761609600,
+      "totalLiquidityUSD": 55568938
+    },
+    {
+      "date": 1761696000,
+      "totalLiquidityUSD": 46852175
+    },
+    {
+      "date": 1761782400,
+      "totalLiquidityUSD": 46661666
+    },
+    {
+      "date": 1761868800,
+      "totalLiquidityUSD": 51469973
+    },
+    {
+      "date": 1761955200,
+      "totalLiquidityUSD": 45877050
+    },
+    {
+      "date": 1762041600,
+      "totalLiquidityUSD": 54218509
+    },
+    {
+      "date": 1762128000,
+      "totalLiquidityUSD": 44010647
+    },
+    {
+      "date": 1762214400,
+      "totalLiquidityUSD": 41512979
+    },
+    {
+      "date": 1762300800,
+      "totalLiquidityUSD": 40847763
+    },
+    {
+      "date": 1762387200,
+      "totalLiquidityUSD": 41439680
+    },
+    {
+      "date": 1762473600,
+      "totalLiquidityUSD": 36327118
+    },
+    {
+      "date": 1762560000,
+      "totalLiquidityUSD": 48185923
+    },
+    {
+      "date": 1762646400,
+      "totalLiquidityUSD": 47492058
+    },
+    {
+      "date": 1762732800,
+      "totalLiquidityUSD": 49264400
+    },
+    {
+      "date": 1762819200,
+      "totalLiquidityUSD": 50614886
+    },
+    {
+      "date": 1762905600,
+      "totalLiquidityUSD": 48104603
+    },
+    {
+      "date": 1762992000,
+      "totalLiquidityUSD": 45320474
+    },
+    {
+      "date": 1763078400,
+      "totalLiquidityUSD": 44116917
+    },
+    {
+      "date": 1763164800,
+      "totalLiquidityUSD": 43124327
+    },
+    {
+      "date": 1763251200,
+      "totalLiquidityUSD": 43372829
+    },
+    {
+      "date": 1763337600,
+      "totalLiquidityUSD": 42034861
+    },
+    {
+      "date": 1763424000,
+      "totalLiquidityUSD": 40967883
+    },
+    {
+      "date": 1763510400,
+      "totalLiquidityUSD": 42082082
+    },
+    {
+      "date": 1763596800,
+      "totalLiquidityUSD": 40841546
+    },
+    {
+      "date": 1763683200,
+      "totalLiquidityUSD": 39731983
+    },
+    {
+      "date": 1763769600,
+      "totalLiquidityUSD": 35396762
+    },
+    {
+      "date": 1763856000,
+      "totalLiquidityUSD": 34418315
+    },
+    {
+      "date": 1763942400,
+      "totalLiquidityUSD": 34691652
+    },
+    {
+      "date": 1764028800,
+      "totalLiquidityUSD": 32238868
+    },
+    {
+      "date": 1764115200,
+      "totalLiquidityUSD": 31802651
+    },
+    {
+      "date": 1764201600,
+      "totalLiquidityUSD": 31752683
+    },
+    {
+      "date": 1764288000,
+      "totalLiquidityUSD": 31600199
+    },
+    {
+      "date": 1764374400,
+      "totalLiquidityUSD": 28340497
+    },
+    {
+      "date": 1764460800,
+      "totalLiquidityUSD": 27999249
+    },
+    {
+      "date": 1764547200,
+      "totalLiquidityUSD": 27465113
+    },
+    {
+      "date": 1764633600,
+      "totalLiquidityUSD": 26149354
+    },
+    {
+      "date": 1764720000,
+      "totalLiquidityUSD": 27107274
+    },
+    {
+      "date": 1764806400,
+      "totalLiquidityUSD": 27701304
+    },
+    {
+      "date": 1764892800,
+      "totalLiquidityUSD": 26893813
+    },
+    {
+      "date": 1764979200,
+      "totalLiquidityUSD": 25357915
+    },
+    {
+      "date": 1765065600,
+      "totalLiquidityUSD": 25494521
+    },
+    {
+      "date": 1765152000,
+      "totalLiquidityUSD": 25111264
+    },
+    {
+      "date": 1765190591,
+      "totalLiquidityUSD": 25495695
+    }
+  ],
+  "currentChainTvls": {
+    "Aptos": 25495695.15715,
+    "Aptos-borrowed": 11366468.53988,
+    "borrowed": 11366468.53988
+  }
+}

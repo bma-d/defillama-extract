@@ -179,7 +179,7 @@ func TestGenerateTVLOutput_EmptyProtocols(t *testing.T) {
 	}
 }
 
-func TestWriteTVLOutputs_WritesBothFiles(t *testing.T) {
+func TestWriteTVLOutputs_WritesFile(t *testing.T) {
 	outDir := t.TempDir()
 	ctx := context.Background()
 
@@ -200,20 +200,15 @@ func TestWriteTVLOutputs_WritesBothFiles(t *testing.T) {
 	}
 
 	fullPath := filepath.Join(outDir, "tvl-data.json")
-	minPath := filepath.Join(outDir, "tvl-data.min.json")
 
 	fullData, err := os.ReadFile(fullPath)
 	if err != nil {
 		t.Fatalf("read full output: %v", err)
 	}
 
-	minData, err := os.ReadFile(minPath)
-	if err != nil {
-		t.Fatalf("read min output: %v", err)
-	}
-
-	if strings.Contains(string(minData), "\n") {
-		t.Fatalf("minified output contains newlines")
+	// Verify indented format
+	if !strings.Contains(string(fullData), "\n") {
+		t.Fatalf("output should be indented but has no newlines")
 	}
 
 	var parsed models.TVLOutput
