@@ -1,0 +1,212 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>2</storyId>
+    <title>Implement Protocol TVL Fetcher</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-2-implement-protocol-tvl-fetcher.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>service developer</asA>
+    <iWant>the API client to fetch historical TVL data from DefiLlama's per-protocol endpoint</iWant>
+    <soThat>the TVL charting pipeline can retrieve TVL time-series data for all tracked protocols (auto-detected and custom)</soThat>
+    <tasks>
+      <task id="1" title="Define TVL Response Models">
+        <subtask id="1.1">Create ProtocolTVLResponse struct in internal/api/responses.go with Name, TVL[], CurrentChainTvls fields</subtask>
+        <subtask id="1.2">Create TVLDataPoint struct with Date (int64) and TotalLiquidityUSD (float64)</subtask>
+        <subtask id="1.3">Add JSON tags matching DefiLlama response format</subtask>
+      </task>
+      <task id="2" title="Add Protocol Endpoint Constant">
+        <subtask id="2.1">Add ProtocolTVLEndpointTemplate = "https://api.llama.fi/protocol/%s" to internal/api/endpoints.go</subtask>
+      </task>
+      <task id="3" title="Implement FetchProtocolTVL Method">
+        <subtask id="3.1">Add FetchProtocolTVL(ctx context.Context, slug string) (*ProtocolTVLResponse, error) method to Client</subtask>
+        <subtask id="3.2">Construct URL using fmt.Sprintf(ProtocolTVLEndpointTemplate, slug)</subtask>
+        <subtask id="3.3">Use doWithRetry wrapper for retry logic</subtask>
+        <subtask id="3.4">Parse response into *ProtocolTVLResponse</subtask>
+        <subtask id="3.5">Return nil, fmt.Errorf("fetch protocol TVL %s: %w", slug, err) on failure</subtask>
+      </task>
+      <task id="4" title="Implement 404 Handling">
+        <subtask id="4.1">Create internal helper to detect 404 status from APIError</subtask>
+        <subtask id="4.2">In FetchProtocolTVL, check if error is 404: return nil, nil with warning log</subtask>
+        <subtask id="4.3">Add warning log with fields: slug, status_code</subtask>
+      </task>
+      <task id="5" title="Write Unit Tests">
+        <subtask id="5.1">Create internal/api/tvl_test.go</subtask>
+        <subtask id="5.2">Test: Successful fetch returns populated ProtocolTVLResponse</subtask>
+        <subtask id="5.3">Test: 404 response returns nil, nil and logs warning</subtask>
+        <subtask id="5.4">Test: 500 response triggers retries and returns error</subtask>
+        <subtask id="5.5">Test: Context cancellation returns context.Canceled</subtask>
+        <subtask id="5.6">Test: Invalid JSON response returns error</subtask>
+        <subtask id="5.7">Test: Empty tvl array is handled (valid response, empty data)</subtask>
+        <subtask id="5.8">Create test fixture testdata/protocol_tvl_response.json</subtask>
+        <subtask id="5.9">Create test fixture testdata/protocol_404_response.json</subtask>
+      </task>
+      <task id="6" title="Build and Lint Verification">
+        <subtask id="6.1">Run go build ./... and verify success</subtask>
+        <subtask id="6.2">Run go test ./internal/api/... and verify all pass</subtask>
+        <subtask id="6.3">Run make lint and fix any issues</subtask>
+      </task>
+      <task id="7" title="Implement Built-in Rate Limiting">
+        <subtask id="7.1">Add per-client rate limiter to Client (200ms minimum gap between calls to protocol endpoint)</subtask>
+        <subtask id="7.2">Ensure rate limiter does not block cancellation (honor ctx)</subtask>
+        <subtask id="7.3">Add unit test verifying ~200ms delay between sequential calls (use fake clock)</subtask>
+        <subtask id="7.4">Add note in Dev Notes that caller no longer needs to throttle this endpoint</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="AC1" title="Fetch Protocol TVL Endpoint">
+      <given>a valid protocol slug</given>
+      <when>FetchProtocolTVL(ctx, slug) is called</when>
+      <then>it performs a GET request to https://api.llama.fi/protocol/{slug}</then>
+      <and>uses the existing HTTP client configuration (timeout, User-Agent)</and>
+    </ac>
+    <ac id="AC2" title="Reuse Retry Logic">
+      <given>a transient failure occurs (429, 5xx, network timeout)</given>
+      <when>the request fails</when>
+      <then>it retries using the existing exponential backoff with jitter</then>
+      <and>respects the configured maxRetries and retryDelay settings</and>
+    </ac>
+    <ac id="AC3" title="Extract Response Fields">
+      <given>a successful API response</given>
+      <when>the response is parsed</when>
+      <then>it extracts name (string) from the response</then>
+      <and>extracts tvl[] array containing historical TVL data points</and>
+      <and>extracts currentChainTvls map with per-chain current TVL values</and>
+      <and>returns a *ProtocolTVLResponse struct with these fields populated</and>
+    </ac>
+    <ac id="AC4" title="Handle 404 Gracefully">
+      <given>the protocol slug does not exist in DefiLlama</given>
+      <when>the API returns HTTP 404</when>
+      <then>it returns nil, nil (not an error)</then>
+      <and>logs a WARNING: protocol_not_found slug=slug status_code=404</and>
+      <and>does NOT retry the request (404 is not retryable)</and>
+    </ac>
+    <ac id="AC5" title="Return Error on Other Failures">
+      <given>the API returns a non-404 client error (401, 403) or server error persists after retries</given>
+      <when>all retry attempts are exhausted</when>
+      <then>it returns an error wrapping the underlying failure</then>
+      <and>the error message includes the endpoint and status code</and>
+    </ac>
+    <ac id="AC6" title="Respect Context Cancellation">
+      <given>the context is cancelled during the request</given>
+      <when>ctx.Done() fires</when>
+      <then>the request is aborted immediately</then>
+      <and>the function returns ctx.Err() without additional retries</and>
+    </ac>
+    <ac id="AC7" title="Built-in Rate Limiting">
+      <given>multiple protocols need to be fetched</given>
+      <when>FetchProtocolTVL is called repeatedly</when>
+      <then>the fetcher enforces a minimum 200ms delay between successive calls (per process)</then>
+      <and>no extra throttling is required by the caller</and>
+    </ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-7.md" title="Epic 7 Technical Specification" section="AC-7.2: Implement Protocol TVL Fetcher">
+        Defines acceptance criteria for FetchProtocolTVL method: reuse HTTP client with retry, extract name/tvl[]/currentChainTvls, handle 404 gracefully with warning log, return error on other failures, respect context cancellation.
+      </doc>
+      <doc path="docs/epics/epic-7-custom-protocols-tvl-charting.md" title="Epic 7: Custom Protocols and TVL Charting" section="Story 7.2">
+        Goal: Fetch historical TVL data from GET /protocol/{slug} endpoint with retry logic. References reusing existing HTTP client, handling 404 gracefully, rate limiting 200ms between calls.
+      </doc>
+      <doc path="docs/architecture/api-contracts.md" title="API Contracts" section="DefiLlama Endpoints">
+        Documents existing DefiLlama endpoints. New endpoint GET /protocol/{slug} returns per-protocol TVL history.
+      </doc>
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization">
+        Unit tests co-located in *_test.go, table-driven tests, mock server tests using httptest.NewServer. Fixtures in testdata/ directory.
+      </doc>
+      <doc path="docs/architecture/implementation-patterns.md" title="Implementation Patterns" section="Context Propagation">
+        All I/O functions accept context.Context as first parameter. Use http.NewRequestWithContext for cancellation support.
+      </doc>
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="Architecture Decision Records" section="ADR-001, ADR-003, ADR-004, ADR-005">
+        ADR-001: Reuse existing Client struct. ADR-003: Explicit error returns with wrapping. ADR-004: Structured logging with slog. ADR-005: No new external dependencies.
+      </doc>
+    </docs>
+    <code>
+      <file path="internal/api/client.go" kind="service" symbol="Client" lines="29-67" reason="Core HTTP client struct to extend with FetchProtocolTVL method. Contains doWithRetry, doRequest, calculateBackoff methods to reuse."/>
+      <file path="internal/api/client.go" kind="method" symbol="doWithRetry" lines="198-261" reason="Retry wrapper with exponential backoff and jitter. Use this for FetchProtocolTVL retry logic."/>
+      <file path="internal/api/client.go" kind="method" symbol="doRequest" lines="80-145" reason="HTTP GET with JSON decoding pattern. FetchProtocolTVL follows this pattern."/>
+      <file path="internal/api/client.go" kind="function" symbol="isRetryable" lines="147-188" reason="Retry decision logic. 404 is NOT retryable (line 156). Reuse this for error classification."/>
+      <file path="internal/api/responses.go" kind="types" symbol="APIError" lines="66-89" reason="Error type with StatusCode field and IsRetryable method. Use errors.As to extract status code for 404 detection."/>
+      <file path="internal/api/responses.go" kind="types" symbol="Protocol, OracleAPIResponse" lines="9-64" reason="Existing response structs. Add ProtocolTVLResponse and TVLDataPoint following same patterns."/>
+      <file path="internal/api/endpoints.go" kind="constants" symbol="OraclesEndpoint, ProtocolsEndpoint" lines="4-7" reason="Add ProtocolTVLEndpointTemplate constant here."/>
+      <file path="internal/api/oracles_test.go" kind="test" symbol="TestFetchOracles_*" lines="1-141" reason="Test patterns to follow: httptest.NewServer, fixture loading from testdata/, context cancellation testing."/>
+    </code>
+    <dependencies>
+      <go>
+        <module name="golang.org/x/sync" version="v0.18.0" use="errgroup for concurrency"/>
+        <module name="golang.org/x/net" version="v0.27.0" use="http2 error handling (indirect)"/>
+        <module name="gopkg.in/yaml.v3" version="v3.0.1" use="config parsing"/>
+        <stdlib package="net/http" use="HTTP client, status codes"/>
+        <stdlib package="net/http/httptest" use="Mock server for tests"/>
+        <stdlib package="context" use="Cancellation, timeout"/>
+        <stdlib package="encoding/json" use="JSON encode/decode"/>
+        <stdlib package="log/slog" use="Structured logging"/>
+        <stdlib package="errors" use="errors.As for APIError extraction"/>
+        <stdlib package="fmt" use="Error wrapping with %w"/>
+        <stdlib package="time" use="Rate limiting delays"/>
+      </go>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-001">Reuse existing Client struct and doWithRetry wrapper - no new HTTP client</constraint>
+    <constraint source="ADR-003">Explicit error returns; wrap errors with context (fmt.Errorf("...: %w", err))</constraint>
+    <constraint source="ADR-004">Structured logging with slog and fields for observability</constraint>
+    <constraint source="ADR-005">No new external dependencies; use standard library</constraint>
+    <constraint source="Dev Notes">Follow existing patterns in client.go for FetchOracles and FetchProtocols methods</constraint>
+    <constraint source="Dev Notes">404 handling: return nil, nil (not error) so caller can continue with other protocols</constraint>
+    <constraint source="Dev Notes">Rate limiter must respect ctx.Done() to avoid blocking cancellation</constraint>
+    <constraint source="Project Structure">Test file naming: tvl_test.go in same package. Fixtures in testdata/ directory at project root.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="FetchProtocolTVL" kind="method" path="internal/api/client.go">
+      <signature>func (c *Client) FetchProtocolTVL(ctx context.Context, slug string) (*ProtocolTVLResponse, error)</signature>
+      <description>New method to add to Client. Returns TVL history for a single protocol.</description>
+    </interface>
+    <interface name="ProtocolTVLEndpointTemplate" kind="constant" path="internal/api/endpoints.go">
+      <signature>const ProtocolTVLEndpointTemplate = "https://api.llama.fi/protocol/%s"</signature>
+      <description>URL template for per-protocol TVL endpoint. Use with fmt.Sprintf.</description>
+    </interface>
+    <interface name="ProtocolTVLResponse" kind="struct" path="internal/api/responses.go">
+      <signature>type ProtocolTVLResponse struct { Name string; TVL []TVLDataPoint; CurrentChainTvls map[string]float64 }</signature>
+      <description>Response struct for GET /protocol/{slug}. JSON tags: name, tvl, currentChainTvls.</description>
+    </interface>
+    <interface name="TVLDataPoint" kind="struct" path="internal/api/responses.go">
+      <signature>type TVLDataPoint struct { Date int64; TotalLiquidityUSD float64 }</signature>
+      <description>Single point in TVL history array. JSON tags: date, totalLiquidityUSD.</description>
+    </interface>
+    <interface name="APIError" kind="struct" path="internal/api/responses.go">
+      <signature>type APIError struct { Endpoint string; StatusCode int; Message string; Err error }</signature>
+      <description>Existing error type. Use errors.As(err, &amp;apiErr) to extract StatusCode for 404 detection.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Follow project testing patterns: table-driven tests with named cases, httptest.NewServer for HTTP mocking, fixtures in testdata/ directory. Co-locate test files (*_test.go) with source. Test error paths explicitly. Use context.WithCancel for cancellation tests.
+    </standards>
+    <locations>
+      <location>internal/api/tvl_test.go (new file)</location>
+      <location>testdata/protocol_tvl_response.json (new fixture)</location>
+      <location>testdata/protocol_404_response.json (new fixture)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1,AC3">TestFetchProtocolTVL_Success: Mock 200 response with fixture, verify ProtocolTVLResponse populated correctly</idea>
+      <idea ac="AC4">TestFetchProtocolTVL_404_ReturnsNilNil: Mock 404 response, verify returns nil, nil (not error), log warning</idea>
+      <idea ac="AC2,AC5">TestFetchProtocolTVL_500_RetriesAndFails: Mock 500 responses, verify retries exhaust then returns error</idea>
+      <idea ac="AC6">TestFetchProtocolTVL_ContextCancellation: Cancel context mid-request, verify returns context.Canceled</idea>
+      <idea ac="AC3">TestFetchProtocolTVL_InvalidJSON: Mock malformed JSON response, verify returns decode error</idea>
+      <idea ac="AC3">TestFetchProtocolTVL_EmptyTVLArray: Mock response with empty tvl[], verify valid response with empty slice</idea>
+      <idea ac="AC7">TestFetchProtocolTVL_RateLimiting: Call twice in quick succession, verify ~200ms delay between calls</idea>
+      <idea ac="AC1">TestFetchProtocolTVL_SetsUserAgent: Capture request headers, verify User-Agent set correctly</idea>
+    </ideas>
+  </tests>
+</story-context>

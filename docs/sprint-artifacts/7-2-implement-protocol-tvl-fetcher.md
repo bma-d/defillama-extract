@@ -1,6 +1,6 @@
 # Story 7.2: Implement Protocol TVL Fetcher
 
-Status: drafted
+Status: ready-for-dev
 
 ## Story
 
@@ -271,7 +271,7 @@ func (c *Client) FetchProtocolTVL(ctx context.Context, slug string) (*ProtocolTV
 
 ### Context Reference
 
-<!-- Path(s) to story context XML will be added here by context workflow -->
+- docs/sprint-artifacts/7-2-implement-protocol-tvl-fetcher.context.xml
 
 ### Agent Model Used
 
