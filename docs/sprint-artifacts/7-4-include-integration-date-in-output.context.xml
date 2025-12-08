@@ -1,0 +1,169 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>4</storyId>
+    <title>Include Integration Date in Output</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-4-include-integration-date-in-output.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>TVL data consumer</asA>
+    <iWant>the integration_date field to be included in the tvl-data.json output for all protocols</iWant>
+    <soThat>downstream applications can filter TVL history by integration date if needed, while receiving the complete unfiltered time-series data</soThat>
+    <tasks>
+      <task id="1" name="Verify MergedProtocol Model Has IntegrationDate" acs="1,2,3">
+        <subtask id="1.1">Confirm `IntegrationDate *int64` field exists in `internal/models/tvl.go` MergedProtocol struct</subtask>
+        <subtask id="1.2">Confirm field uses pointer type to distinguish null from zero</subtask>
+      </task>
+      <task id="2" name="Verify Merger Sets IntegrationDate Correctly" acs="1,2,3">
+        <subtask id="2.1">Review `internal/tvl/merger.go` MergeProtocolLists function</subtask>
+        <subtask id="2.2">Confirm auto-detected protocols get `IntegrationDate: nil`</subtask>
+        <subtask id="2.3">Confirm custom protocols get `IntegrationDate` from config `Date` field (nil if not set)</subtask>
+      </task>
+      <task id="3" name="Define TVLOutputProtocol Schema" acs="1,2,3,4">
+        <subtask id="3.1">Add/update `TVLOutputProtocol` struct in `internal/models/tvl.go` (or `internal/tvl/output.go`) with IntegrationDate *int64 and TVLHistory []TVLHistoryItem</subtask>
+        <subtask id="3.2">Ensure JSON serialization outputs `null` for nil IntegrationDate (not omitted)</subtask>
+      </task>
+      <task id="4" name="Implement Output Mapping" acs="1,2,3,4">
+        <subtask id="4.1">Create function to map `MergedProtocol` + TVL data to `TVLOutputProtocol`</subtask>
+        <subtask id="4.2">Pass through `IntegrationDate` directly from MergedProtocol</subtask>
+        <subtask id="4.3">Include full `tvl_history` array without filtering</subtask>
+      </task>
+      <task id="5" name="Write Unit Tests" acs="all">
+        <subtask id="5.1">Test: Custom protocol with date - integration_date populated in output</subtask>
+        <subtask id="5.2">Test: Custom protocol without date - integration_date is null in output</subtask>
+        <subtask id="5.3">Test: Auto-detected protocol - integration_date is null in output</subtask>
+        <subtask id="5.4">Test: TVL history included in full regardless of integration_date value</subtask>
+        <subtask id="5.5">Test: JSON serialization outputs null (not omits) for nil integration_date</subtask>
+      </task>
+      <task id="6" name="Build and Test Verification" acs="all">
+        <subtask id="6.1">Run `go build ./...` and verify success</subtask>
+        <subtask id="6.2">Run `go test ./internal/tvl/...` and verify all pass</subtask>
+        <subtask id="6.3">Run `go test ./internal/models/...` if applicable</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" name="Custom Protocols Integration Date">
+      <given>a custom protocol with a `date` field in config</given>
+      <when>the protocol is included in tvl-data.json output</when>
+      <then>`integration_date` equals the config `date` value (Unix timestamp)</then>
+    </criterion>
+    <criterion id="AC2" name="Custom Protocols Without Date">
+      <given>a custom protocol without a `date` field in config</given>
+      <when>the protocol is included in tvl-data.json output</when>
+      <then>`integration_date` is null</then>
+    </criterion>
+    <criterion id="AC3" name="Auto-Detected Protocols">
+      <given>an auto-detected protocol (from /oracles endpoint)</given>
+      <when>the protocol is included in tvl-data.json output</when>
+      <then>`integration_date` is null</then>
+    </criterion>
+    <criterion id="AC4" name="Full TVL History Included">
+      <given>any protocol (custom or auto-detected)</given>
+      <when>tvl-data.json is generated</when>
+      <then>the full `tvl_history` array is included regardless of `integration_date`</then>
+      <and>no filtering of TVL data points by date occurs</and>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-7.md" title="Epic 7 Tech Spec" section="AC-7.4, Data Models and Contracts" snippet="Defines TVLOutputProtocol struct with IntegrationDate *int64 field and TVLHistory. AC-7.4 specifies custom protocols get integration_date from config date (null if not set), auto-detected get null, full tvl_history included without filtering." />
+      <doc path="docs/epics/epic-7-custom-protocols-tvl-charting.md" title="Epic 7 Definition" section="Story 7.4" snippet="Goal: Pass through date field as integration_date in output. No filtering of TVL history. Custom protocols get date value or null; auto-detected get null." />
+      <doc path="docs/prd.md" title="Product Requirements Document" section="Data Filtering &amp; Extraction" snippet="System extracts protocol metadata. Growth features include per-protocol TVL charting with historical data. Output JSON files must follow defined schema." />
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="Architecture Decision Records" section="ADR-003, ADR-005" snippet="ADR-003: Explicit error returns, no panics. ADR-005: Minimal external dependencies - stdlib preferred. No new dependencies for this story." />
+      <doc path="docs/architecture/data-architecture.md" title="Data Architecture" section="Output Models" snippet="Defines FullOutput structure patterns. Output files written atomically (temp file + rename)." />
+      <doc path="docs/sprint-artifacts/7-3-merge-protocol-lists.md" title="Story 7.3 (Previous)" section="Dev Agent Record" snippet="MergedProtocol model at internal/models/tvl.go:17-28 already has IntegrationDate *int64. Merger at internal/tvl/merger.go sets auto protocols to nil, custom protocols to config Date field (nil if not set). Tests confirm nil date handling." />
+    </docs>
+    <code>
+      <artifact path="internal/models/tvl.go" kind="model" symbol="MergedProtocol" lines="17-28" reason="Contains IntegrationDate *int64 field that must be passed through to output. Existing model from Story 7.3." />
+      <artifact path="internal/models/tvl.go" kind="model" symbol="CustomProtocol" lines="7-15" reason="Source model with Date *int64 field that maps to IntegrationDate in output." />
+      <artifact path="internal/tvl/merger.go" kind="service" symbol="MergeProtocolLists" lines="13-50" reason="Sets IntegrationDate from CustomProtocol.Date (nil for auto). Integration point for this story." />
+      <artifact path="internal/tvl/merger_test.go" kind="test" symbol="TestMergeProtocolLists_CustomNilDateStaysNil" lines="58-80" reason="Existing test verifying nil date handling. Model for new output tests." />
+      <artifact path="internal/api/responses.go" kind="model" symbol="ProtocolTVLResponse, TVLDataPoint" lines="30-41" reason="API response models for TVL history data. TVLDataPoint has Date (Unix) and TotalLiquidityUSD." />
+    </code>
+    <dependencies>
+      <ecosystem name="go">
+        <package name="go" version="1.24.0" />
+        <package name="golang.org/x/sync" version="v0.18.0" />
+        <package name="gopkg.in/yaml.v3" version="v3.0.1" />
+      </ecosystem>
+      <note>No new dependencies required for this story (ADR-005 compliant). Standard library encoding/json handles nullable pointer serialization.</note>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-003">Explicit error returns; wrap errors with context using fmt.Errorf("...: %w", err). No panics.</constraint>
+    <constraint source="ADR-005">No new external dependencies. Use standard library only.</constraint>
+    <constraint source="Tech Spec">integration_date MUST be included in output JSON (not omitted). Value is null for auto-detected and custom protocols without date. Value is Unix timestamp for custom protocols with date.</constraint>
+    <constraint source="Tech Spec">tvl_history is NOT filtered by integration_date. Downstream applications are responsible for date filtering.</constraint>
+    <constraint source="JSON Semantics">Use pointer types (*int64) to ensure JSON serialization outputs null rather than omitting the field or using zero value.</constraint>
+    <constraint source="Story 7.5">This story (7.4) establishes the contract for integration_date flow. Actual output file generation is in Story 7.5. TVLOutputProtocol struct definition prepares for that story.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="MergedProtocol" kind="struct">
+      <signature><![CDATA[type MergedProtocol struct {
+    Slug            string  `json:"slug"`
+    Name            string  `json:"name"`
+    Source          string  `json:"source"`
+    IsOngoing       bool    `json:"is_ongoing"`
+    SimpleTVSRatio  float64 `json:"simple_tvs_ratio"`
+    IntegrationDate *int64  `json:"integration_date"`  // Already exists
+    DocsProof       *string `json:"docs_proof"`
+    GitHubProof     *string `json:"github_proof"`
+}]]></signature>
+      <path>internal/models/tvl.go:17-28</path>
+    </interface>
+    <interface name="TVLOutputProtocol" kind="struct">
+      <signature><![CDATA[type TVLOutputProtocol struct {
+    Name            string           `json:"name"`
+    Slug            string           `json:"slug"`
+    Source          string           `json:"source"`
+    IsOngoing       bool             `json:"is_ongoing"`
+    SimpleTVSRatio  float64          `json:"simple_tvs_ratio"`
+    IntegrationDate *int64           `json:"integration_date"`  // Key field for this story
+    DocsProof       *string          `json:"docs_proof"`
+    GitHubProof     *string          `json:"github_proof"`
+    CurrentTVL      float64          `json:"current_tvl"`
+    TVLHistory      []TVLHistoryItem `json:"tvl_history"`       // Full history, no filtering
+}]]></signature>
+      <path>internal/models/tvl.go or internal/tvl/output.go (to be created)</path>
+    </interface>
+    <interface name="TVLHistoryItem" kind="struct">
+      <signature><![CDATA[type TVLHistoryItem struct {
+    Date      string  `json:"date"`      // YYYY-MM-DD
+    Timestamp int64   `json:"timestamp"` // Unix
+    TVL       float64 `json:"tvl"`
+}]]></signature>
+      <path>internal/models/tvl.go or internal/tvl/output.go (to be created)</path>
+    </interface>
+    <interface name="MergeProtocolLists" kind="function">
+      <signature><![CDATA[func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []models.MergedProtocol]]></signature>
+      <path>internal/tvl/merger.go:13</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Table-driven tests with named cases. Co-located test files (*_test.go). High coverage for business logic. Mock server tests for HTTP client. Test all error paths. Standard library testing package only.</standards>
+    <locations>
+      <location>internal/tvl/*_test.go</location>
+      <location>internal/models/*_test.go</location>
+      <location>testdata/tvl/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test custom protocol with date field set - verify integration_date populated with Unix timestamp in TVLOutputProtocol</idea>
+      <idea ac="AC2">Test custom protocol without date field - verify integration_date is null (not zero, not omitted) in JSON output</idea>
+      <idea ac="AC3">Test auto-detected protocol - verify integration_date is null in TVLOutputProtocol</idea>
+      <idea ac="AC4">Test TVL history mapping - verify full tvl[] array from API response maps to tvl_history without filtering</idea>
+      <idea ac="AC1,AC2,AC3">Test JSON serialization: marshal TVLOutputProtocol with nil IntegrationDate, verify output contains "integration_date": null (not omitted)</idea>
+      <idea ac="AC4">Test TVL history with various lengths (empty, single item, many items) - all preserved without modification</idea>
+      <idea ac="all">Integration test: MergedProtocol + ProtocolTVLResponse -> TVLOutputProtocol mapping end-to-end</idea>
+    </ideas>
+  </tests>
+</story-context>
