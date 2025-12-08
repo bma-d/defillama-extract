@@ -134,7 +134,7 @@ This epic adds two capabilities:
 - [ ] Get auto-detected protocol slugs from existing aggregator
 - [ ] Merge with custom protocols list
 - [ ] Deduplicate by slug (custom takes precedence for metadata)
-- [ ] Auto-detected protocols get `source: "auto"`, `simple_tvs_ratio: 1.0`
+- [ ] Auto-detected protocols get `source: "auto"`, `simple_tvs_ratio: 1.0`, `docs_proof: "https://defillama.com/protocol/{slug}"`
 - [ ] Custom protocols get `source: "custom"` with their config values
 
 ---
