@@ -1,0 +1,266 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>7.6</storyId>
+    <title>Integrate TVL Pipeline into Main Extraction Cycle</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-6-integrate-tvl-pipeline-into-main-extraction-cycle.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>system operator</asA>
+    <iWant>the TVL charting pipeline to run automatically alongside the main oracle extraction in the 2-hour cycle</iWant>
+    <soThat>both datasets are updated simultaneously with consistent timestamps, while ensuring main pipeline reliability is not affected by TVL pipeline failures</soThat>
+    <tasks>
+      <task id="1" title="Add TVL Pipeline Runner Function" ac="1,2,3,6">
+        <subtask id="1.1">Create RunTVLPipeline(ctx, cfg, logger) function in new file internal/tvl/pipeline.go</subtask>
+        <subtask id="1.2">Accept timestamp parameter from main extraction for consistency</subtask>
+        <subtask id="1.3">Orchestrate: LoadCustom -> GetAutoSlugs -> Merge -> FetchTVL -> Generate -> Write</subtask>
+        <subtask id="1.4">Add pipeline: tvl attribute to all log messages</subtask>
+        <subtask id="1.5">Return error on failure but design for caller to handle gracefully</subtask>
+        <subtask id="1.6">Respect context cancellation throughout</subtask>
+      </task>
+      <task id="2" title="Implement TVL State Manager" ac="5">
+        <subtask id="2.1">Create TVLStateManager in internal/tvl/state.go (similar pattern to storage.StateManager)</subtask>
+        <subtask id="2.2">State file at data/tvl-state.json with fields: last_updated, protocol_count, custom_count</subtask>
+        <subtask id="2.3">Implement ShouldProcess(currentTS) for skip-if-no-changes logic</subtask>
+        <subtask id="2.4">Implement LoadState() and SaveState() with atomic writes</subtask>
+        <subtask id="2.5">Handle missing/corrupted state file gracefully (treat as first run)</subtask>
+      </task>
+      <task id="3" title="Extract Auto-Detected Protocol Slugs" ac="1">
+        <subtask id="3.1">Create GetAutoDetectedSlugs(oracleResp, oracleName) function in internal/tvl/slugs.go</subtask>
+        <subtask id="3.2">Extract protocol slugs from oracle response that match the configured oracle name</subtask>
+        <subtask id="3.3">Return deduplicated slice of slugs for TVL fetching</subtask>
+      </task>
+      <task id="4" title="Implement TVL Data Fetcher" ac="1,8">
+        <subtask id="4.1">Create FetchAllTVL(ctx, client, slugs) function in internal/tvl/fetcher.go</subtask>
+        <subtask id="4.2">Iterate over merged protocol slugs and call client.FetchProtocolTVL(slug)</subtask>
+        <subtask id="4.3">Respect rate limiting (200ms between calls) via existing client logic</subtask>
+        <subtask id="4.4">Return map[string]*api.ProtocolTVLResponse for successful fetches</subtask>
+        <subtask id="4.5">Log warnings for 404 (protocol not found) but continue with others</subtask>
+        <subtask id="4.6">Count and log fetch statistics (total, success, not_found, failed)</subtask>
+      </task>
+      <task id="5" title="Integrate TVL Pipeline into RunOnce" ac="1,2,4,6">
+        <subtask id="5.1">Modify runOnceWithDeps in cmd/extractor/main.go to call TVL pipeline after main completes</subtask>
+        <subtask id="5.2">Add tvlRunner to runDeps struct for dependency injection</subtask>
+        <subtask id="5.3">Check cfg.TVL.Enabled before running TVL pipeline</subtask>
+        <subtask id="5.4">Wrap TVL pipeline call in error handler that logs but doesn't return error</subtask>
+        <subtask id="5.5">Pass oracle response to TVL pipeline for extracting auto-detected slugs</subtask>
+        <subtask id="5.6">Log TVL pipeline outcome (success/failure) with duration</subtask>
+      </task>
+      <task id="6" title="Integrate TVL Pipeline into Daemon Mode" ac="1,2,3">
+        <subtask id="6.1">Verify daemon mode inherits TVL integration through RunOnce</subtask>
+        <subtask id="6.2">Confirm TVL failures don't affect daemon loop continuation</subtask>
+        <subtask id="6.3">Ensure "next extraction at" logs after both pipelines complete</subtask>
+      </task>
+      <task id="7" title="Add Pipeline Logging Context" ac="3">
+        <subtask id="7.1">Add pipeline attribute to main extraction log messages where appropriate</subtask>
+        <subtask id="7.2">Ensure TVL pipeline logs include pipeline: tvl throughout</subtask>
+        <subtask id="7.3">Add summary log at end: extraction_cycle_complete with both pipeline statuses</subtask>
+      </task>
+      <task id="8" title="Write Unit Tests" ac="all">
+        <subtask id="8.1">Test: TVL pipeline runs after main extraction completes (AC1)</subtask>
+        <subtask id="8.2">Test: TVL pipeline failure does not affect main extraction success (AC2)</subtask>
+        <subtask id="8.3">Test: Logging includes pipeline attribute for both pipelines (AC3)</subtask>
+        <subtask id="8.4">Test: TVL pipeline executes in --once mode and respects exit-code rules (AC4)</subtask>
+        <subtask id="8.5">Test: TVL state tracking skip logic (ShouldProcess) works and state persists (AC5)</subtask>
+        <subtask id="8.6">Test: TVL runs even when main pipeline reports failure (AC6)</subtask>
+        <subtask id="8.7">Test: Dry-run mode skips file writes for both pipelines (AC7)</subtask>
+        <subtask id="8.8">Test: Rate limiting enforces ≥200ms between TVL fetch calls (AC8)</subtask>
+        <subtask id="8.9">Test: GetAutoDetectedSlugs extracts correct slugs from oracle response (AC1)</subtask>
+        <subtask id="8.10">Test: FetchAllTVL handles mixed success/failure/404 responses (AC1,AC8)</subtask>
+      </task>
+      <task id="9" title="Build and Test Verification" ac="all">
+        <subtask id="9.1">Run go build ./... and verify success</subtask>
+        <subtask id="9.2">Run go test ./... and verify all pass</subtask>
+        <subtask id="9.3">Run ./extractor --once with TVL enabled and verify both outputs generated</subtask>
+        <subtask id="9.4">Run with TVL disabled and verify only main output generated</subtask>
+        <subtask id="9.5">Verify tvl-state.json created with correct structure</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" title="TVL Pipeline Runs After Main Extraction">
+      Given the main oracle extraction completes successfully, when the extraction cycle continues, then the TVL pipeline runs after main extraction and both pipelines share the same extraction start timestamp for consistency.
+    </criterion>
+    <criterion id="AC2" title="TVL Pipeline Failures Are Isolated">
+      Given the TVL pipeline encounters an error, when the error is handled, then the main pipeline output (switchboard-oracle-data.json) is NOT affected, the error is logged with pipeline: tvl attribute, and the extraction cycle completes with partial success.
+    </criterion>
+    <criterion id="AC3" title="Logging Distinguishes Pipelines">
+      Given any log message during extraction, when the message relates to a specific pipeline, then the log includes a pipeline attribute with value main or tvl.
+    </criterion>
+    <criterion id="AC4" title="Once Mode Runs Both Pipelines">
+      Given the CLI is invoked with --once flag, when the extraction runs, then both main and TVL pipelines execute sequentially, exit code is 0 if main succeeds (even if TVL fails), and exit code is non-zero only if main pipeline fails.
+    </criterion>
+    <criterion id="AC5" title="TVL Pipeline State Tracking">
+      Given the TVL pipeline runs, when determining whether to process, then TVL state is tracked separately (tvl-state.json) and TVL pipeline skips processing if no changes detected.
+    </criterion>
+    <criterion id="AC6" title="TVL Runs Even If Main Pipeline Fails">
+      Given the main pipeline fails or skips output, when RunOnce completes main execution path, then the TVL pipeline still runs using cached/empty slugs if available, and any TVL errors remain isolated from main pipeline error handling.
+    </criterion>
+    <criterion id="AC7" title="Dry Run Skips Writes">
+      Given the CLI runs with --dry-run, when both pipelines execute, then no files are written for either pipeline.
+    </criterion>
+    <criterion id="AC8" title="Rate Limiting Enforced">
+      Given TVL protocol fetches are performed, when issuing successive TVL API calls, then a minimum 200ms delay is enforced between fetches.
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-7.md" title="Epic 7 Tech Spec" section="AC-7.6" snippet="Detailed acceptance criteria for TVL pipeline integration, data flow diagrams, and integration architecture."/>
+      <doc path="docs/epics/epic-7-custom-protocols-tvl-charting.md" title="Epic 7 Definition" section="Story 7.6" snippet="Story definition with acceptance criteria checklist and dependencies on Epic 2 (API) and Epic 5 (Output)."/>
+      <doc path="docs/architecture/implementation-patterns.md" title="Implementation Patterns" section="Atomic File Writes, Context Propagation" snippet="Core patterns: dependency injection, context-first I/O, errgroup for concurrency, atomic writes via temp+rename."/>
+      <doc path="docs/architecture/consistency-rules.md" title="Consistency Rules" section="Error Handling, Logging Strategy" snippet="Sentinel errors for expected conditions, APIError for retries, slog structured logging with levels."/>
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="ADRs" section="ADR-002 through ADR-005" snippet="ADR-002: Atomic writes; ADR-003: Explicit error returns; ADR-004: Structured slog logging; ADR-005: Minimal deps."/>
+      <doc path="docs/architecture/project-structure.md" title="Project Structure" section="Directory Layout" snippet="internal/tvl/ for TVL package, internal/storage/ for state, cmd/extractor/ for CLI entry point."/>
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization" snippet="Table-driven tests, httptest for mocking, co-located *_test.go files, coverage requirements."/>
+    </docs>
+    <code>
+      <file path="cmd/extractor/main.go" kind="entry-point" symbol="runOnceWithDeps" lines="96-267" reason="Primary integration point for TVL pipeline. Add TVL runner after line 266, modify runDeps struct, add tvlRunner dependency."/>
+      <file path="cmd/extractor/main.go" kind="entry-point" symbol="RunOnce" lines="81-94" reason="Public entry point that creates dependencies and delegates to runOnceWithDeps."/>
+      <file path="cmd/extractor/main.go" kind="interface" symbol="runDeps" lines="69-78" reason="Dependency injection struct to extend with tvlRunner for testability."/>
+      <file path="cmd/extractor/main.go" kind="interface" symbol="CLIOptions" lines="28-33" reason="CLI options struct containing DryRun flag needed for TVL pipeline."/>
+      <file path="internal/tvl/output.go" kind="function" symbol="GenerateTVLOutput" lines="59-82" reason="Builds TVLOutput from merged protocols and TVL data. Reuse directly in pipeline."/>
+      <file path="internal/tvl/output.go" kind="function" symbol="WriteTVLOutputs" lines="86-138" reason="Writes tvl-data.json and tvl-data.min.json atomically. Reuse directly in pipeline."/>
+      <file path="internal/tvl/custom.go" kind="type" symbol="CustomLoader" lines="16-19" reason="Loads custom protocols from JSON. Use CustomLoader.Load() in pipeline."/>
+      <file path="internal/tvl/custom.go" kind="method" symbol="CustomLoader.Load" lines="35-96" reason="Returns []models.CustomProtocol, handles missing file gracefully."/>
+      <file path="internal/tvl/merger.go" kind="function" symbol="MergeProtocolLists" lines="13-50" reason="Combines auto slugs with custom protocols, dedupes by slug, sorts alphabetically."/>
+      <file path="internal/storage/state.go" kind="type" symbol="StateManager" lines="30-35" reason="Pattern to follow for TVLStateManager implementation."/>
+      <file path="internal/storage/state.go" kind="method" symbol="StateManager.LoadState" lines="54-80" reason="Reference for handling missing/corrupted state files gracefully."/>
+      <file path="internal/storage/state.go" kind="method" symbol="StateManager.ShouldProcess" lines="111-137" reason="Reference for skip-if-no-changes logic with logging."/>
+      <file path="internal/storage/state.go" kind="method" symbol="StateManager.SaveState" lines="83-104" reason="Reference for atomic state file writing pattern."/>
+      <file path="internal/api/client.go" kind="method" symbol="Client.FetchProtocolTVL" lines="330-358" reason="Per-protocol TVL fetcher with rate limiting. Returns nil,nil on 404."/>
+      <file path="internal/api/client.go" kind="method" symbol="Client.waitForProtocolRateLimit" lines="204-230" reason="200ms rate limiting implementation. Already built into FetchProtocolTVL."/>
+      <file path="internal/api/client.go" kind="constant" symbol="protocolRateLimitInterval" lines="27" reason="200ms constant for rate limiting."/>
+      <file path="internal/api/responses.go" kind="type" symbol="ProtocolTVLResponse" lines="31-35" reason="Response type from /protocol/{slug} endpoint with Name, TVL[], CurrentChainTvls."/>
+      <file path="internal/api/responses.go" kind="type" symbol="TVLDataPoint" lines="38-41" reason="TVL history point with Date (unix) and TotalLiquidityUSD."/>
+      <file path="internal/api/responses.go" kind="type" symbol="OracleAPIResponse" lines="10-15" reason="Response from /oracles with Oracles map for extracting auto-detected slugs."/>
+      <file path="internal/config/config.go" kind="type" symbol="TVLConfig" lines="56-59" reason="TVL configuration with CustomProtocolsPath and Enabled fields."/>
+      <file path="internal/config/config.go" kind="function" symbol="defaultConfig" lines="104-138" reason="Default TVL config: custom_protocols_path=config/custom-protocols.json, enabled=true."/>
+      <file path="internal/models/tvl.go" kind="type" symbol="CustomProtocol" lines="7-15" reason="Input model for custom protocols JSON."/>
+      <file path="internal/models/tvl.go" kind="type" symbol="MergedProtocol" lines="19-28" reason="After merge: slug, name, source, is_ongoing, simple_tvs_ratio, integration_date, proofs."/>
+      <file path="internal/models/tvl.go" kind="type" symbol="TVLOutput" lines="39-45" reason="Root output: Version, Metadata, Protocols map keyed by slug."/>
+      <file path="internal/models/tvl.go" kind="type" symbol="TVLOutputMetadata" lines="49-53" reason="Metadata: LastUpdated, ProtocolCount, CustomProtocolCount."/>
+      <file path="internal/models/tvl.go" kind="type" symbol="TVLOutputProtocol" lines="58-69" reason="Per-protocol output with all fields including TVLHistory array."/>
+      <file path="internal/storage/writer.go" kind="function" symbol="WriteAtomic" lines="235-292" reason="Atomic write implementation: temp file, sync, rename."/>
+      <file path="internal/storage/writer.go" kind="function" symbol="WriteJSON" lines="142-158" reason="JSON marshaling with indent option, uses WriteAtomic."/>
+    </code>
+    <dependencies>
+      <ecosystem name="go" version="1.24.0">
+        <package name="golang.org/x/sync" version="v0.18.0" purpose="errgroup for concurrent operations"/>
+        <package name="gopkg.in/yaml.v3" version="v3.0.1" purpose="YAML config parsing"/>
+        <package name="golang.org/x/net" version="v0.27.0" purpose="HTTP/2 support (indirect)"/>
+        <package name="golang.org/x/text" version="v0.16.0" purpose="Text encoding (indirect)"/>
+      </ecosystem>
+      <stdlib>
+        <package name="context" purpose="Context propagation and cancellation"/>
+        <package name="log/slog" purpose="Structured logging (ADR-004)"/>
+        <package name="encoding/json" purpose="JSON marshaling/unmarshaling"/>
+        <package name="time" purpose="Timestamps, rate limiting delays"/>
+        <package name="os" purpose="File operations"/>
+        <package name="path/filepath" purpose="Path manipulation"/>
+        <package name="errors" purpose="Error wrapping and sentinel errors"/>
+        <package name="fmt" purpose="Error formatting"/>
+        <package name="sort" purpose="Sorting merged protocols"/>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-002">Atomic file writes (temp + rename) for tvl-state.json and output files</constraint>
+    <constraint source="ADR-003">Explicit error returns; TVL pipeline returns error for logging but main ignores it</constraint>
+    <constraint source="ADR-004">Structured logging with pipeline attribute for filtering main vs tvl logs</constraint>
+    <constraint source="ADR-005">No new external dependencies - use standard library</constraint>
+    <constraint source="tech-spec">TVL failures must not affect main pipeline - use pattern: if err := runTVL(...); err != nil { logger.Error(...); } (no return)</constraint>
+    <constraint source="tech-spec">Sequential fetching with 200ms rate limiting between calls (already in api.Client)</constraint>
+    <constraint source="tech-spec">State file at data/tvl-state.json alongside data/state.json</constraint>
+    <constraint source="consistency-rules">Package naming: lowercase single word (tvl); files: lowercase underscores (pipeline.go)</constraint>
+    <constraint source="consistency-rules">JSON field naming: snake_case (protocol_count)</constraint>
+    <constraint source="consistency-rules">Test functions: Test prefix + PascalCase (TestRunTVLPipeline)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="TVLPipelineRunner" kind="function-signature">
+      <signature>RunTVLPipeline(ctx context.Context, cfg *config.Config, oracleResp *api.OracleAPIResponse, logger *slog.Logger) error</signature>
+      <path>internal/tvl/pipeline.go (to be created)</path>
+      <purpose>Main orchestrator for TVL extraction, called from runOnceWithDeps</purpose>
+    </interface>
+    <interface name="TVLStateManager" kind="interface">
+      <signature>LoadState() (*TVLState, error); ShouldProcess(currentTS int64, state *TVLState) bool; SaveState(state *TVLState) error</signature>
+      <path>internal/tvl/state.go (to be created)</path>
+      <purpose>State tracking for TVL pipeline skip-if-no-changes logic</purpose>
+    </interface>
+    <interface name="GetAutoDetectedSlugs" kind="function-signature">
+      <signature>GetAutoDetectedSlugs(oracleResp *api.OracleAPIResponse, oracleName string) []string</signature>
+      <path>internal/tvl/slugs.go (to be created)</path>
+      <purpose>Extract protocol slugs from oracle response for the configured oracle</purpose>
+    </interface>
+    <interface name="FetchAllTVL" kind="function-signature">
+      <signature>FetchAllTVL(ctx context.Context, client *api.Client, slugs []string, logger *slog.Logger) (map[string]*api.ProtocolTVLResponse, error)</signature>
+      <path>internal/tvl/fetcher.go (to be created)</path>
+      <purpose>Fetch TVL data for all protocol slugs with rate limiting and error handling</purpose>
+    </interface>
+    <interface name="api.Client.FetchProtocolTVL" kind="method" existing="true">
+      <signature>(c *Client) FetchProtocolTVL(ctx context.Context, slug string) (*ProtocolTVLResponse, error)</signature>
+      <path>internal/api/client.go:330-358</path>
+      <purpose>Per-protocol TVL fetch with 200ms rate limiting, returns nil,nil on 404</purpose>
+    </interface>
+    <interface name="tvl.GenerateTVLOutput" kind="function" existing="true">
+      <signature>GenerateTVLOutput(protocols []models.MergedProtocol, tvlData map[string]*api.ProtocolTVLResponse) *models.TVLOutput</signature>
+      <path>internal/tvl/output.go:59-82</path>
+      <purpose>Build TVL output document from merged protocols and TVL responses</purpose>
+    </interface>
+    <interface name="tvl.WriteTVLOutputs" kind="function" existing="true">
+      <signature>WriteTVLOutputs(ctx context.Context, outputDir string, output *models.TVLOutput) error</signature>
+      <path>internal/tvl/output.go:86-138</path>
+      <purpose>Write tvl-data.json and tvl-data.min.json atomically</purpose>
+    </interface>
+    <interface name="tvl.CustomLoader.Load" kind="method" existing="true">
+      <signature>(l *CustomLoader) Load(ctx context.Context) ([]models.CustomProtocol, error)</signature>
+      <path>internal/tvl/custom.go:35-96</path>
+      <purpose>Load custom protocols from JSON, handle missing file gracefully</purpose>
+    </interface>
+    <interface name="tvl.MergeProtocolLists" kind="function" existing="true">
+      <signature>MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []models.MergedProtocol</signature>
+      <path>internal/tvl/merger.go:13-50</path>
+      <purpose>Combine auto and custom protocols, dedupe by slug, custom wins</purpose>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Table-driven tests with named cases. Co-located *_test.go files. Use httptest.NewServer for API mocking. Mock interfaces for dependency injection. Coverage targets: 90%+ for business logic, all error paths tested.
+    </standards>
+    <locations>
+      <location>internal/tvl/*_test.go</location>
+      <location>cmd/extractor/main_test.go</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1">Test RunTVLPipeline is called after main extraction completes in runOnceWithDeps</idea>
+      <idea acRef="AC1">Test shared timestamp propagation from main to TVL pipeline</idea>
+      <idea acRef="AC2">Test TVL error is logged but runOnceWithDeps returns nil (success) when main succeeds</idea>
+      <idea acRef="AC2">Test main output file is not affected when TVL pipeline fails</idea>
+      <idea acRef="AC3">Verify log entries contain "pipeline": "main" or "pipeline": "tvl" attributes</idea>
+      <idea acRef="AC4">Test --once mode with mock TVL runner, verify exit code 0 even if TVL fails</idea>
+      <idea acRef="AC4">Test exit code non-zero when main pipeline fails regardless of TVL</idea>
+      <idea acRef="AC5">Test TVLStateManager.LoadState handles missing file (first run)</idea>
+      <idea acRef="AC5">Test TVLStateManager.LoadState handles corrupted file (treat as first run)</idea>
+      <idea acRef="AC5">Test TVLStateManager.ShouldProcess returns false when timestamp unchanged</idea>
+      <idea acRef="AC5">Test TVLStateManager.SaveState writes atomically</idea>
+      <idea acRef="AC6">Test TVL pipeline runs even when main pipeline returns error</idea>
+      <idea acRef="AC6">Test TVL pipeline handles empty oracle response gracefully</idea>
+      <idea acRef="AC7">Test dry-run mode skips WriteTVLOutputs call</idea>
+      <idea acRef="AC7">Test dry-run mode logs intent without file operations</idea>
+      <idea acRef="AC8">Test FetchAllTVL respects 200ms rate limit (measure elapsed time)</idea>
+      <idea acRef="AC8">Test rate limiting via mocked api.Client.FetchProtocolTVL calls</idea>
+      <idea acRef="supporting">Test GetAutoDetectedSlugs extracts correct slugs from OracleAPIResponse.Oracles map</idea>
+      <idea acRef="supporting">Test GetAutoDetectedSlugs returns empty slice for unknown oracle</idea>
+      <idea acRef="supporting">Test FetchAllTVL handles mixed 200/404/500 responses correctly</idea>
+      <idea acRef="supporting">Test FetchAllTVL logs fetch statistics (success/failed/not_found counts)</idea>
+    </ideas>
+  </tests>
+</story-context>
