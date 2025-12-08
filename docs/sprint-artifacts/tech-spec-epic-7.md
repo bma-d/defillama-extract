@@ -661,3 +661,7 @@ TVLConfig{
 | `empty_custom_protocols.json` | `testdata/` | Empty array |
 | `protocol_tvl_response.json` | `testdata/` | Sample /protocol/{slug} response |
 | `protocol_404_response.json` | `testdata/` | 404 error response |
+
+### Post-Review Follow-ups
+
+- RESOLVED 2025-12-08: Presence validation for required booleans (`is-ongoing`, `live`) added with fixtures/tests (Story 7.1; internal/tvl/custom.go, internal/tvl/custom_test.go, testdata/tvl/missing_*.json).

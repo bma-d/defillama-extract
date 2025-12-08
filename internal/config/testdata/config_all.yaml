@@ -17,6 +17,10 @@ output:
   summary_file: summary.json
   state_file: state.json
 
+tvl:
+  custom_protocols_path: /tmp/custom-protocols.json
+  enabled: false
+
 scheduler:
   interval: 30m
   start_immediately: false

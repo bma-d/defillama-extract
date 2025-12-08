@@ -30,6 +30,12 @@ output:
   summary_file: switchboard-summary.json
   state_file: state.json
 
+tvl:
+  # Path to custom protocols JSON configuration
+  custom_protocols_path: config/custom-protocols.json
+  # Whether TVL pipeline (including custom protocol loading) is enabled
+  enabled: true
+
 scheduler:
   # Interval between extraction cycles
   interval: 2h

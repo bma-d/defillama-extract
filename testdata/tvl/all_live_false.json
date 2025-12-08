@@ -1,0 +1,14 @@
+[
+  {
+    "slug": "inactive-one",
+    "is-ongoing": true,
+    "live": false,
+    "simple-tvs-ratio": 0.4
+  },
+  {
+    "slug": "inactive-two",
+    "is-ongoing": false,
+    "live": false,
+    "simple-tvs-ratio": 0.9
+  }
+]

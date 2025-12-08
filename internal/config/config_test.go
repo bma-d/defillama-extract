@@ -41,6 +41,12 @@ func TestLoad_ValidAllFields(t *testing.T) {
 	if cfg.Logging.Format != "text" {
 		t.Errorf("Logging.Format = %q, want %q", cfg.Logging.Format, "text")
 	}
+	if cfg.TVL.CustomProtocolsPath != "/tmp/custom-protocols.json" {
+		t.Errorf("TVL.CustomProtocolsPath = %q, want %q", cfg.TVL.CustomProtocolsPath, "/tmp/custom-protocols.json")
+	}
+	if cfg.TVL.Enabled {
+		t.Errorf("TVL.Enabled = %v, want false", cfg.TVL.Enabled)
+	}
 }
 
 func TestLoad_MinimalDefaultsApplied(t *testing.T) {
@@ -62,6 +68,12 @@ func TestLoad_MinimalDefaultsApplied(t *testing.T) {
 	}
 	if cfg.Scheduler.StartImmediately != true {
 		t.Errorf("Scheduler.StartImmediately default = %v, want true", cfg.Scheduler.StartImmediately)
+	}
+	if cfg.TVL.CustomProtocolsPath != "config/custom-protocols.json" {
+		t.Errorf("TVL.CustomProtocolsPath default = %q, want %q", cfg.TVL.CustomProtocolsPath, "config/custom-protocols.json")
+	}
+	if !cfg.TVL.Enabled {
+		t.Errorf("TVL.Enabled default = %v, want true", cfg.TVL.Enabled)
 	}
 }
 
@@ -126,6 +138,11 @@ func TestValidate_InvalidValues(t *testing.T) {
 			mutate:  func(c *Config) { c.Scheduler.Interval = 0 },
 			wantMsg: "scheduler.interval",
 		},
+		{
+			name:    "empty tvl path",
+			mutate:  func(c *Config) { c.TVL.CustomProtocolsPath = " " },
+			wantMsg: "tvl.custom_protocols_path",
+		},
 	}
 
 	for _, tt := range tests {
@@ -156,6 +173,8 @@ func TestLoad_EnvOverrides_StringAndDuration(t *testing.T) {
 	t.Setenv("LOG_FORMAT", "text")
 	t.Setenv("API_TIMEOUT", "45s")
 	t.Setenv("SCHEDULER_INTERVAL", "1h30m")
+	t.Setenv("TVL_CUSTOM_PROTOCOLS_PATH", "/env/custom.json")
+	t.Setenv("TVL_ENABLED", "false")
 
 	cfg, err := Load(path)
 	if err != nil {
@@ -179,6 +198,12 @@ func TestLoad_EnvOverrides_StringAndDuration(t *testing.T) {
 	}
 	if cfg.Scheduler.Interval != time.Hour+30*time.Minute {
 		t.Errorf("Scheduler.Interval = %s, want %s", cfg.Scheduler.Interval, time.Hour+30*time.Minute)
+	}
+	if cfg.TVL.CustomProtocolsPath != "/env/custom.json" {
+		t.Errorf("TVL.CustomProtocolsPath = %q, want %q", cfg.TVL.CustomProtocolsPath, "/env/custom.json")
+	}
+	if cfg.TVL.Enabled {
+		t.Errorf("TVL.Enabled = %v, want false", cfg.TVL.Enabled)
 	}
 }
 

@@ -1,0 +1,17 @@
+[
+  {
+    "slug": "drift-trade",
+    "is-ongoing": true,
+    "live": true,
+    "date": 1700000000,
+    "simple-tvs-ratio": 0.85,
+    "docs_proof": "https://docs.drift.trade/oracles#switchboard",
+    "github_proof": "https://github.com/drift-labs/protocol-v2/blob/main/src/oracle.rs"
+  },
+  {
+    "slug": "example-protocol",
+    "is-ongoing": false,
+    "live": false,
+    "simple-tvs-ratio": 1.0
+  }
+]

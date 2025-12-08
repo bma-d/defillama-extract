@@ -18,6 +18,7 @@ type Config struct {
 	Output    OutputConfig    `yaml:"output"`
 	Scheduler SchedulerConfig `yaml:"scheduler"`
 	Logging   LoggingConfig   `yaml:"logging"`
+	TVL       TVLConfig       `yaml:"tvl"`
 }
 
 type OracleConfig struct {
@@ -50,6 +51,11 @@ type SchedulerConfig struct {
 type LoggingConfig struct {
 	Level  string `yaml:"level"`
 	Format string `yaml:"format"`
+}
+
+type TVLConfig struct {
+	CustomProtocolsPath string `yaml:"custom_protocols_path"`
+	Enabled             bool   `yaml:"enabled"`
 }
 
 // applyEnvOverrides applies environment variable overrides to the provided config in place.
@@ -85,6 +91,13 @@ func applyEnvOverrides(cfg *Config) {
 			log.Printf("warning: invalid SCHEDULER_INTERVAL %q, using YAML/default value", v)
 		}
 	}
+
+	if v := os.Getenv("TVL_CUSTOM_PROTOCOLS_PATH"); v != "" {
+		cfg.TVL.CustomProtocolsPath = v
+	}
+	if v := os.Getenv("TVL_ENABLED"); v != "" {
+		cfg.TVL.Enabled = strings.ToLower(v) == "true"
+	}
 }
 
 // defaultConfig returns configuration populated with documented defaults.
@@ -116,6 +129,10 @@ func defaultConfig() Config {
 		Logging: LoggingConfig{
 			Level:  "info",
 			Format: "json",
+		},
+		TVL: TVLConfig{
+			CustomProtocolsPath: "config/custom-protocols.json",
+			Enabled:             true,
 		},
 	}
 }
@@ -179,6 +196,10 @@ func (c *Config) Validate() error {
 	}
 	if _, ok := validFormats[strings.ToLower(c.Logging.Format)]; !ok {
 		return fmt.Errorf("logging.format must be one of json, text; got %q", c.Logging.Format)
+	}
+
+	if strings.TrimSpace(c.TVL.CustomProtocolsPath) == "" {
+		return errors.New("tvl.custom_protocols_path must not be empty")
 	}
 
 	return nil
