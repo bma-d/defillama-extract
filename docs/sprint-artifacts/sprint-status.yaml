@@ -93,7 +93,7 @@ development_status:
   epic-7: contexted
   7-1-load-custom-protocols-configuration: done
   7-2-implement-protocol-tvl-fetcher: done
-  7-3-merge-protocol-lists: ready-for-dev
+  7-3-merge-protocol-lists: done
   7-4-include-integration-date-in-output: backlog
   7-5-generate-tvl-data-json-output: backlog
   7-6-integrate-tvl-pipeline-into-main-extraction-cycle: backlog

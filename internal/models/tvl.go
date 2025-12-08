@@ -13,3 +13,16 @@ type CustomProtocol struct {
 	DocsProof      *string `json:"docs_proof,omitempty"`   // Optional documentation URL
 	GitHubProof    *string `json:"github_proof,omitempty"` // Optional repository link proving integration
 }
+
+// MergedProtocol represents a protocol after combining auto-detected and
+// custom sources. Name is populated later by the TVL fetcher.
+type MergedProtocol struct {
+	Slug            string  `json:"slug"`
+	Name            string  `json:"name"`
+	Source          string  `json:"source"`
+	IsOngoing       bool    `json:"is_ongoing"`
+	SimpleTVSRatio  float64 `json:"simple_tvs_ratio"`
+	IntegrationDate *int64  `json:"integration_date"`
+	DocsProof       *string `json:"docs_proof"`
+	GitHubProof     *string `json:"github_proof"`
+}

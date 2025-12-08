@@ -1,6 +1,6 @@
 # Story 7.3: Merge Protocol Lists
 
-Status: drafted
+Status: done
 
 ## Story
 
@@ -54,8 +54,8 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-7.md#AC-7.3]; [Source: doc
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define MergedProtocol Model (AC: 2, 3, 6)
-  - [ ] 1.1: Add `MergedProtocol` struct to `internal/models/tvl.go`:
+- [x] Task 1: Define MergedProtocol Model (AC: 2, 3, 6)
+  - [x] 1.1: Add `MergedProtocol` struct to `internal/models/tvl.go`:
     - `Slug string` - Protocol identifier
     - `Name string` - Display name (populated later by TVL fetch)
     - `Source string` - "auto" | "custom"
@@ -64,40 +64,44 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-7.md#AC-7.3]; [Source: doc
     - `IntegrationDate *int64` - Unix timestamp, nullable
     - `DocsProof *string` - Documentation URL, nullable
     - `GitHubProof *string` - GitHub proof URL, nullable
-  - [ ] 1.2: Add JSON tags matching output schema
+  - [x] 1.2: Add JSON tags matching output schema
 
-- [ ] Task 2: Create merger.go File (AC: 1)
-  - [ ] 2.1: Create `internal/tvl/merger.go` with package declaration
-  - [ ] 2.2: Add imports: `sort`, `fmt`, `github.com/switchboard-xyz/defillama-extract/internal/models`
+- [x] Task 2: Create merger.go File (AC: 1)
+  - [x] 2.1: Create `internal/tvl/merger.go` with package declaration
+  - [x] 2.2: Add imports: `sort`, `fmt`, `github.com/switchboard-xyz/defillama-extract/internal/models`
 
-- [ ] Task 3: Implement MergeProtocolLists Function (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 3.1: Define signature: `func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []models.MergedProtocol`
-  - [ ] 3.2: Create `map[string]models.MergedProtocol` for deduplication
-  - [ ] 3.3: Iterate auto-detected slugs, add to map with auto defaults (source="auto", ratio=1.0, date=nil, ongoing=true, docs_proof generated)
-  - [ ] 3.4: Iterate custom protocols, upsert to map with custom values (overwrites if exists)
-  - [ ] 3.5: Convert map values to slice
-  - [ ] 3.6: Sort slice by slug (ascending, alphabetical)
-  - [ ] 3.7: Return sorted slice (empty slice if no inputs, never nil)
+- [x] Task 3: Implement MergeProtocolLists Function (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 3.1: Define signature: `func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []models.MergedProtocol`
+  - [x] 3.2: Create `map[string]models.MergedProtocol` for deduplication
+  - [x] 3.3: Iterate auto-detected slugs, add to map with auto defaults (source="auto", ratio=1.0, date=nil, ongoing=true, docs_proof generated)
+  - [x] 3.4: Iterate custom protocols, upsert to map with custom values (overwrites if exists)
+  - [x] 3.5: Convert map values to slice
+  - [x] 3.6: Sort slice by slug (ascending, alphabetical)
+  - [x] 3.7: Return sorted slice (empty slice if no inputs, never nil)
 
-- [ ] Task 4: Helper for Auto DocsProof URL (AC: 2)
-  - [ ] 4.1: Create helper function to generate DefiLlama URL: `fmt.Sprintf("https://defillama.com/protocol/%s", slug)`
+- [x] Task 4: Helper for Auto DocsProof URL (AC: 2)
+  - [x] 4.1: Create helper function to generate DefiLlama URL: `fmt.Sprintf("https://defillama.com/protocol/%s", slug)`
 
-- [ ] Task 5: Write Unit Tests (AC: all)
-  - [ ] 5.1: Create `internal/tvl/merger_test.go`
-  - [ ] 5.2: Test: Auto slugs only → all get auto defaults
-  - [ ] 5.3: Test: Custom protocols only → all get custom metadata
-  - [ ] 5.4: Test: Overlap (auto + custom with same slug) → custom wins
-  - [ ] 5.5: Test: Mixed (some overlap, some unique) → correct merge
-  - [ ] 5.6: Test: Empty inputs → empty slice returned
-  - [ ] 5.7: Test: Result sorted alphabetically by slug
-  - [ ] 5.8: Test: Auto docs_proof URL generated correctly
-  - [ ] 5.9: Test: Custom with nil date → integration_date is nil
-  - [ ] 5.10: Test: Custom with date → integration_date populated
+- [x] Task 5: Write Unit Tests (AC: all)
+  - [x] 5.1: Create `internal/tvl/merger_test.go`
+  - [x] 5.2: Test: Auto slugs only → all get auto defaults
+  - [x] 5.3: Test: Custom protocols only → all get custom metadata
+  - [x] 5.4: Test: Overlap (auto + custom with same slug) → custom wins
+  - [x] 5.5: Test: Mixed (some overlap, some unique) → correct merge
+  - [x] 5.6: Test: Empty inputs → empty slice returned
+  - [x] 5.7: Test: Result sorted alphabetically by slug
+  - [x] 5.8: Test: Auto docs_proof URL generated correctly
+  - [x] 5.9: Test: Custom with nil date → integration_date is nil
+  - [x] 5.10: Test: Custom with date → integration_date populated
 
-- [ ] Task 6: Build and Lint Verification (AC: all)
-  - [ ] 6.1: Run `go build ./...` and verify success
-  - [ ] 6.2: Run `go test ./internal/tvl/...` and verify all pass
-  - [ ] 6.3: Run `make lint` and fix any issues
+- [x] Task 6: Build and Lint Verification (AC: all)
+  - [x] 6.1: Run `go build ./...` and verify success
+  - [x] 6.2: Run `go test ./internal/tvl/...` and verify all pass
+  - [x] 6.3: Run `make lint` and fix any issues
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][High] Add unit test covering custom protocol with nil `date` to assert `IntegrationDate` remains nil in `MergeProtocolLists` (AC3, Task 5.9) [file: internal/tvl/merger_test.go]
 
 ## Dev Notes
 
@@ -240,18 +244,77 @@ For this story, the merger function takes pre-extracted `[]string` slugs as inpu
 gpt-5-codex
 
 ### Debug Log References
-
-Draft stage: no execution logs yet. Add go test / lint outputs after implementation.
+- Plan: map auto+custom merge, ensure custom overwrite, sort, keep slice non-nil.
+- go build ./... → pass.
+- go test ./internal/tvl/... → pass.
+- make lint → pass.
 
 ### Completion Notes List
 
-- Story auto-improved to resolve validation issues (status reset to drafted, continuity learnings populated, Dev Agent Record initialized).
-- Implementation not started; no code changes under this story yet.
+- Implemented MergeProtocolLists with auto defaults, custom overwrite, sorted output; added MergedProtocol model.
+- Added helper for auto docs_proof URL and comprehensive unit coverage per ACs.
+- Build, targeted tests, and lint all passing.
 ### File List
 
-- None yet for this story (draft). Populate after implementation.
+- internal/models/tvl.go
+- internal/tvl/merger.go
+- internal/tvl/merger_test.go
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/7-3-merge-protocol-lists.md
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-12-08 | SM Agent (Bob) | Initial story draft created from Epic 7 / Tech Spec |
+| 2025-12-08 | Amelia (Dev) | Implemented protocol merge logic, model, tests, and updated sprint status |
+| 2025-12-08 | BMad | Senior Developer Review (AI) — Systematic validation; status moved to done |
+
+## Senior Developer Review (AI)
+
+Reviewer: BMad  
+Date: 2025-12-08  
+Outcome: Approve (all ACs implemented; no findings)
+
+### Summary
+- AC1–AC6 fully met; merge logic uses map dedupe with custom precedence and alphabetic sort; returns non-nil slice.
+- Tests exercise auto defaults, custom metadata (nil/non-nil dates), overlap precedence, sorting, empty inputs, and docs proof generation.
+- Build, package tests, and lint all pass on current commit.
+
+### Key Findings
+- None (no defects or gaps identified).
+
+### Acceptance Criteria Coverage
+| AC | Status | Evidence |
+|----|--------|----------|
+| AC1 Combine lists | Implemented | map merge of auto + custom (internal/tvl/merger.go:13-44) |
+| AC2 Auto defaults | Implemented | defaults set for auto slugs (internal/tvl/merger.go:16-25); validated in TestMergeProtocolLists_AutoOnly (internal/tvl/merger_test.go:11-31) |
+| AC3 Custom metadata | Implemented | custom fields preserved incl. nil date (internal/tvl/merger.go:28-37); tests cover nil/non-nil dates (internal/tvl/merger_test.go:33-80,139-152) |
+| AC4 Custom precedence | Implemented | custom overwrites auto entry (internal/tvl/merger.go:28-37); confirmed in CustomOverridesAuto test (internal/tvl/merger_test.go:82-108) |
+| AC5 Sorted result | Implemented | sort by slug ascending (internal/tvl/merger.go:45-47); Sorting test (internal/tvl/merger_test.go:110-125) |
+| AC6 Return type | Implemented | returns slice not nil (internal/tvl/merger.go:13-49); empty-input test (internal/tvl/merger_test.go:128-137) |
+
+### Task Completion Validation
+| Task | Status | Evidence |
+|------|--------|----------|
+| 1: MergedProtocol model | Verified | struct with JSON tags added (internal/models/tvl.go:17-28) |
+| 2: merger.go scaffolding | Verified | file with fmt/sort imports (internal/tvl/merger.go:1-8) |
+| 3: MergeProtocolLists impl | Verified | map dedupe, defaults, overwrite, sort, non-nil return (internal/tvl/merger.go:13-49) |
+| 4: Auto docs_proof helper | Verified | autoDocsProof generates URL (internal/tvl/merger.go:52-54) |
+| 5: Unit tests | Verified | coverage across scenarios incl. nil date and docs proof (internal/tvl/merger_test.go:11-152) |
+| 6: Build/test/lint | Verified | `go test ./...`, `make lint` on 2025-12-08 (all pass) |
+
+### Test Coverage and Gaps
+- Executed: `go test ./...` (pass); `make lint` (pass). No uncovered AC cases remain.
+
+### Architectural Alignment
+- No new deps (ADR-005); pure function, deterministic, stdlib only; package placement matches tvl patterns.
+
+### Security Notes
+- Pure in-memory merge; no I/O or network surface.
+
+### Best-Practices and References
+- Testing: docs/architecture/testing-strategy.md.
+- Dependencies: docs/architecture/architecture-decision-records-adrs.md#ADR-005.
+
+### Action Items
+- None.
