@@ -1,0 +1,180 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>5</storyId>
+    <title>Generate tvl-data.json Output</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-5-generate-tvl-data-json-output.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>TVL data consumer</asA>
+    <iWant>the system to generate a tvl-data.json file containing all protocol TVL data with metadata</iWant>
+    <soThat>downstream applications can access comprehensive historical TVL data for all tracked protocols (auto-detected and custom) in a standardized format</soThat>
+    <tasks>
+      <task id="1" name="Define TVLOutput Root Structure" ac="1,2">
+        <subtask id="1.1">Add TVLOutput struct to internal/models/tvl.go with Version, Metadata, Protocols fields</subtask>
+        <subtask id="1.2">Add TVLOutputMetadata struct with LastUpdated, ProtocolCount, CustomProtocolCount</subtask>
+        <subtask id="1.3">Ensure JSON tags use snake_case to match schema</subtask>
+      </task>
+      <task id="2" name="Implement GenerateTVLOutput Function" ac="1,2,3,4">
+        <subtask id="2.1">Create GenerateTVLOutput function in internal/tvl/output.go</subtask>
+        <subtask id="2.2">Accept []MergedProtocol and map[string]*api.ProtocolTVLResponse as inputs</subtask>
+        <subtask id="2.3">Build protocols map keyed by slug using existing MapToOutputProtocol</subtask>
+        <subtask id="2.4">Calculate protocol_count (total) and custom_protocol_count (source == "custom")</subtask>
+        <subtask id="2.5">Set last_updated to current UTC time in RFC3339 format</subtask>
+        <subtask id="2.6">Set version to "1.0.0"</subtask>
+      </task>
+      <task id="3" name="Implement WriteTVLOutputs Function" ac="5,6">
+        <subtask id="3.1">Create WriteTVLOutputs function in internal/tvl/output.go</subtask>
+        <subtask id="3.2">Accept context, outputDir, output paths (or use defaults), and TVLOutput</subtask>
+        <subtask id="3.3">Use storage.WriteJSON for indented version (tvl-data.json)</subtask>
+        <subtask id="3.4">Use storage.WriteJSON for minified version (tvl-data.min.json)</subtask>
+        <subtask id="3.5">Respect context cancellation between writes</subtask>
+        <subtask id="3.6">Return error on any write failure (no partial state)</subtask>
+      </task>
+      <task id="4" name="Write Unit Tests" ac="all">
+        <subtask id="4.1">Test: GenerateTVLOutput with mixed auto/custom protocols returns correct counts</subtask>
+        <subtask id="4.2">Test: Metadata.last_updated is valid RFC3339 timestamp</subtask>
+        <subtask id="4.3">Test: Protocols map keyed by slug correctly</subtask>
+        <subtask id="4.4">Test: Empty protocol list produces valid output with zero counts</subtask>
+        <subtask id="4.5">Test: TVLHistoryItem dates formatted correctly (YYYY-MM-DD)</subtask>
+        <subtask id="4.6">Test: WriteTVLOutputs creates both files atomically</subtask>
+        <subtask id="4.7">Test: Context cancellation prevents/rolls back writes</subtask>
+      </task>
+      <task id="5" name="Build and Test Verification" ac="all">
+        <subtask id="5.1">Run go build ./... and verify success</subtask>
+        <subtask id="5.2">Run go test ./internal/tvl/... and verify all pass</subtask>
+        <subtask id="5.3">Run go test ./internal/models/... if applicable</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" title="Output Structure Matches Schema">
+      Given merged protocols with TVL data, when tvl-data.json is generated, then output structure matches the defined TVLOutput schema with version, metadata, and protocols map.
+    </criterion>
+    <criterion id="AC2" title="Metadata Contains Required Fields">
+      Given a TVL output generation, when tvl-data.json is written, then metadata.last_updated is in ISO 8601/RFC3339 format, metadata.protocol_count equals total protocols, and metadata.custom_protocol_count equals protocols with source: "custom".
+    </criterion>
+    <criterion id="AC3" title="Protocols Keyed by Slug">
+      Given merged protocols, when tvl-data.json is generated, then protocols is a map keyed by protocol slug, and each protocol includes all fields from TVLOutputProtocol struct.
+    </criterion>
+    <criterion id="AC4" title="TVL History Format">
+      Given a protocol with TVL data, when included in tvl-data.json, then tvl_history entries have date (YYYY-MM-DD), timestamp (Unix), tvl (float), and full history is preserved (no filtering).
+    </criterion>
+    <criterion id="AC5" title="Atomic Write">
+      Given TVL output ready for writing, when tvl-data.json is written, then uses WriteAtomic() pattern (temp file + rename) and file permissions are 0644.
+    </criterion>
+    <criterion id="AC6" title="Minified Version">
+      Given TVL output written, when write completes, then minified version written to tvl-data.min.json and contains same data without indentation.
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-7.md" title="Epic 7 Technical Specification" section="AC-7.5: Generate tvl-data.json Output" snippet="Output structure matches schema, metadata in ISO 8601, protocols keyed by slug, atomic writes, minified version generation."/>
+      <doc path="docs/epics/epic-7-custom-protocols-tvl-charting.md" title="Epic 7: Custom Protocols &amp; TVL Charting" section="Story 7.5" snippet="Build and write the tvl-data.json output file with atomic writes, include metadata, generate minified version."/>
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="ADRs" section="ADR-002" snippet="Atomic file writes: write to temp file, then atomic rename. Readers always see complete version."/>
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="ADRs" section="ADR-003" snippet="Explicit error returns over exceptions. Return errors explicitly, wrap with context."/>
+      <doc path="docs/architecture/architecture-decision-records-adrs.md" title="ADRs" section="ADR-005" snippet="Minimal external dependencies. Only external dependency is gopkg.in/yaml.v3."/>
+      <doc path="docs/architecture/testing-strategy.md" title="Testing Strategy" section="Test Organization" snippet="Table-driven tests in all test files. Test fixtures in testdata/ directory."/>
+      <doc path="docs/sprint-artifacts/7-4-include-integration-date-in-output.md" title="Story 7.4" section="Dev Agent Record" snippet="MapToOutputProtocol available at internal/tvl/output.go:14-49. TVLOutputProtocol schema defined at internal/models/tvl.go:39-53."/>
+    </docs>
+    <code>
+      <file path="internal/models/tvl.go" kind="model" symbol="TVLOutputProtocol" lines="39-53" reason="Existing per-protocol output struct that this story extends with root TVLOutput and TVLOutputMetadata"/>
+      <file path="internal/models/tvl.go" kind="model" symbol="TVLHistoryItem" lines="30-37" reason="TVL history item format with Date (YYYY-MM-DD), Timestamp (Unix), TVL (float64)"/>
+      <file path="internal/models/tvl.go" kind="model" symbol="MergedProtocol" lines="19-28" reason="Input struct for GenerateTVLOutput - contains Source field for counting custom protocols"/>
+      <file path="internal/tvl/output.go" kind="mapper" symbol="MapToOutputProtocol" lines="14-49" reason="Existing function to convert MergedProtocol + TVL data to TVLOutputProtocol - reuse in generator"/>
+      <file path="internal/storage/writer.go" kind="utility" symbol="WriteJSON" lines="141-158" reason="Existing JSON writer with indent option - use for both full and minified output"/>
+      <file path="internal/storage/writer.go" kind="utility" symbol="WriteAtomic" lines="232-292" reason="Atomic file write pattern (temp + rename + fsync) - underlying mechanism for WriteJSON"/>
+      <file path="internal/storage/writer.go" kind="utility" symbol="WriteAllOutputs" lines="162-230" reason="Example pattern for writing multiple files with context cancellation and cleanup"/>
+      <file path="internal/tvl/output_test.go" kind="test" symbol="TestMapToOutputProtocol_*" lines="1-127" reason="Existing tests for MapToOutputProtocol - follow same patterns for new GenerateTVLOutput tests"/>
+      <file path="internal/api/client.go" kind="client" symbol="ProtocolTVLResponse" lines="n/a" reason="API response type used as input to GenerateTVLOutput via map[string]*api.ProtocolTVLResponse"/>
+    </code>
+    <dependencies>
+      <go>
+        <module>go1.24.0</module>
+        <toolchain>go1.24.10</toolchain>
+        <require name="golang.org/x/sync" version="v0.18.0"/>
+        <require name="gopkg.in/yaml.v3" version="v3.0.1"/>
+        <indirect name="golang.org/x/net" version="v0.27.0"/>
+        <indirect name="golang.org/x/text" version="v0.16.0"/>
+      </go>
+      <stdlib>
+        <package>context</package>
+        <package>encoding/json</package>
+        <package>time</package>
+        <package>path/filepath</package>
+        <package>os</package>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-002">All file writes must be atomic using temp file + rename pattern</constraint>
+    <constraint source="ADR-003">Return explicit errors; no panics; wrap errors with context</constraint>
+    <constraint source="ADR-005">No new external dependencies - use standard library only</constraint>
+    <constraint source="Tech Spec">TVLOutput version must be "1.0.0"</constraint>
+    <constraint source="Tech Spec">File permissions must be 0644</constraint>
+    <constraint source="Tech Spec">Metadata.last_updated must use RFC3339/ISO 8601 format</constraint>
+    <constraint source="Tech Spec">Protocols map must be keyed by slug (not array)</constraint>
+    <constraint source="Tech Spec">Full TVL history preserved - no date filtering</constraint>
+    <constraint source="Story">Context cancellation must be respected between file writes</constraint>
+    <constraint source="Story">WriteTVLOutputs must not leave partial state on error</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="TVLOutput" kind="struct" path="internal/models/tvl.go">
+      <signature>
+type TVLOutput struct {
+    Version   string                       `json:"version"`
+    Metadata  TVLOutputMetadata            `json:"metadata"`
+    Protocols map[string]TVLOutputProtocol `json:"protocols"`
+}
+      </signature>
+    </interface>
+    <interface name="TVLOutputMetadata" kind="struct" path="internal/models/tvl.go">
+      <signature>
+type TVLOutputMetadata struct {
+    LastUpdated         string `json:"last_updated"`
+    ProtocolCount       int    `json:"protocol_count"`
+    CustomProtocolCount int    `json:"custom_protocol_count"`
+}
+      </signature>
+    </interface>
+    <interface name="GenerateTVLOutput" kind="function" path="internal/tvl/output.go">
+      <signature>func GenerateTVLOutput(protocols []models.MergedProtocol, tvlData map[string]*api.ProtocolTVLResponse) *models.TVLOutput</signature>
+    </interface>
+    <interface name="WriteTVLOutputs" kind="function" path="internal/tvl/output.go">
+      <signature>func WriteTVLOutputs(ctx context.Context, outputDir string, output *models.TVLOutput) error</signature>
+    </interface>
+    <interface name="WriteJSON" kind="function" path="internal/storage/writer.go">
+      <signature>func WriteJSON(path string, data interface{}, indent bool) error</signature>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Table-driven tests with named cases in all test files. Co-located *_test.go files alongside implementation. Test fixtures in testdata/ directory. High coverage for business-critical aggregation logic and error handling paths. Use httptest for mock server tests.
+    </standards>
+    <locations>
+      <location>internal/tvl/*_test.go</location>
+      <location>internal/models/*_test.go</location>
+      <location>testdata/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1,AC2,AC3">TestGenerateTVLOutput_MixedProtocols: Given 3 auto + 2 custom protocols, verify protocol_count=5, custom_protocol_count=2, all slugs present as map keys</idea>
+      <idea ac="AC2">TestGenerateTVLOutput_MetadataTimestamp: Verify last_updated parses as valid RFC3339 timestamp</idea>
+      <idea ac="AC1,AC3">TestGenerateTVLOutput_EmptyProtocols: Empty input produces valid output with version="1.0.0", protocol_count=0, empty protocols map</idea>
+      <idea ac="AC4">TestGenerateTVLOutput_TVLHistoryFormat: Verify history items have YYYY-MM-DD date strings derived from Unix timestamps</idea>
+      <idea ac="AC5,AC6">TestWriteTVLOutputs_BothFilesCreated: Verify both tvl-data.json and tvl-data.min.json are created with correct content</idea>
+      <idea ac="AC5">TestWriteTVLOutputs_AtomicWrite: Verify temp file pattern and 0644 permissions</idea>
+      <idea ac="AC6">TestWriteTVLOutputs_MinifiedNoWhitespace: Verify minified version has no indentation or extra whitespace</idea>
+      <idea ac="AC5,AC6">TestWriteTVLOutputs_ContextCancellation: Cancel context mid-write, verify no files left behind or rollback occurs</idea>
+      <idea ac="AC3">TestGenerateTVLOutput_ProtocolsKeyedBySlug: Verify map keys match protocol slugs exactly</idea>
+    </ideas>
+  </tests>
+</story-context>
