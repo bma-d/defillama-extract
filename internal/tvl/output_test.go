@@ -1,7 +1,10 @@
 package tvl
 
 import (
+	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -124,4 +127,118 @@ func TestMapToOutputProtocol_FullHistoryPreserved(t *testing.T) {
 func containsJSONNull(jsonStr, field string) bool {
 	needle := "\"" + field + "\":null"
 	return strings.Contains(jsonStr, needle)
+}
+
+func TestGenerateTVLOutput_MixedProtocols(t *testing.T) {
+	protocols := []models.MergedProtocol{
+		{Slug: "auto-1", Source: "auto", Name: "Auto One"},
+		{Slug: "custom-1", Source: "custom", Name: "Custom One"},
+		{Slug: "auto-2", Source: "auto", Name: "Auto Two"},
+	}
+
+	tvlData := map[string]*api.ProtocolTVLResponse{
+		"auto-1": {Name: "Auto One", TVL: []api.TVLDataPoint{{Date: 1, TotalLiquidityUSD: 10}}},
+	}
+
+	out := GenerateTVLOutput(protocols, tvlData)
+
+	if out.Version != "1.0.0" {
+		t.Fatalf("version mismatch: %s", out.Version)
+	}
+
+	if out.Metadata.ProtocolCount != 3 {
+		t.Fatalf("protocol_count = %d", out.Metadata.ProtocolCount)
+	}
+
+	if out.Metadata.CustomProtocolCount != 1 {
+		t.Fatalf("custom_protocol_count = %d", out.Metadata.CustomProtocolCount)
+	}
+
+	if _, err := time.Parse(time.RFC3339, out.Metadata.LastUpdated); err != nil {
+		t.Fatalf("last_updated not RFC3339: %v", err)
+	}
+
+	if len(out.Protocols) != 3 {
+		t.Fatalf("expected 3 protocols, got %d", len(out.Protocols))
+	}
+
+	if out.Protocols["auto-1"].Name != "Auto One" {
+		t.Fatalf("protocol mapping mismatch: %s", out.Protocols["auto-1"].Name)
+	}
+}
+
+func TestGenerateTVLOutput_EmptyProtocols(t *testing.T) {
+	out := GenerateTVLOutput(nil, nil)
+
+	if out.Metadata.ProtocolCount != 0 || out.Metadata.CustomProtocolCount != 0 {
+		t.Fatalf("expected zero counts, got %+v", out.Metadata)
+	}
+
+	if out.Protocols == nil || len(out.Protocols) != 0 {
+		t.Fatalf("protocols map should be empty, got %d", len(out.Protocols))
+	}
+}
+
+func TestWriteTVLOutputs_WritesBothFiles(t *testing.T) {
+	outDir := t.TempDir()
+	ctx := context.Background()
+
+	output := &models.TVLOutput{
+		Version: "1.0.0",
+		Metadata: models.TVLOutputMetadata{
+			LastUpdated:         time.Now().UTC().Format(time.RFC3339),
+			ProtocolCount:       1,
+			CustomProtocolCount: 1,
+		},
+		Protocols: map[string]models.TVLOutputProtocol{
+			"proto": {Slug: "proto", Name: "Proto"},
+		},
+	}
+
+	if err := WriteTVLOutputs(ctx, outDir, output); err != nil {
+		t.Fatalf("write outputs: %v", err)
+	}
+
+	fullPath := filepath.Join(outDir, "tvl-data.json")
+	minPath := filepath.Join(outDir, "tvl-data.min.json")
+
+	fullData, err := os.ReadFile(fullPath)
+	if err != nil {
+		t.Fatalf("read full output: %v", err)
+	}
+
+	minData, err := os.ReadFile(minPath)
+	if err != nil {
+		t.Fatalf("read min output: %v", err)
+	}
+
+	if strings.Contains(string(minData), "\n") {
+		t.Fatalf("minified output contains newlines")
+	}
+
+	var parsed models.TVLOutput
+	if err := json.Unmarshal(fullData, &parsed); err != nil {
+		t.Fatalf("unmarshal full output: %v", err)
+	}
+
+	if parsed.Protocols["proto"].Name != output.Protocols["proto"].Name {
+		t.Fatalf("content mismatch: %s", parsed.Protocols["proto"].Name)
+	}
+}
+
+func TestWriteTVLOutputs_ContextCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	outDir := t.TempDir()
+	output := &models.TVLOutput{Protocols: map[string]models.TVLOutputProtocol{}}
+
+	err := WriteTVLOutputs(ctx, outDir, output)
+	if err == nil {
+		t.Fatal("expected error for cancelled context")
+	}
+
+	if _, err := os.Stat(filepath.Join(outDir, "tvl-data.json")); !os.IsNotExist(err) {
+		t.Fatalf("expected no files when context cancelled, got err=%v", err)
+	}
 }

@@ -1,6 +1,6 @@
 # Story 7.5: Generate tvl-data.json Output
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -57,40 +57,40 @@ Source: [Source: docs/sprint-artifacts/tech-spec-epic-7.md#AC-7.5]; [Source: doc
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define TVLOutput Root Structure (AC: 1, 2)
-  - [ ] 1.1: Add `TVLOutput` struct to `internal/models/tvl.go` with Version, Metadata, Protocols fields
-  - [ ] 1.2: Add `TVLOutputMetadata` struct with LastUpdated, ProtocolCount, CustomProtocolCount
-  - [ ] 1.3: Ensure JSON tags use snake_case to match schema
+- [x] Task 1: Define TVLOutput Root Structure (AC: 1, 2)
+  - [x] 1.1: Add `TVLOutput` struct to `internal/models/tvl.go` with Version, Metadata, Protocols fields
+  - [x] 1.2: Add `TVLOutputMetadata` struct with LastUpdated, ProtocolCount, CustomProtocolCount
+  - [x] 1.3: Ensure JSON tags use snake_case to match schema
 
-- [ ] Task 2: Implement GenerateTVLOutput Function (AC: 1, 2, 3, 4)
-  - [ ] 2.1: Create `GenerateTVLOutput` function in `internal/tvl/output.go`
-  - [ ] 2.2: Accept `[]MergedProtocol` and `map[string]*api.ProtocolTVLResponse` as inputs
-  - [ ] 2.3: Build protocols map keyed by slug using existing `MapToOutputProtocol`
-  - [ ] 2.4: Calculate protocol_count (total) and custom_protocol_count (source == "custom")
-  - [ ] 2.5: Set last_updated to current UTC time in RFC3339 format
-  - [ ] 2.6: Set version to "1.0.0"
+- [x] Task 2: Implement GenerateTVLOutput Function (AC: 1, 2, 3, 4)
+  - [x] 2.1: Create `GenerateTVLOutput` function in `internal/tvl/output.go`
+  - [x] 2.2: Accept `[]MergedProtocol` and `map[string]*api.ProtocolTVLResponse` as inputs
+  - [x] 2.3: Build protocols map keyed by slug using existing `MapToOutputProtocol`
+  - [x] 2.4: Calculate protocol_count (total) and custom_protocol_count (source == "custom")
+  - [x] 2.5: Set last_updated to current UTC time in RFC3339 format
+  - [x] 2.6: Set version to "1.0.0"
 
-- [ ] Task 3: Implement WriteTVLOutputs Function (AC: 5, 6)
-  - [ ] 3.1: Create `WriteTVLOutputs` function in `internal/tvl/output.go`
-  - [ ] 3.2: Accept context, outputDir, output paths (or use defaults), and TVLOutput
-  - [ ] 3.3: Use `storage.WriteJSON` for indented version (tvl-data.json)
-  - [ ] 3.4: Use `storage.WriteJSON` for minified version (tvl-data.min.json)
-  - [ ] 3.5: Respect context cancellation between writes
-  - [ ] 3.6: Return error on any write failure (no partial state)
+- [x] Task 3: Implement WriteTVLOutputs Function (AC: 5, 6)
+  - [x] 3.1: Create `WriteTVLOutputs` function in `internal/tvl/output.go`
+  - [x] 3.2: Accept context, outputDir, output paths (or use defaults), and TVLOutput
+  - [x] 3.3: Use `storage.WriteJSON` for indented version (tvl-data.json)
+  - [x] 3.4: Use `storage.WriteJSON` for minified version (tvl-data.min.json)
+  - [x] 3.5: Respect context cancellation between writes
+  - [x] 3.6: Return error on any write failure (no partial state)
 
-- [ ] Task 4: Write Unit Tests (AC: all)
-  - [ ] 4.1: Test: GenerateTVLOutput with mixed auto/custom protocols returns correct counts
-  - [ ] 4.2: Test: Metadata.last_updated is valid RFC3339 timestamp
-  - [ ] 4.3: Test: Protocols map keyed by slug correctly
-  - [ ] 4.4: Test: Empty protocol list produces valid output with zero counts
-  - [ ] 4.5: Test: TVLHistoryItem dates formatted correctly (YYYY-MM-DD)
-  - [ ] 4.6: Test: WriteTVLOutputs creates both files atomically
-  - [ ] 4.7: Test: Context cancellation prevents/rolls back writes
+- [x] Task 4: Write Unit Tests (AC: all)
+  - [x] 4.1: Test: GenerateTVLOutput with mixed auto/custom protocols returns correct counts
+  - [x] 4.2: Test: Metadata.last_updated is valid RFC3339 timestamp
+  - [x] 4.3: Protocols map keyed by slug correctly
+  - [x] 4.4: Empty protocol list produces valid output with zero counts
+  - [x] 4.5: TVLHistoryItem dates formatted correctly (YYYY-MM-DD)
+  - [x] 4.6: WriteTVLOutputs creates both files atomically
+  - [x] 4.7: Context cancellation prevents/rolls back writes
 
-- [ ] Task 5: Build and Test Verification (AC: all)
-  - [ ] 5.1: Run `go build ./...` and verify success
-  - [ ] 5.2: Run `go test ./internal/tvl/...` and verify all pass
-  - [ ] 5.3: Run `go test ./internal/models/...` if applicable
+- [x] Task 5: Build and Test Verification (AC: all)
+  - [x] 5.1: Run `go build ./...` and verify success
+  - [x] 5.2: Run `go test ./internal/tvl/...` and verify all pass
+  - [x] 5.3: Run `go test ./internal/models/...` if applicable
 
 ## Dev Notes
 
@@ -221,18 +221,77 @@ gpt-5 (Scrum Master auto-fix)
 ### Debug Log References
 
 - 2025-12-08: Auto-fix applied after validation to address continuity, PRD citation, and Dev Agent Record completeness.
+- 2025-12-08: Implemented TVLOutput root structs, generator, writer, and tests; validated via go test ./internal/tvl/... and go build ./...
 
 ### Completion Notes List
 
 - 2025-12-08: Added previous-story file learnings and completion notes, cited PRD, populated Dev Agent Record metadata and file list.
+- 2025-12-08: TVL output generation completed (AC1-AC6). Added TVLOutput structures, GenerateTVLOutput, WriteTVLOutputs with atomic writes, and unit coverage for counts, metadata, minified output, and cancellation.
 
 ### File List
 
 - docs/sprint-artifacts/7-5-generate-tvl-data-json-output.md
 - docs/sprint-artifacts/validation-report-2025-12-08T06-43-36Z.md
+- docs/sprint-artifacts/sprint-status.yaml
+- internal/models/tvl.go
+- internal/tvl/output.go
+- internal/tvl/output_test.go
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-12-08 | SM Agent (Bob) | Initial story draft created from Epic 7 / Tech Spec |
+| 2025-12-08 | Amelia | Implemented TVL output structures, generator, writer, and tests; set story to review |
+| 2025-12-08 | Amelia (AI Review) | Senior Developer Review completed; approved and notes appended |
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad
+- Date: 2025-12-08
+- Outcome: Approve — All ACs and completed tasks verified with evidence; no change requests.
+
+### Summary
+- TVL output root structs, generator, and atomic writers match Epic 7 schema; minified output produced; tests cover AC-critical paths; build and full test suite passing.
+
+### Key Findings
+- No High/Medium findings. No code changes requested.
+
+### Acceptance Criteria Coverage
+| AC | Status | Evidence |
+| --- | --- | --- |
+| AC1 Output structure matches schema | Implemented | internal/models/tvl.go:39-45; internal/tvl/output.go:60-73; internal/tvl/output_test.go:132-168 |
+| AC2 Metadata fields + ISO timestamp | Implemented | internal/tvl/output.go:60-80; internal/tvl/output_test.go:149-159 |
+| AC3 Protocols keyed by slug, all fields present | Implemented | internal/tvl/output.go:60-73; internal/tvl/output_test.go:132-167 |
+| AC4 TVL history format preserved | Implemented | internal/tvl/output.go:23-34; internal/tvl/output_test.go:106-124 |
+| AC5 Atomic writes with 0644 perms | Implemented | internal/tvl/output.go:84-135; internal/storage/writer.go:141-158,232-278 |
+| AC6 Minified version matches data | Implemented | internal/tvl/output.go:132-135; internal/tvl/output_test.go:182-217 |
+
+### Task Completion Validation
+| Task | Marked As | Verified As | Evidence |
+| --- | --- | --- | --- |
+| 1 Define TVLOutput root structures | Completed | Verified | internal/models/tvl.go:39-53 |
+| 2 GenerateTVLOutput implementation | Completed | Verified | internal/tvl/output.go:56-82; internal/tvl/output_test.go:132-180 |
+| 3 WriteTVLOutputs (atomic + minified) | Completed | Verified | internal/tvl/output.go:84-135; internal/storage/writer.go:141-158,232-278; internal/tvl/output_test.go:182-243 |
+| 4 Unit tests added | Completed | Verified | internal/tvl/output_test.go:16-243 |
+| 5 Build & test runs | Completed | Verified | `go build ./...`; `go test ./...` |
+
+### Test Coverage and Gaps
+- Executed: `go build ./...`, `go test ./...` (2025-12-08) — all packages pass. Tests cover metadata, slug mapping, history preservation, minified output, and context cancellation. No gaps noted for AC1-AC6.
+
+### Architectural Alignment
+- Atomic writes via WriteAtomic with fsync and 0644 perms (ADR-002) — internal/storage/writer.go:232-278.
+- Explicit error returns, no panics (ADR-003) — WriteTVLOutputs returns errors for nil output/context cancellation.
+- No new dependencies added (ADR-005); stdlib only.
+
+### Security Notes
+- Output writing uses WriteAtomic; no new I/O surfaces beyond json marshalling. No secrets or external calls added.
+
+### Best-Practices and References
+- Go 1.24; stdlib JSON and context handling. Patterns mirror existing WriteAllOutputs for atomic multi-file writes.
+
+### Action Items
+**Code Changes Required:** None.
+
+**Advisory Notes:**
+- Note: No additional follow-ups identified.

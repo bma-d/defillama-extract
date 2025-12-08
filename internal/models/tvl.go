@@ -36,6 +36,22 @@ type TVLHistoryItem struct {
 	TVL       float64 `json:"tvl"`
 }
 
+// TVLOutput is the root document written to tvl-data.json. It contains
+// global metadata plus a map of per-protocol entries keyed by slug.
+type TVLOutput struct {
+	Version   string                       `json:"version"`
+	Metadata  TVLOutputMetadata            `json:"metadata"`
+	Protocols map[string]TVLOutputProtocol `json:"protocols"`
+}
+
+// TVLOutputMetadata captures top-level counts and the generation timestamp in
+// RFC3339 format. Counts enable quick summaries without scanning the map.
+type TVLOutputMetadata struct {
+	LastUpdated         string `json:"last_updated"`
+	ProtocolCount       int    `json:"protocol_count"`
+	CustomProtocolCount int    `json:"custom_protocol_count"`
+}
+
 // TVLOutputProtocol is the contract for per-protocol entries in tvl-data.json.
 // IntegrationDate is nullable to preserve the distinction between missing and
 // zero values. TVLHistory must contain the full, unfiltered history.

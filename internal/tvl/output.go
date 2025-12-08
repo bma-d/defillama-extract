@@ -1,10 +1,15 @@
 package tvl
 
 import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/switchboard-xyz/defillama-extract/internal/api"
 	"github.com/switchboard-xyz/defillama-extract/internal/models"
+	"github.com/switchboard-xyz/defillama-extract/internal/storage"
 )
 
 // MapToOutputProtocol converts a merged protocol plus its TVL data into the
@@ -46,4 +51,88 @@ func MapToOutputProtocol(protocol models.MergedProtocol, tvl *api.ProtocolTVLRes
 		CurrentTVL:      currentTVL,
 		TVLHistory:      history,
 	}
+}
+
+// GenerateTVLOutput builds the root tvl-data.json document from merged
+// protocols and their associated TVL responses. The protocols map is keyed by
+// slug to satisfy AC3.
+func GenerateTVLOutput(protocols []models.MergedProtocol, tvlData map[string]*api.ProtocolTVLResponse) *models.TVLOutput {
+	result := &models.TVLOutput{
+		Version:   "1.0.0",
+		Metadata:  models.TVLOutputMetadata{},
+		Protocols: make(map[string]models.TVLOutputProtocol),
+	}
+
+	for _, p := range protocols {
+		if p.Slug == "" {
+			continue
+		}
+
+		mapped := MapToOutputProtocol(p, tvlData[p.Slug])
+		result.Protocols[p.Slug] = mapped
+		result.Metadata.ProtocolCount++
+		if p.Source == "custom" {
+			result.Metadata.CustomProtocolCount++
+		}
+	}
+
+	result.Metadata.LastUpdated = time.Now().UTC().Format(time.RFC3339)
+
+	return result
+}
+
+// WriteTVLOutputs writes both indented and minified output files atomically.
+// Context cancellation is honored between writes to prevent partial state.
+func WriteTVLOutputs(ctx context.Context, outputDir string, output *models.TVLOutput) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	if output == nil {
+		return fmt.Errorf("output is nil")
+	}
+
+	fullPath := filepath.Join(outputDir, "tvl-data.json")
+	minPath := filepath.Join(outputDir, "tvl-data.min.json")
+
+	written := []string{}
+	cleanup := func() {
+		for i := len(written) - 1; i >= 0; i-- {
+			_ = os.Remove(written[i])
+		}
+	}
+
+	write := func(path string, data interface{}, indent bool) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		if err := storage.WriteJSON(path, data, indent); err != nil {
+			return err
+		}
+
+		written = append(written, path)
+
+		if err := ctx.Err(); err != nil {
+			cleanup()
+			return err
+		}
+
+		return nil
+	}
+
+	if err := write(fullPath, output, true); err != nil {
+		cleanup()
+		return err
+	}
+
+	if err := write(minPath, output, false); err != nil {
+		cleanup()
+		return err
+	}
+
+	return nil
 }
