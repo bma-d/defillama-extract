@@ -1,0 +1,275 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>3</storyId>
+    <title>Merge Protocol Lists</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/7-3-merge-protocol-lists.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>TVL pipeline developer</asA>
+    <iWant>to combine auto-detected protocols (from `/oracles` endpoint) with custom protocols (from config), deduplicating by slug with custom taking precedence</iWant>
+    <soThat>the TVL charting pipeline has a complete, unified list of all tracked protocols with correct source attribution and metadata</soThat>
+    <tasks>
+      <task id="1" title="Define MergedProtocol Model" acs="2,3,6">
+        <subtask id="1.1">Add MergedProtocol struct to internal/models/tvl.go with fields: Slug, Name, Source, IsOngoing, SimpleTVSRatio, IntegrationDate, DocsProof, GitHubProof</subtask>
+        <subtask id="1.2">Add JSON tags matching output schema</subtask>
+      </task>
+      <task id="2" title="Create merger.go File" acs="1">
+        <subtask id="2.1">Create internal/tvl/merger.go with package declaration</subtask>
+        <subtask id="2.2">Add imports: sort, fmt, github.com/switchboard-xyz/defillama-extract/internal/models</subtask>
+      </task>
+      <task id="3" title="Implement MergeProtocolLists Function" acs="1,2,3,4,5,6">
+        <subtask id="3.1">Define signature: func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []models.MergedProtocol</subtask>
+        <subtask id="3.2">Create map[string]models.MergedProtocol for deduplication</subtask>
+        <subtask id="3.3">Iterate auto-detected slugs, add to map with auto defaults (source="auto", ratio=1.0, date=nil, ongoing=true, docs_proof generated)</subtask>
+        <subtask id="3.4">Iterate custom protocols, upsert to map with custom values (overwrites if exists)</subtask>
+        <subtask id="3.5">Convert map values to slice</subtask>
+        <subtask id="3.6">Sort slice by slug (ascending, alphabetical)</subtask>
+        <subtask id="3.7">Return sorted slice (empty slice if no inputs, never nil)</subtask>
+      </task>
+      <task id="4" title="Helper for Auto DocsProof URL" acs="2">
+        <subtask id="4.1">Create helper function to generate DefiLlama URL: fmt.Sprintf("https://defillama.com/protocol/%s", slug)</subtask>
+      </task>
+      <task id="5" title="Write Unit Tests" acs="all">
+        <subtask id="5.1">Create internal/tvl/merger_test.go</subtask>
+        <subtask id="5.2">Test: Auto slugs only - all get auto defaults</subtask>
+        <subtask id="5.3">Test: Custom protocols only - all get custom metadata</subtask>
+        <subtask id="5.4">Test: Overlap (auto + custom with same slug) - custom wins</subtask>
+        <subtask id="5.5">Test: Mixed (some overlap, some unique) - correct merge</subtask>
+        <subtask id="5.6">Test: Empty inputs - empty slice returned</subtask>
+        <subtask id="5.7">Test: Result sorted alphabetically by slug</subtask>
+        <subtask id="5.8">Test: Auto docs_proof URL generated correctly</subtask>
+        <subtask id="5.9">Test: Custom with nil date - integration_date is nil</subtask>
+        <subtask id="5.10">Test: Custom with date - integration_date populated</subtask>
+      </task>
+      <task id="6" title="Build and Lint Verification" acs="all">
+        <subtask id="6.1">Run go build ./... and verify success</subtask>
+        <subtask id="6.2">Run go test ./internal/tvl/... and verify all pass</subtask>
+        <subtask id="6.3">Run make lint and fix any issues</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" title="Combine Auto-Detected and Custom Protocols">
+      Given a list of auto-detected protocol slugs (from existing aggregator filtering)
+      And a list of custom protocols (loaded via CustomLoader)
+      When MergeProtocolLists() is called
+      Then it returns a combined list containing protocols from both sources
+    </criterion>
+    <criterion id="AC2" title="Auto-Detected Protocol Defaults">
+      Given a protocol slug appears only in the auto-detected list
+      When it is added to the merged result
+      Then it is assigned source: "auto"
+      And simple_tvs_ratio: 1.0
+      And integration_date: nil
+      And is_ongoing: true
+      And docs_proof: "https://defillama.com/protocol/{slug}" (generated from slug)
+    </criterion>
+    <criterion id="AC3" title="Custom Protocol Metadata">
+      Given a protocol appears in the custom protocols list
+      When it is added to the merged result
+      Then it is assigned source: "custom"
+      And preserves simple_tvs_ratio from config
+      And preserves integration_date from config date field (nil if not set)
+      And preserves is_ongoing from config
+      And preserves docs_proof and github_proof from config
+    </criterion>
+    <criterion id="AC4" title="Deduplication with Custom Precedence">
+      Given a protocol slug exists in both auto-detected and custom lists
+      When the lists are merged
+      Then the custom protocol's metadata takes precedence (overwrites auto)
+      And the protocol appears exactly once in the result
+    </criterion>
+    <criterion id="AC5" title="Result Sorted Alphabetically">
+      Given the merged list contains multiple protocols
+      When MergeProtocolLists() returns
+      Then the result is sorted alphabetically by slug (ascending)
+    </criterion>
+    <criterion id="AC6" title="Return Type">
+      Given any combination of inputs
+      When MergeProtocolLists() completes
+      Then it returns []MergedProtocol (never nil, may be empty)
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>AC-7.3: Merge Protocol Lists</section>
+        <snippet>MergeProtocolLists() combines auto-detected slugs with custom protocols. Auto-detected get source: "auto", simple_tvs_ratio: 1.0, integration_date: nil. Custom get source: "custom" with config values. Deduplication by slug; custom takes precedence.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Data Models and Contracts - MergedProtocol</section>
+        <snippet>MergedProtocol struct with fields: Slug, Name, Source ("auto"|"custom"), IsOngoing, SimpleTVSRatio, IntegrationDate (*int64), DocsProof (*string), GitHubProof (*string).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Protocol Merge Flow</section>
+        <snippet>Create map[slug]MergedProtocol. Iterate autoSlugs adding with auto defaults. Iterate custom protocols upserting (overwrites auto if exists). Return sorted slice by slug.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-7.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Protocol Merging Test Scenarios</section>
+        <snippet>Test cases: [a,b]+[] = [a(auto),b(auto)]; []+[c,d] = [c(custom),d(custom)]; [a,b]+[b,c] = [a(auto),b(custom),c(custom)]; [a]+[a] = [a(custom)].</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-7-custom-protocols-tvl-charting.md</path>
+        <title>Epic 7: Custom Protocols and TVL Charting</title>
+        <section>Story 7.3: Merge Protocol Lists</section>
+        <snippet>Goal: Combine auto-detected protocols (from /oracles) with custom protocols, deduplicating by slug. Auto-detected get source: "auto", simple_tvs_ratio: 1.0, docs_proof: generated URL.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-003: Explicit Error Returns</section>
+        <snippet>Return errors explicitly, wrap with context (fmt.Errorf("...: %w", err)), use sentinel errors for expected conditions.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-005: Minimal External Dependencies</section>
+        <snippet>Only external dependency is gopkg.in/yaml.v3. Go stdlib provides HTTP, JSON, logging, testing. Fewer deps = faster builds, smaller binary.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization</section>
+        <snippet>Unit tests co-located as *_test.go. Table-driven tests for multiple inputs/outputs. Test fixtures in testdata/ directory.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/project-structure.md</path>
+        <title>Project Structure</title>
+        <section>internal/tvl/</section>
+        <snippet>TVL package contains: doc.go (documentation), custom.go (custom protocol loading), merger.go (protocol merging - to be created), fetcher.go (TVL fetching), output.go (output generation).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>internal/models/tvl.go</path>
+        <kind>model</kind>
+        <symbol>CustomProtocol</symbol>
+        <lines>1-15</lines>
+        <reason>Existing model for custom protocols - MergedProtocol struct should be added to this file alongside CustomProtocol</reason>
+      </artifact>
+      <artifact>
+        <path>internal/tvl/custom.go</path>
+        <kind>service</kind>
+        <symbol>CustomLoader</symbol>
+        <lines>1-118</lines>
+        <reason>CustomLoader.Load() returns []models.CustomProtocol which is input to MergeProtocolLists. Follow same package patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/tvl/custom_test.go</path>
+        <kind>test</kind>
+        <symbol>TestCustomLoader</symbol>
+        <lines>all</lines>
+        <reason>Reference for test patterns in tvl package - table-driven tests, testdata fixtures</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/responses.go</path>
+        <kind>model</kind>
+        <symbol>ProtocolTVLResponse, TVLDataPoint</symbol>
+        <lines>30-41</lines>
+        <reason>TVL response models from Story 7.2 - MergedProtocol will be populated with Name from TVL fetch in later story</reason>
+      </artifact>
+      <artifact>
+        <path>internal/api/client.go</path>
+        <kind>service</kind>
+        <symbol>FetchProtocolTVL</symbol>
+        <lines>329-358</lines>
+        <reason>Protocol TVL fetcher from Story 7.2 - will use merged list as input in Story 7.6</reason>
+      </artifact>
+      <artifact>
+        <path>internal/aggregator/filter.go</path>
+        <kind>service</kind>
+        <symbol>FilterByOracle</symbol>
+        <lines>1-30</lines>
+        <reason>Returns []api.Protocol filtered by oracle - caller extracts slugs from this for MergeProtocolLists input</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="go">
+        <package name="go" version="1.24.0">Go toolchain version</package>
+        <package name="golang.org/x/sync" version="v0.18.0">errgroup for concurrency</package>
+        <package name="gopkg.in/yaml.v3" version="v3.0.1">Config parsing</package>
+        <package name="sort" version="stdlib">For sorting merged slice by slug</package>
+        <package name="fmt" version="stdlib">For generating docs_proof URL</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-003">Explicit error returns; wrap errors with context using fmt.Errorf("...: %w", err)</constraint>
+    <constraint source="ADR-005">No new external dependencies; use standard library only (sort, fmt)</constraint>
+    <constraint source="Tech Spec">Follow existing internal/tvl/ package structure established in Story 7.1</constraint>
+    <constraint source="Tech Spec">MergeProtocolLists is a pure function - no HTTP calls, no side effects</constraint>
+    <constraint source="Story">Auto-detected protocols get source: "auto", simple_tvs_ratio: 1.0, integration_date: nil, is_ongoing: true</constraint>
+    <constraint source="Story">Custom protocols overwrite auto if slug matches - custom always takes precedence</constraint>
+    <constraint source="Story">Return slice must be sorted alphabetically by slug (ascending)</constraint>
+    <constraint source="Story">Never return nil - return empty slice []models.MergedProtocol{} if no inputs</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>MergeProtocolLists</name>
+      <kind>function signature</kind>
+      <signature>func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []models.MergedProtocol</signature>
+      <path>internal/tvl/merger.go</path>
+    </interface>
+    <interface>
+      <name>CustomLoader.Load</name>
+      <kind>method</kind>
+      <signature>func (l *CustomLoader) Load(ctx context.Context) ([]models.CustomProtocol, error)</signature>
+      <path>internal/tvl/custom.go</path>
+    </interface>
+    <interface>
+      <name>FilterByOracle</name>
+      <kind>function</kind>
+      <signature>func FilterByOracle(protocols []api.Protocol, oracleName string) []api.Protocol</signature>
+      <path>internal/aggregator/filter.go</path>
+    </interface>
+    <interface>
+      <name>MergedProtocol</name>
+      <kind>struct</kind>
+      <signature>type MergedProtocol struct { Slug string; Name string; Source string; IsOngoing bool; SimpleTVSRatio float64; IntegrationDate *int64; DocsProof *string; GitHubProof *string }</signature>
+      <path>internal/models/tvl.go</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Table-driven tests with named cases. Unit tests co-located as *_test.go files. No HTTP mocking needed for this story (pure logic function). Test all edge cases: empty inputs, duplicates, sorting verification. Verify pointer fields (DocsProof, GitHubProof, IntegrationDate) handled correctly for both nil and non-nil cases.
+    </standards>
+    <locations>
+      <location>internal/tvl/merger_test.go</location>
+      <location>testdata/tvl/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test auto slugs only returns all with auto defaults</idea>
+      <idea ac="AC1">Test custom protocols only returns all with custom metadata</idea>
+      <idea ac="AC1">Test mixed inputs returns combined list</idea>
+      <idea ac="AC2">Test auto protocol gets source="auto", ratio=1.0, date=nil, ongoing=true</idea>
+      <idea ac="AC2">Test auto docs_proof URL generated as https://defillama.com/protocol/{slug}</idea>
+      <idea ac="AC3">Test custom protocol preserves all config values</idea>
+      <idea ac="AC3">Test custom with nil date results in nil integration_date</idea>
+      <idea ac="AC3">Test custom with date value results in populated integration_date</idea>
+      <idea ac="AC4">Test same slug in both lists results in single entry with custom metadata</idea>
+      <idea ac="AC4">Test custom overwrites auto completely (not merge)</idea>
+      <idea ac="AC5">Test result sorted alphabetically by slug ascending</idea>
+      <idea ac="AC5">Test sorting with mixed case slugs</idea>
+      <idea ac="AC6">Test empty auto + empty custom returns empty slice (not nil)</idea>
+      <idea ac="AC6">Test nil custom slice treated as empty</idea>
+    </ideas>
+  </tests>
+</story-context>
