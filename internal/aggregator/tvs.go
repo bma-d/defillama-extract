@@ -3,9 +3,10 @@ package aggregator
 import "strings"
 
 // ExtractProtocolTVS returns total TVS and per-chain TVS for a protocol.
-// It normalizes borrowed variants ("chain-borrowed", "borrowed") so they are
-// counted once and do not pollute the chain list. Returns found=false when the
-// protocol entry is absent or empty.
+// It excludes borrowed variants ("chain-borrowed", "borrowed") entirely since
+// borrowed amounts are derived from deposits and should not be double-counted
+// in TVS (Total Value Secured). Returns found=false when the protocol entry
+// is absent or empty.
 func ExtractProtocolTVS(oraclesTVS map[string]map[string]map[string]float64, oracleName, protocolSlug string) (float64, map[string]float64, bool) {
 	if oraclesTVS == nil || oracleName == "" || protocolSlug == "" {
 		return 0, nil, false
@@ -28,12 +29,10 @@ func ExtractProtocolTVS(oraclesTVS map[string]map[string]map[string]float64, ora
 			continue
 		}
 
-		// Keep a single borrowed entry; later duplicates are ignored to prevent
-		// double-counting when APIs return both "borrowed" and "chain-borrowed".
+		// Skip borrowed entries entirely - they are derived from deposits
+		// and should not be counted in TVS to avoid double-counting.
 		if isBorrowed {
-			if _, exists := byChain[normalized]; exists {
-				continue
-			}
+			continue
 		}
 
 		byChain[normalized] += tvs

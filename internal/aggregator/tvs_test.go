@@ -42,14 +42,17 @@ func TestExtractProtocolTVS_BlankSlug(t *testing.T) {
 	}
 }
 
-func TestExtractProtocolTVS_NormalizesBorrowed(t *testing.T) {
+func TestExtractProtocolTVS_ExcludesBorrowed(t *testing.T) {
+	// Borrowed amounts should be excluded entirely from TVS since they are
+	// derived from deposits and would cause double-counting.
 	oraclesTVS := map[string]map[string]map[string]float64{
 		"Switchboard": {
 			"proto-a": {
-				"Solana":          50,
-				"Solana-borrowed": 100,
-				"borrowed":        100,
-				"Sui-borrowed":    100,
+				"Solana":          757_000_000, // deposits
+				"Solana-borrowed": 442_000_000, // borrowed (excluded)
+				"borrowed":        442_000_000, // total borrowed (excluded)
+				"Sui":             50_000_000,  // deposits
+				"Sui-borrowed":    30_000_000,  // borrowed (excluded)
 			},
 		},
 	}
@@ -59,19 +62,43 @@ func TestExtractProtocolTVS_NormalizesBorrowed(t *testing.T) {
 		t.Fatalf("expected TVS to be found")
 	}
 
-	if total != 150 {
-		t.Fatalf("total = %f, want 150", total)
+	// Only non-borrowed values should be counted
+	expectedTotal := 757_000_000.0 + 50_000_000.0
+	if total != expectedTotal {
+		t.Fatalf("total = %f, want %f (borrowed should be excluded)", total, expectedTotal)
 	}
 
 	if len(byChain) != 2 {
-		t.Fatalf("expected 2 chains (Solana + borrowed), got %d: %+v", len(byChain), byChain)
+		t.Fatalf("expected 2 chains (Solana + Sui), got %d: %+v", len(byChain), byChain)
 	}
 
-	if byChain["Solana"] != 50 {
-		t.Fatalf("Solana tvs = %f, want 50", byChain["Solana"])
+	if byChain["Solana"] != 757_000_000 {
+		t.Fatalf("Solana tvs = %f, want 757000000", byChain["Solana"])
 	}
 
-	if byChain["borrowed"] != 100 {
-		t.Fatalf("borrowed tvs = %f, want 100", byChain["borrowed"])
+	if byChain["Sui"] != 50_000_000 {
+		t.Fatalf("Sui tvs = %f, want 50000000", byChain["Sui"])
+	}
+
+	// Borrowed should NOT be in byChain
+	if _, exists := byChain["borrowed"]; exists {
+		t.Fatalf("borrowed should not be in byChain: %+v", byChain)
+	}
+}
+
+func TestExtractProtocolTVS_OnlyBorrowedReturnsNotFound(t *testing.T) {
+	// If a protocol only has borrowed entries, it should return not found
+	oraclesTVS := map[string]map[string]map[string]float64{
+		"Switchboard": {
+			"proto-a": {
+				"borrowed":        100,
+				"Solana-borrowed": 100,
+			},
+		},
+	}
+
+	total, byChain, found := ExtractProtocolTVS(oraclesTVS, "Switchboard", "proto-a")
+	if found {
+		t.Fatalf("expected not found when only borrowed entries exist, got total=%f byChain=%+v", total, byChain)
 	}
 }

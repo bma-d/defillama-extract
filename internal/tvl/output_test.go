@@ -237,3 +237,50 @@ func TestWriteTVLOutputs_ContextCancelled(t *testing.T) {
 		t.Fatalf("expected no files when context cancelled, got err=%v", err)
 	}
 }
+
+func TestMapToOutputProtocol_DedupesSameDateEntries(t *testing.T) {
+	// DefiLlama returns daily snapshots at midnight plus a real-time value,
+	// which can produce two entries for the same date. We keep the latest.
+	merged := models.MergedProtocol{Slug: "dedupe-test", Source: "auto"}
+	tvl := &api.ProtocolTVLResponse{
+		Name: "Dedupe Test",
+		TVL: []api.TVLDataPoint{
+			{Date: 1765065600, TotalLiquidityUSD: 100}, // 2025-12-07 00:00:00 UTC
+			{Date: 1765152000, TotalLiquidityUSD: 200}, // 2025-12-08 00:00:00 UTC (midnight)
+			{Date: 1765190351, TotalLiquidityUSD: 250}, // 2025-12-08 10:39:11 UTC (real-time)
+		},
+	}
+
+	out := MapToOutputProtocol(merged, tvl)
+
+	// Should have only 2 entries (one per unique date)
+	if len(out.TVLHistory) != 2 {
+		t.Fatalf("expected 2 history items after dedupe, got %d", len(out.TVLHistory))
+	}
+
+	// Check dates are unique
+	dates := make(map[string]bool)
+	for _, h := range out.TVLHistory {
+		if dates[h.Date] {
+			t.Fatalf("duplicate date found: %s", h.Date)
+		}
+		dates[h.Date] = true
+	}
+
+	// The 2025-12-08 entry should have the later timestamp (real-time value)
+	lastEntry := out.TVLHistory[len(out.TVLHistory)-1]
+	if lastEntry.Date != "2025-12-08" {
+		t.Fatalf("expected last date to be 2025-12-08, got %s", lastEntry.Date)
+	}
+	if lastEntry.Timestamp != 1765190351 {
+		t.Fatalf("expected latest timestamp 1765190351, got %d", lastEntry.Timestamp)
+	}
+	if lastEntry.TVL != 250 {
+		t.Fatalf("expected TVL 250, got %f", lastEntry.TVL)
+	}
+
+	// CurrentTVL should be from the latest entry
+	if out.CurrentTVL != 250 {
+		t.Fatalf("expected CurrentTVL 250, got %f", out.CurrentTVL)
+	}
+}

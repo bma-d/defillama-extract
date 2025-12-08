@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/switchboard-xyz/defillama-extract/internal/api"
@@ -20,17 +21,33 @@ func MapToOutputProtocol(protocol models.MergedProtocol, tvl *api.ProtocolTVLRes
 	currentTVL := 0.0
 
 	if tvl != nil {
-		history = make([]models.TVLHistoryItem, 0, len(tvl.TVL))
+		// Dedupe by date: DefiLlama returns daily snapshots plus a real-time value,
+		// which can produce two entries for the same date. Keep the latest per date.
+		dateMap := make(map[string]models.TVLHistoryItem)
 		for _, point := range tvl.TVL {
-			history = append(history, models.TVLHistoryItem{
-				Date:      time.Unix(point.Date, 0).UTC().Format("2006-01-02"),
-				Timestamp: point.Date,
-				TVL:       point.TotalLiquidityUSD,
-			})
+			dateStr := time.Unix(point.Date, 0).UTC().Format("2006-01-02")
+			existing, exists := dateMap[dateStr]
+			if !exists || point.Date > existing.Timestamp {
+				dateMap[dateStr] = models.TVLHistoryItem{
+					Date:      dateStr,
+					Timestamp: point.Date,
+					TVL:       point.TotalLiquidityUSD,
+				}
+			}
 		}
 
-		if len(tvl.TVL) > 0 {
-			currentTVL = tvl.TVL[len(tvl.TVL)-1].TotalLiquidityUSD
+		// Build sorted history from deduped map
+		history = make([]models.TVLHistoryItem, 0, len(dateMap))
+		for _, item := range dateMap {
+			history = append(history, item)
+		}
+		// Sort by timestamp ascending
+		sort.Slice(history, func(i, j int) bool {
+			return history[i].Timestamp < history[j].Timestamp
+		})
+
+		if len(history) > 0 {
+			currentTVL = history[len(history)-1].TVL
 		}
 
 		if protocol.Name == "" {
