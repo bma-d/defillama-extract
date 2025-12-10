@@ -31,11 +31,27 @@ This epic provides a structured home for:
 
 | ID | Issue | Severity | Status | Story |
 |----|-------|----------|--------|-------|
-| M-001 | Per-protocol TVS breakdown missing for many protocols | High | Ready for Story | - |
+| M-001 | Per-protocol TVS breakdown missing for many protocols | High | Resolved | 6-1 |
+| M-002 | Non-DefiLlama protocols have no TVL history source | Medium | In Progress | 6-2 |
 
 ## Completed Stories
 
-_None yet - stories will be added as issues are addressed._
+### Story 6.1: Per-Protocol TVS Breakdown
+- **Status:** Done
+- **Summary:** Added TVS data extraction per protocol
+
+## Active Stories
+
+### Story 6.2: Custom Data Folder for Non-DefiLlama Protocols
+- **Status:** Drafted
+- **Issue:** M-002
+- **Summary:** Create `custom-data/` folder to supply manual TVL history for protocols not available on DefiLlama API
+- **Acceptance Criteria:**
+  1. `custom-data/` directory at project root with per-protocol JSON files
+  2. Schema: `{"slug": string, "tvl_history": [{date, timestamp, tvl}]}`
+  3. Merge custom data with API data (custom wins on date conflicts)
+  4. Protocols with only custom data produce valid output
+  5. Config supports `custom_data_path` with default `custom-data/`
 
 ---
 

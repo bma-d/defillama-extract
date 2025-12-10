@@ -1,0 +1,260 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>2</storyId>
+    <title>Custom Data Folder for Non-DefiLlama Protocols</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-10</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/6-2-custom-data-folder.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>data pipeline operator</asA>
+    <iWant>a custom-data folder where I can supply manual TVL history for protocols not on DefiLlama</iWant>
+    <soThat>protocols without API data can still be tracked with accurate historical information</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <title>Create custom-data directory structure</title>
+        <subtasks>
+          <subtask id="1.1">Create custom-data/ directory at project root</subtask>
+          <subtask id="1.2">Add .gitkeep to preserve empty directory</subtask>
+          <subtask id="1.3">Add example file custom-data/_example.json.template showing schema</subtask>
+          <subtask id="1.4">Test: dir discovered by pipeline when empty (AC: 1)</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2,3,4">
+        <title>Define custom data schema and loader</title>
+        <subtasks>
+          <subtask id="2.1">Create internal/tvl/customdata.go with CustomDataLoader struct</subtask>
+          <subtask id="2.2">Implement Load(ctx) (map[string][]models.TVLHistoryItem, error)</subtask>
+          <subtask id="2.3">Add schema validation for required fields</subtask>
+          <subtask id="2.4">Handle missing directory gracefully (return empty map, log info)</subtask>
+          <subtask id="2.5">Handle invalid JSON files (log warning, skip file, continue)</subtask>
+          <subtask id="2.6">Write unit tests in internal/tvl/customdata_test.go</subtask>
+          <subtask id="2.7">Test: invalid schema file yields warning but continues (AC: 4)</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="5,6">
+        <title>Implement merge logic</title>
+        <subtasks>
+          <subtask id="3.1">Create MergeTVLHistory(apiData, customData []TVLHistoryItem) []TVLHistoryItem</subtask>
+          <subtask id="3.2">Dedupe by date, custom data wins on conflicts</subtask>
+          <subtask id="3.3">Sort result by timestamp ascending</subtask>
+          <subtask id="3.4">Write unit tests for merge scenarios (overlap, no overlap, custom-only)</subtask>
+          <subtask id="3.5">Test: custom-only protocol produces valid merged output (AC: 6)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="7">
+        <title>Update config</title>
+        <subtasks>
+          <subtask id="4.1">Add CustomDataPath string to TVLConfig struct</subtask>
+          <subtask id="4.2">Set default to custom-data/</subtask>
+          <subtask id="4.3">Add env override TVL_CUSTOM_DATA_PATH</subtask>
+          <subtask id="4.4">Update configs/config.yaml with new field</subtask>
+          <subtask id="4.5">Test: env override respected and default retained when unset (AC: 7)</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="5,6,8">
+        <title>Integrate into pipeline</title>
+        <subtasks>
+          <subtask id="5.1">Add CustomDataLoader to RunnerDeps struct</subtask>
+          <subtask id="5.2">Load custom data after API fetch in RunTVLPipeline</subtask>
+          <subtask id="5.3">Merge custom data into tvlData map before output generation</subtask>
+          <subtask id="5.4">Add logging for custom data statistics</subtask>
+          <subtask id="5.5">Update pipeline tests</subtask>
+          <subtask id="5.6">Test: log contains files loaded / entries merged metrics (AC: 8)</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="N/A">
+        <title>Update Epic 6 with story 6.2 definition (process)</title>
+        <subtasks>
+          <subtask id="6.1">Add story 6.2 to epic-6-maintenance.md Known Issues / Completed Stories</subtask>
+          <subtask id="6.2">Add story key 6-2-custom-data-folder to sprint-status.yaml</subtask>
+          <subtask id="6.3">Test: story shows in sprint-status.yaml and epic markdown</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">custom-data/ directory exists at project root and is recognized by the pipeline - Verification: Directory created, .gitkeep present</criterion>
+    <criterion id="AC2">Per-protocol JSON files follow schema: {"slug": string, "tvl_history": [{"date": "YYYY-MM-DD", "timestamp": int64, "tvl": float64}]} - Verification: Schema validation in loader</criterion>
+    <criterion id="AC3">Custom data loader reads all *.json files from custom-data/ directory - Verification: Unit test with multiple files</criterion>
+    <criterion id="AC4">Invalid JSON files are logged as warnings but don't fail the pipeline - Verification: Error handling test</criterion>
+    <criterion id="AC5">Custom data is merged with API data - custom entries win on date conflicts - Verification: Merge logic unit test</criterion>
+    <criterion id="AC6">Protocols with only custom data (no API response) produce valid output - Verification: Integration test</criterion>
+    <criterion id="AC7">Config supports optional custom_data_path with default custom-data/ - Verification: Config field added</criterion>
+    <criterion id="AC8">Pipeline logs custom data load statistics (files loaded, entries merged) - Verification: Log output verification</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Success Criteria, Functional Requirements</section>
+        <snippet>PRD defines Complete Protocol Capture goal and historical tracking requirements. FR30-34 cover historical data management.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-6-maintenance.md</path>
+        <title>Epic 6: Maintenance and Data Quality</title>
+        <section>Active Stories - Story 6.2</section>
+        <snippet>Defines M-002 issue (Non-DefiLlama protocols have no TVL history source) and story 6.2 acceptance criteria for custom data folder.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Overview, System Architecture Alignment</section>
+        <snippet>Describes maintenance epic scope, architecture alignment, and impact on internal/aggregator/, internal/api/, internal/models/ components.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/data-architecture.md</path>
+        <title>Data Architecture</title>
+        <section>API Response Models, Output Models</section>
+        <snippet>Defines OracleAPIResponse, Protocol, FullOutput, and State structs used for data processing.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/testing-strategy.md</path>
+        <title>Testing Strategy</title>
+        <section>Test Organization, Test Fixtures</section>
+        <snippet>Unit tests co-located as *_test.go, table-driven tests, test data in testdata/ directory.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/architecture-decision-records-adrs.md</path>
+        <title>Architecture Decision Records</title>
+        <section>ADR-002, ADR-004</section>
+        <snippet>ADR-002: Atomic file writes (temp file + rename). ADR-004: Structured logging with log/slog.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>internal/tvl/custom.go</path>
+        <kind>loader</kind>
+        <symbol>CustomLoader</symbol>
+        <lines>1-119</lines>
+        <reason>Pattern for file loading with JSON validation. NewCustomLoader, Load, Validate functions provide template for CustomDataLoader implementation.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/tvl/pipeline.go</path>
+        <kind>orchestrator</kind>
+        <symbol>RunTVLPipeline, RunnerDeps</symbol>
+        <lines>1-141</lines>
+        <reason>Integration point for custom data loading. RunnerDeps struct shows dependency injection pattern. Custom data merge happens after FetchAllTVL call.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/models/tvl.go</path>
+        <kind>model</kind>
+        <symbol>TVLHistoryItem, TVLOutput, TVLOutputProtocol, MergedProtocol</symbol>
+        <lines>1-73</lines>
+        <reason>TVLHistoryItem struct defines the history item schema (date, timestamp, tvl). Used for merge logic and output generation.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/config/config.go</path>
+        <kind>config</kind>
+        <symbol>TVLConfig, applyEnvOverrides, defaultConfig</symbol>
+        <lines>56-141</lines>
+        <reason>Add CustomDataPath to TVLConfig struct, add TVL_CUSTOM_DATA_PATH env override in applyEnvOverrides, set default in defaultConfig.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/tvl/output.go</path>
+        <kind>output</kind>
+        <symbol>MapToOutputProtocol, GenerateTVLOutput</symbol>
+        <lines>1-123</lines>
+        <reason>Shows existing deduplication and sorting logic for TVL history (lines 26-47). Merge logic should follow same pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>internal/tvl/custom_test.go</path>
+        <kind>test</kind>
+        <symbol>TestLoad_*, recordingHandler</symbol>
+        <lines>1-183</lines>
+        <reason>Testing patterns for file-based loader. Uses recordingHandler for log capture, table-driven approach, testdata fixtures.</reason>
+      </artifact>
+      <artifact>
+        <path>configs/config.yaml</path>
+        <kind>config</kind>
+        <symbol>tvl section</symbol>
+        <lines>33-38</lines>
+        <reason>Add custom_data_path field under tvl section with default value.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="go">
+        <package name="go" version="1.24.0">Go runtime</package>
+        <package name="golang.org/x/sync" version="v0.18.0">Concurrency utilities</package>
+        <package name="gopkg.in/yaml.v3" version="v3.0.1">YAML config parsing</package>
+        <package name="log/slog" version="stdlib">Structured logging (ADR-004)</package>
+        <package name="encoding/json" version="stdlib">JSON parsing for custom data files</package>
+        <package name="os" version="stdlib">File operations</package>
+        <package name="path/filepath" version="stdlib">Directory traversal</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="ADR-002">Use atomic file writes (temp file + rename) for any file output</constraint>
+    <constraint source="ADR-004">Use log/slog for structured logging - all logs must use slog patterns</constraint>
+    <constraint source="ADR-005">Minimize external dependencies - use stdlib where possible</constraint>
+    <constraint source="Epic-6-Tech-Spec">All changes must preserve backward compatibility with existing output consumers</constraint>
+    <constraint source="Epic-6-Tech-Spec">Data gaps are logged as warnings, not errors - pipeline must continue</constraint>
+    <constraint source="Testing-Strategy">Use table-driven tests, co-locate *_test.go files, use testdata/ for fixtures</constraint>
+    <constraint source="Story-Dev-Notes">Follow existing patterns from internal/tvl/custom.go (CustomLoader)</constraint>
+    <constraint source="Story-Dev-Notes">Files starting with _ are ignored (allows _example.json.template)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>CustomDataLoader</name>
+      <kind>struct interface</kind>
+      <signature>
+type CustomDataLoader struct {
+    path   string
+    logger *slog.Logger
+}
+
+func NewCustomDataLoader(path string, logger *slog.Logger) *CustomDataLoader
+func (l *CustomDataLoader) Load(ctx context.Context) (map[string][]models.TVLHistoryItem, error)
+      </signature>
+      <path>internal/tvl/customdata.go (NEW)</path>
+    </interface>
+    <interface>
+      <name>MergeTVLHistory</name>
+      <kind>function</kind>
+      <signature>func MergeTVLHistory(apiData, customData []models.TVLHistoryItem) []models.TVLHistoryItem</signature>
+      <path>internal/tvl/customdata.go or internal/tvl/output.go</path>
+    </interface>
+    <interface>
+      <name>TVLConfig.CustomDataPath</name>
+      <kind>config field</kind>
+      <signature>CustomDataPath string `yaml:"custom_data_path"`</signature>
+      <path>internal/config/config.go:56-59</path>
+    </interface>
+    <interface>
+      <name>RunnerDeps.CustomDataLoader</name>
+      <kind>dependency injection</kind>
+      <signature>CustomDataLoader *CustomDataLoader // in RunnerDeps struct</signature>
+      <path>internal/tvl/pipeline.go:13-19</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Go's testing package with table-driven tests. Co-locate test files as *_test.go alongside implementation. Use testdata/ directory for fixture files. recordingHandler pattern for log capture verification. High coverage required for business-critical aggregation/merge logic. Error handling paths must be tested.
+    </standards>
+    <locations>
+      <location>internal/tvl/*_test.go</location>
+      <location>internal/config/*_test.go</location>
+      <location>testdata/tvl/*.json</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test that pipeline recognizes empty custom-data/ directory without error</idea>
+      <idea ac="AC2">Test schema validation for required fields (slug, tvl_history with date/timestamp/tvl)</idea>
+      <idea ac="AC3">Test loading multiple JSON files from directory, verify all loaded</idea>
+      <idea ac="AC4">Test invalid JSON file logs warning and continues processing other files</idea>
+      <idea ac="AC5">Test merge with overlapping dates - custom data wins, verify result sorted by timestamp</idea>
+      <idea ac="AC6">Test protocol with only custom data (no API response) generates valid output entry</idea>
+      <idea ac="AC7">Test config default value custom-data/, test TVL_CUSTOM_DATA_PATH env override</idea>
+      <idea ac="AC8">Test log capture contains files_loaded and entries_merged metrics</idea>
+    </ideas>
+  </tests>
+</story-context>
