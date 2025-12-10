@@ -3910,13 +3910,21 @@
       "totalLiquidityUSD": 40805499.74086
     },
     {
-      "date": 1765219307,
-      "totalLiquidityUSD": 41659306.764750004
+      "date": 1765238400,
+      "totalLiquidityUSD": 41863174.52611
+    },
+    {
+      "date": 1765324800,
+      "totalLiquidityUSD": 43055177.26128
+    },
+    {
+      "date": 1765379015,
+      "totalLiquidityUSD": 41615541.70528
     }
   ],
   "currentChainTvls": {
-    "Aptos": 41659306.764750004,
-    "Aptos-staking": 597813,
-    "staking": 597813
+    "Aptos": 41615541.70528,
+    "Aptos-staking": 618000,
+    "staking": 618000
   }
 }

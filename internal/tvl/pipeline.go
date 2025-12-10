@@ -22,7 +22,10 @@ type RunnerDeps struct {
 // be called after the main extraction pipeline and shares the same start
 // timestamp for consistency (AC1). Errors are returned for logging but callers
 // may choose to ignore them to isolate failures (AC2, AC6).
-func RunTVLPipeline(ctx context.Context, cfg *config.Config, oracleResp *api.OracleAPIResponse, start time.Time, dryRun bool, logger *slog.Logger, deps RunnerDeps) error {
+//
+// The protocols parameter should be the full list from /lite/protocols2,
+// which includes ALL protocols using the oracle (not just those in /oracles).
+func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Protocol, start time.Time, dryRun bool, logger *slog.Logger, deps RunnerDeps) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -70,7 +73,7 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, oracleResp *api.Ora
 		return nil
 	}
 
-	autoSlugs := GetAutoDetectedSlugs(oracleResp, cfg.Oracle.Name)
+	autoSlugs := GetAutoDetectedSlugs(protocols, cfg.Oracle.Name)
 
 	customProtocols, err := loader.Load(ctx)
 	if err != nil {

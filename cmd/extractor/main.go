@@ -77,7 +77,7 @@ type runDeps struct {
 	writeOutputs    func(context.Context, string, *config.Config, *models.FullOutput, *models.SummaryOutput) error
 	now             func() time.Time
 	logger          *slog.Logger
-	tvlRunner       func(context.Context, *config.Config, *api.OracleAPIResponse, time.Time, CLIOptions, tvl.TVLClient, *slog.Logger) error
+	tvlRunner       func(context.Context, *config.Config, []api.Protocol, time.Time, CLIOptions, tvl.TVLClient, *slog.Logger) error
 }
 
 // RunOnce executes a single extraction cycle according to Story 5.2.
@@ -129,7 +129,7 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 	var (
 		mainErr    error
 		mainStatus = "success"
-		oracleResp *api.OracleAPIResponse
+		protocols  []api.Protocol
 		aggResult  *aggregator.AggregationResult
 	)
 
@@ -155,7 +155,7 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 			mainStatus = "failed"
 			break
 		}
-		oracleResp = result.OracleResponse
+		protocols = result.Protocols
 
 		if err := checkCtx("after_fetch"); err != nil {
 			mainErr = err
@@ -339,15 +339,15 @@ func runOnceWithDeps(ctx context.Context, cfg *config.Config, opts CLIOptions, d
 
 		runner := d.tvlRunner
 		if runner == nil {
-			runner = func(c context.Context, cfg *config.Config, resp *api.OracleAPIResponse, ts time.Time, opts CLIOptions, client tvl.TVLClient, logger *slog.Logger) error {
-				return tvl.RunTVLPipeline(c, cfg, resp, ts, opts.DryRun, logger, tvl.RunnerDeps{
+			runner = func(c context.Context, cfg *config.Config, protos []api.Protocol, ts time.Time, opts CLIOptions, client tvl.TVLClient, logger *slog.Logger) error {
+				return tvl.RunTVLPipeline(c, cfg, protos, ts, opts.DryRun, logger, tvl.RunnerDeps{
 					Client:    client,
 					OutputDir: cfg.Output.Directory,
 				})
 			}
 		}
 
-		tvlErr = runner(ctx, cfg, oracleResp, start, opts, tvlClient, tvlLogger)
+		tvlErr = runner(ctx, cfg, protocols, start, opts, tvlClient, tvlLogger)
 		if tvlErr != nil {
 			tvlStatus = "failed"
 			mainLogger.Warn("tvl_pipeline_failed", "error", tvlErr)

@@ -1,0 +1,27 @@
+Defillama slug,Protocols,Defillama,Github Proof,Docs proof
+kamino-lend,Kamino Lend,Yes,https://github.com/Kamino-Finance/klend/blob/8e2f907cc18f7d2b652d919cce7a91f9cf5b7aa8/programs/klend/src/utils/prices/switchboard.rs#L34,https://docs.kamino.finance/kamino-lend-litepaper#multiple-providers
+marginfi-lending,MarginFi Lending,Yes,https://github.com/mrgnlabs/marginfi-v2/blob/38d7e1918345159bd06f59ae17b9e22eb2e62bdf/programs/marginfi/src/state/price.rs#L492,https://docs.marginfi.com/protocol-design#oracle-usage
+scallop-lend,Sallop Lend,Yes,,https://docs.scallop.io/protocol/oracles#multi-oracle-planning
+carrot,Carrot Liquidity,Yes,https://github.com/DeFi-Carrot/switchboard-od-read-interface,
+bucket-cdp,Bucket CDP,Yes,https://github.com/Bucket-Protocol/oracle,
+synatra,Synatra,Yes,,https://docs.synatra.xyz/synthetic-staking/oracles
+sendit,Sendit,Yes,,https://docs.sendit.fun/security/oracles#unverified-markets
+moveposition,MovePosition,Yes,,https://docs.moveposition.xyz/asset-pricing#asset-pricing -> https://docs.concordia.systems/platform-spec/pricing-engine
+symmetry,Symmetry,Yes,,https://docs.symmetry.fi/infrastructure/price-oracles
+rain.fi,Rain.fi,Yes,,
+superposition,Superposition,Yes,,https://docs.superposition.finance/asset-pricing
+hedge,Hedge,Yes,,https://docs.hedge.so/protocol-overview/security#oracles
+aptin-finance,Aptin Finance,Yes,,https://docs.aptin.io/aptin-finance/protocol/oracles
+weiss-finance,Weiss Finance,Yes,,https://docs.weiss.finance/docs/oracles
+mango-markets,Mango Markets V4 Perps,Yes,,https://github.com/blockworks-foundation/mango-docs/blob/a4d15dec5b52e69fd402ea5bda83a3dba38afd1e/mango-markets/oracles.md?plain=1#L6
+drift,Drift Protocol,No,https://github.com/drift-labs/drift-py/blob/2e595c576b436ef23422d4cd932fe8d5318c04ae/sdk/constants.py#L215,https://docs.drift.trade/trading/market-specs#switchboard
+N/A,Project 0,No,,
+thala,Thala,No,https://github.com/ThalaLabs/sbv2-movement,https://docs.thala.fi/overview/move-dollar-mod/oracles#switchboard
+save-protocol,save-protocol(Solend),No,https://github.com/solendprotocol/solana-program-library/blob/d04ce00bbf4356c4fd32b3be38eb9760b696bb3e/token-lending/oracles/src/switchboard.rs#L41,https://docs.save.finance/getting-started/faq#what-oracles-does-solend-use
+aries-markets,areis markets,No,https://github.com/Aries-Markets/sbv2-aptos,https://docs.ariesmarkets.xyz/aries-markets/protocol-parameters/oracles
+colend-protocol,colend,No,,https://colend.gitbook.io/home/resources/oracles#integration-of-complementary-oracles
+jito-mev-tips,Jito tip router,No,,https://www.jito.network/docs/tiprouter/onchain/pricing/#introduction
+marinade-liquid-staking,Marinade liquid staking,No,,https://docs.marinade.finance/marinade-protocol/protocol-overview/marinade-liquid/msol-token
+suilend-protocol,Suilend,No,https://github.com/suilend/suilend/blob/6177c96749f92e91295f42b93e818f6fc3e99663/contracts/oracles/sources/switchboard.move#L1,https://docs.suilend.fi/security/risks
+echelon-market,Echelon Markets,No,,https://docs.echelon.market/echelon/core/oracles
+Etherfuse,Etherfuse,No,https://github.com/etherfuse/prices/blob/c34e3a013763a0862d61797febaf05d2226d1e1e/src/main.rs#L18,

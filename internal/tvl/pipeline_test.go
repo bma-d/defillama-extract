@@ -35,9 +35,12 @@ func TestRunTVLPipelineWritesStateAndOutputs(t *testing.T) {
 		t.Fatalf("setup custom file: %v", err)
 	}
 
-	oracleResp := &api.OracleAPIResponse{Oracles: map[string][]string{"Switchboard": {"auto"}}}
+	// Use protocols slice with Name (slug derived) - mirrors /lite/protocols2 response
+	protocols := []api.Protocol{
+		{Name: "Auto Protocol", Oracles: []string{"Switchboard"}},
+	}
 
-	err := RunTVLPipeline(context.Background(), cfg, oracleResp, time.Unix(100, 0), false, nil, RunnerDeps{
+	err := RunTVLPipeline(context.Background(), cfg, protocols, time.Unix(100, 0), false, nil, RunnerDeps{
 		Client:    stubTVLClientSuccess{},
 		OutputDir: dir,
 	})
@@ -75,9 +78,12 @@ func TestRunTVLPipelineDryRunSkipsWritesAndState(t *testing.T) {
 		t.Fatalf("setup custom file: %v", err)
 	}
 
-	oracleResp := &api.OracleAPIResponse{Oracles: map[string][]string{"Switchboard": {"auto"}}}
+	// Use protocols slice with Name (slug derived) - mirrors /lite/protocols2 response
+	protocols := []api.Protocol{
+		{Name: "Auto Protocol", Oracles: []string{"Switchboard"}},
+	}
 
-	err := RunTVLPipeline(context.Background(), cfg, oracleResp, time.Unix(100, 0), true, nil, RunnerDeps{
+	err := RunTVLPipeline(context.Background(), cfg, protocols, time.Unix(100, 0), true, nil, RunnerDeps{
 		Client:    stubTVLClientSuccess{},
 		OutputDir: dir,
 	})

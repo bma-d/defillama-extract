@@ -2554,13 +2554,21 @@
       "totalLiquidityUSD": 286132053.39329004
     },
     {
-      "date": 1765218155,
-      "totalLiquidityUSD": 292684852.64868
+      "date": 1765238400,
+      "totalLiquidityUSD": 291095770.45826
+    },
+    {
+      "date": 1765324800,
+      "totalLiquidityUSD": 293109894.43635
+    },
+    {
+      "date": 1765379015,
+      "totalLiquidityUSD": 288032379.33810997
     }
   ],
   "currentChainTvls": {
-    "Sui": 292684852.64868,
-    "Sui-borrowed": 135546075,
-    "borrowed": 135546075
+    "Sui": 288032379.33810997,
+    "Sui-borrowed": 132712248,
+    "borrowed": 132712248
   }
 }

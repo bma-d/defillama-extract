@@ -9,8 +9,5 @@ vendor/
 # Test artifacts
 internal/api/api-cache/
 
-# Reference documentation (external guides)
-docs-reference/
-
 # OS/filesystem
 .DS_Store

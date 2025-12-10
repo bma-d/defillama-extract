@@ -397,7 +397,7 @@ func TestRunOnceInvokesTVLRunnerAfterMain(t *testing.T) {
 		},
 		now:    func() time.Time { return time.Unix(500, 0) },
 		logger: logger,
-		tvlRunner: func(_ context.Context, _ *config.Config, _ *api.OracleAPIResponse, ts time.Time, _ CLIOptions, _ tvl.TVLClient, l *slog.Logger) error {
+		tvlRunner: func(_ context.Context, _ *config.Config, _ []api.Protocol, ts time.Time, _ CLIOptions, _ tvl.TVLClient, l *slog.Logger) error {
 			tvlCalled = true
 			passedTS = ts
 			if l != nil {
@@ -447,7 +447,7 @@ func TestRunOnceTVLErrorDoesNotFailMain(t *testing.T) {
 		},
 		now:    func() time.Time { return time.Unix(600, 0) },
 		logger: logger,
-		tvlRunner: func(_ context.Context, _ *config.Config, _ *api.OracleAPIResponse, _ time.Time, _ CLIOptions, _ tvl.TVLClient, _ *slog.Logger) error {
+		tvlRunner: func(_ context.Context, _ *config.Config, _ []api.Protocol, _ time.Time, _ CLIOptions, _ tvl.TVLClient, _ *slog.Logger) error {
 			tvlCalled++
 			return errors.New("tvl failure")
 		},
@@ -493,7 +493,7 @@ func TestRunOnceTVLRunsWhenMainFails(t *testing.T) {
 		},
 		now:    func() time.Time { return time.Unix(700, 0) },
 		logger: logger,
-		tvlRunner: func(_ context.Context, _ *config.Config, _ *api.OracleAPIResponse, _ time.Time, _ CLIOptions, _ tvl.TVLClient, _ *slog.Logger) error {
+		tvlRunner: func(_ context.Context, _ *config.Config, _ []api.Protocol, _ time.Time, _ CLIOptions, _ tvl.TVLClient, _ *slog.Logger) error {
 			tvlCalled++
 			return nil
 		},

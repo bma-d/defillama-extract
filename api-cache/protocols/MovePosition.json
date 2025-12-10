@@ -1090,13 +1090,21 @@
       "totalLiquidityUSD": 8643673
     },
     {
-      "date": 1765214615,
-      "totalLiquidityUSD": 8663152
+      "date": 1765238400,
+      "totalLiquidityUSD": 8636653
+    },
+    {
+      "date": 1765324800,
+      "totalLiquidityUSD": 8779126
+    },
+    {
+      "date": 1765375391,
+      "totalLiquidityUSD": 8775252
     }
   ],
   "currentChainTvls": {
-    "Move": 8663152.85978,
-    "Move-borrowed": 1701880.90943,
-    "borrowed": 1701880.90943
+    "Move": 8775252.55264,
+    "Move-borrowed": 1554654.96346,
+    "borrowed": 1554654.96346
   }
 }
