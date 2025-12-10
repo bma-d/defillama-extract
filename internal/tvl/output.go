@@ -64,6 +64,7 @@ func MapToOutputProtocol(protocol models.MergedProtocol, tvl *api.ProtocolTVLRes
 		IntegrationDate: protocol.IntegrationDate,
 		DocsProof:       protocol.DocsProof,
 		GitHubProof:     protocol.GitHubProof,
+		IsDefillama:     protocol.IsDefillama,
 		CurrentTVL:      currentTVL,
 		TVLHistory:      history,
 	}

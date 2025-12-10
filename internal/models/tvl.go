@@ -12,6 +12,7 @@ type CustomProtocol struct {
 	SimpleTVSRatio float64 `json:"simple-tvs-ratio"`       // TVS multiplier in range [0,1]
 	DocsProof      *string `json:"docs_proof,omitempty"`   // Optional documentation URL
 	GitHubProof    *string `json:"github_proof,omitempty"` // Optional repository link proving integration
+	IsDefillama    *bool   `json:"is-defillama,omitempty"` // True if listed in DefiLlama's /oracles endpoint
 }
 
 // MergedProtocol represents a protocol after combining auto-detected and
@@ -25,6 +26,7 @@ type MergedProtocol struct {
 	IntegrationDate *int64  `json:"integration_date"`
 	DocsProof       *string `json:"docs_proof"`
 	GitHubProof     *string `json:"github_proof"`
+	IsDefillama     bool    `json:"is_defillama"` // True if listed in DefiLlama's /oracles endpoint
 }
 
 // TVLHistoryItem represents a single point in a protocol's TVL history. Both
@@ -64,6 +66,7 @@ type TVLOutputProtocol struct {
 	IntegrationDate *int64           `json:"integration_date"`
 	DocsProof       *string          `json:"docs_proof"`
 	GitHubProof     *string          `json:"github_proof"`
+	IsDefillama     bool             `json:"is_defillama"` // True if listed in DefiLlama's /oracles endpoint
 	CurrentTVL      float64          `json:"current_tvl"`
 	TVLHistory      []TVLHistoryItem `json:"tvl_history"`
 }

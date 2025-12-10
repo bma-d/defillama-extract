@@ -22,10 +22,15 @@ func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []mo
 			SimpleTVSRatio:  1.0,
 			IntegrationDate: nil,
 			DocsProof:       &docs,
+			IsDefillama:     true, // auto-detected from /oracles endpoint
 		}
 	}
 
 	for _, cp := range custom {
+		isDefillama := false
+		if cp.IsDefillama != nil {
+			isDefillama = *cp.IsDefillama
+		}
 		merged[cp.Slug] = models.MergedProtocol{
 			Slug:            cp.Slug,
 			Source:          "custom",
@@ -34,6 +39,7 @@ func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []mo
 			IntegrationDate: cp.Date,
 			DocsProof:       cp.DocsProof,
 			GitHubProof:     cp.GitHubProof,
+			IsDefillama:     isDefillama,
 		}
 	}
 

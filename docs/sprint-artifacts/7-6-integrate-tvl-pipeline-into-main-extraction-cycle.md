@@ -582,3 +582,36 @@ Key files modified:
 
 - [utls library](https://github.com/refraction-networking/utls) - TLS fingerprint impersonation
 - [Chrome TLS fingerprint](https://tlsfingerprint.io/) - Reference for browser fingerprints
+
+## Post-Completion Enhancement: IsDefillama Field and Custom Protocols Expansion
+
+**Issue**: Need to distinguish protocols listed in DefiLlama's /oracles endpoint from custom-only protocols, and expand custom-protocols.json with all known Switchboard integrations.
+
+**Solution**: Add `is-defillama` optional field to custom protocols JSON and propagate through the pipeline.
+
+### Implementation
+
+- [x] Task 24: Expand custom-protocols.json with all known integrations
+  - [x] 24.1: Parse docs-reference/untracked-sw.csv for protocols with Defillama=Yes
+  - [x] 24.2: Add 15 new protocols from CSV (kamino-lend, marginfi-lending, scallop-lend, carrot, bucket-cdp, synatra, sendit, moveposition, symmetry, rain.fi, superposition, hedge, aptin-finance, weiss-finance, mango-markets-v4-perps)
+  - [x] 24.3: Add `is-defillama: true` for protocols in DefiLlama /oracles
+  - [x] 24.4: Add `is-defillama: false` for existing custom protocols not in /oracles
+
+- [x] Task 25: Add IsDefillama field to models
+  - [x] 25.1: Add `IsDefillama *bool` to `CustomProtocol` struct (internal/models/tvl.go:15)
+  - [x] 25.2: Add `IsDefillama bool` to `MergedProtocol` struct (internal/models/tvl.go:29)
+  - [x] 25.3: Add `IsDefillama bool` to `TVLOutputProtocol` struct (internal/models/tvl.go:69)
+
+- [x] Task 26: Propagate IsDefillama through pipeline
+  - [x] 26.1: Update `MergeProtocolLists` to set IsDefillama (auto=true, custom=from JSON) (internal/tvl/merger.go:25,30-42)
+  - [x] 26.2: Update `MapToOutputProtocol` to propagate IsDefillama (internal/tvl/output.go:67)
+
+- [x] Task 27: Build and test verification
+  - [x] 27.1: Run `go build ./...` - pass
+  - [x] 27.2: Run `go test ./cmd/... ./internal/...` - pass
+
+### Results
+
+- **24 total protocols** in custom-protocols.json (9 existing + 15 new)
+- `is_defillama` field now appears in tvl-data.json output for each protocol
+- Auto-detected protocols from /oracles endpoint automatically get `is_defillama: true`

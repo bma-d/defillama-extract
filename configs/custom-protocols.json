@@ -4,6 +4,7 @@
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 0.5,
+    "is-defillama": false,
     "docs_proof": "https://docs.drift.trade/trading/market-specs#switchboard",
     "github_proof": "https://github.com/drift-labs/drift-py/blob/2e595c576b436ef23422d4cd932fe8d5318c04ae/sdk/constants.py#L215"
   },
@@ -12,6 +13,7 @@
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 0.5,
+    "is-defillama": false,
     "docs_proof": "https://docs.thala.fi/overview/move-dollar-mod/oracles#switchboard",
     "github_proof": "https://github.com/ThalaLabs/sbv2-movement"
   },
@@ -20,6 +22,7 @@
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 1.0,
+    "is-defillama": false,
     "docs_proof": "https://docs.save.finance/getting-started/faq#what-oracles-does-solend-use",
     "github_proof": "https://github.com/solendprotocol/solana-program-library/blob/d04ce00bbf4356c4fd32b3be38eb9760b696bb3e/token-lending/oracles/src/switchboard.rs#L41"
   },
@@ -28,6 +31,7 @@
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 1.0,
+    "is-defillama": false,
     "docs_proof": "https://docs.ariesmarkets.xyz/aries-markets/protocol-parameters/oracles",
     "github_proof": "https://github.com/Aries-Markets/sbv2-aptos"
   },
@@ -36,13 +40,15 @@
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 1.0,
-    "docs_proof": "https://colend.gitbook.io/home/resour,ces/oracles#integration-of-complementary-oracles"
+    "is-defillama": false,
+    "docs_proof": "https://colend.gitbook.io/home/resources/oracles#integration-of-complementary-oracles"
   },
   {
     "slug": "marinade-liquid-staking",
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 1.0,
+    "is-defillama": false,
     "docs_proof": "https://docs.marinade.finance/marinade-protocol/protocol-overview/marinade-liquid/msol-token"
   },
   {
@@ -50,6 +56,7 @@
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 1.0,
+    "is-defillama": false,
     "docs_proof": "https://docs.suilend.fi/security/risks",
     "github_proof": "https://github.com/suilend/suilend/blob/6177c96749f92e91295f42b93e818f6fc3e99663/contracts/oracles/sources/switchboard.move#L1"
   },
@@ -58,6 +65,7 @@
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 1.0,
+    "is-defillama": false,
     "docs_proof": "https://docs.echelon.market/echelon/core/oracles"
   },
   {
@@ -65,6 +73,128 @@
     "is-ongoing": false,
     "live": true,
     "simple-tvs-ratio": 1.0,
+    "is-defillama": false,
     "github_proof": "https://github.com/etherfuse/prices/blob/c34e3a013763a0862d61797febaf05d2226d1e1e/src/main.rs#L18"
+  },
+  {
+    "slug": "kamino-lend",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.kamino.finance/kamino-lend-litepaper#multiple-providers",
+    "github_proof": "https://github.com/Kamino-Finance/klend/blob/8e2f907cc18f7d2b652d919cce7a91f9cf5b7aa8/programs/klend/src/utils/prices/switchboard.rs#L34"
+  },
+  {
+    "slug": "marginfi-lending",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.marginfi.com/protocol-design#oracle-usage",
+    "github_proof": "https://github.com/mrgnlabs/marginfi-v2/blob/38d7e1918345159bd06f59ae17b9e22eb2e62bdf/programs/marginfi/src/state/price.rs#L492"
+  },
+  {
+    "slug": "scallop-lend",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.scallop.io/protocol/oracles#multi-oracle-planning"
+  },
+  {
+    "slug": "carrot",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "github_proof": "https://github.com/DeFi-Carrot/switchboard-od-read-interface"
+  },
+  {
+    "slug": "bucket-cdp",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "github_proof": "https://github.com/Bucket-Protocol/oracle"
+  },
+  {
+    "slug": "synatra",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.synatra.xyz/synthetic-staking/oracles"
+  },
+  {
+    "slug": "sendit",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.sendit.fun/security/oracles#unverified-markets"
+  },
+  {
+    "slug": "moveposition",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.moveposition.xyz/asset-pricing#asset-pricing -> https://docs.concordia.systems/platform-spec/pricing-engine"
+  },
+  {
+    "slug": "symmetry",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.symmetry.fi/infrastructure/price-oracles"
+  },
+  {
+    "slug": "rain.fi",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true
+  },
+  {
+    "slug": "superposition",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.superposition.finance/asset-pricing"
+  },
+  {
+    "slug": "hedge",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.hedge.so/protocol-overview/security#oracles"
+  },
+  {
+    "slug": "aptin-finance",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.aptin.io/aptin-finance/protocol/oracles"
+  },
+  {
+    "slug": "weiss-finance",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://docs.weiss.finance/docs/oracles"
+  },
+  {
+    "slug": "mango-markets-v4-perps",
+    "is-ongoing": false,
+    "live": true,
+    "simple-tvs-ratio": 1.0,
+    "is-defillama": true,
+    "docs_proof": "https://github.com/blockworks-foundation/mango-docs/blob/a4d15dec5b52e69fd402ea5bda83a3dba38afd1e/mango-markets/oracles.md?plain=1#L6"
   }
 ]
