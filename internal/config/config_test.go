@@ -143,6 +143,11 @@ func TestValidate_InvalidValues(t *testing.T) {
 			mutate:  func(c *Config) { c.TVL.CustomProtocolsPath = " " },
 			wantMsg: "tvl.custom_protocols_path",
 		},
+		{
+			name:    "empty custom data path",
+			mutate:  func(c *Config) { c.TVL.CustomDataPath = "" },
+			wantMsg: "tvl.custom_data_path",
+		},
 	}
 
 	for _, tt := range tests {
@@ -174,6 +179,7 @@ func TestLoad_EnvOverrides_StringAndDuration(t *testing.T) {
 	t.Setenv("API_TIMEOUT", "45s")
 	t.Setenv("SCHEDULER_INTERVAL", "1h30m")
 	t.Setenv("TVL_CUSTOM_PROTOCOLS_PATH", "/env/custom.json")
+	t.Setenv("TVL_CUSTOM_DATA_PATH", "/env/customdata")
 	t.Setenv("TVL_ENABLED", "false")
 
 	cfg, err := Load(path)
@@ -201,6 +207,9 @@ func TestLoad_EnvOverrides_StringAndDuration(t *testing.T) {
 	}
 	if cfg.TVL.CustomProtocolsPath != "/env/custom.json" {
 		t.Errorf("TVL.CustomProtocolsPath = %q, want %q", cfg.TVL.CustomProtocolsPath, "/env/custom.json")
+	}
+	if cfg.TVL.CustomDataPath != "/env/customdata" {
+		t.Errorf("TVL.CustomDataPath = %q, want %q", cfg.TVL.CustomDataPath, "/env/customdata")
 	}
 	if cfg.TVL.Enabled {
 		t.Errorf("TVL.Enabled = %v, want false", cfg.TVL.Enabled)

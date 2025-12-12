@@ -5890,11 +5890,19 @@
       "totalLiquidityUSD": 0
     },
     {
-      "date": 1765368707,
+      "date": 1765411200,
+      "totalLiquidityUSD": 0
+    },
+    {
+      "date": 1765497600,
+      "totalLiquidityUSD": 0
+    },
+    {
+      "date": 1765557419,
       "totalLiquidityUSD": 0
     }
   ],
   "currentChainTvls": {
-    "Solana": 0.09674
+    "Solana": 0.07705
   }
 }

@@ -32,7 +32,7 @@ This epic provides a structured home for:
 | ID | Issue | Severity | Status | Story |
 |----|-------|----------|--------|-------|
 | M-001 | Per-protocol TVS breakdown missing for many protocols | High | Resolved | 6-1 |
-| M-002 | Non-DefiLlama protocols have no TVL history source | Medium | In Progress | 6-2 |
+| M-002 | Non-DefiLlama protocols have no TVL history source | Medium | Review | 6-2 |
 
 ## Completed Stories
 
@@ -43,7 +43,7 @@ This epic provides a structured home for:
 ## Active Stories
 
 ### Story 6.2: Custom Data Folder for Non-DefiLlama Protocols
-- **Status:** Drafted
+- **Status:** Review
 - **Issue:** M-002
 - **Summary:** Create `custom-data/` folder to supply manual TVL history for protocols not available on DefiLlama API
 - **Acceptance Criteria:**

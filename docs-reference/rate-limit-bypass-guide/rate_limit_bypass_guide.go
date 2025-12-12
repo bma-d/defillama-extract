@@ -187,11 +187,11 @@ func (pr *ProxyRotator) FetchFromProxyScrape(protocol string) error {
 
 // GimmeProxyResponse represents the JSON response from GimmeProxy
 type GimmeProxyResponse struct {
-	IP            string `json:"ip"`
-	Port          string `json:"port"`
-	Protocol      string `json:"protocol"`
-	Country       string `json:"country"`
-	AnonymityLevel int   `json:"anonymityLevel"`
+	IP             string `json:"ip"`
+	Port           string `json:"port"`
+	Protocol       string `json:"protocol"`
+	Country        string `json:"country"`
+	AnonymityLevel int    `json:"anonymityLevel"`
 }
 
 // FetchFromGimmeProxy fetches a single proxy from GimmeProxy API
@@ -235,7 +235,7 @@ type PubProxyResponse struct {
 // FetchFromPubProxy fetches proxies from PubProxy API
 func (pr *ProxyRotator) FetchFromPubProxy(limit int) error {
 	url := fmt.Sprintf("http://pubproxy.com/api/proxy?limit=%d&format=json&type=http&level=anonymous", limit)
-	
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return fmt.Errorf("failed to fetch from PubProxy: %w", err)
@@ -456,7 +456,7 @@ func RandomUserAgent() string {
 // GenerateHeaders returns a map of randomized HTTP headers
 func (hr *HeaderRandomizer) GenerateHeaders() map[string]string {
 	ua := RandomUserAgent()
-	
+
 	headers := map[string]string{
 		"User-Agent":      ua,
 		"Accept":          randomChoice(hr.accepts),
@@ -569,7 +569,7 @@ func (sc *SmartClient) LoadProxies(sources ...string) error {
 			fmt.Printf("Warning: failed to load from %s: %v\n", source, err)
 		}
 	}
-	
+
 	fmt.Printf("Loaded %d proxies total\n", sc.proxyRotator.Count())
 	return nil
 }
@@ -617,10 +617,10 @@ func (sc *SmartClient) Do(method, targetURL string, body io.Reader) (*http.Respo
 	for attempt := 0; attempt <= sc.retryCount; attempt++ {
 		// Get next proxy (can be nil if no proxies loaded - direct connection)
 		proxy := sc.proxyRotator.GetNext()
-		
+
 		// Create client
 		client := sc.createHTTPClient(proxy)
-		
+
 		// Create request
 		req, err := http.NewRequest(method, targetURL, body)
 		if err != nil {
@@ -650,11 +650,11 @@ func (sc *SmartClient) Do(method, targetURL string, body io.Reader) (*http.Respo
 			resp.Body.Close()
 			retryAfter := resp.Header.Get("Retry-After")
 			fmt.Printf("Rate limited (429). Retry-After: %s. Switching proxy...\n", retryAfter)
-			
+
 			if proxy != nil {
 				sc.proxyRotator.MarkDead(proxy.IP, proxy.Port)
 			}
-			
+
 			// Add jitter to delay
 			jitter := time.Duration(rand.Intn(3000)) * time.Millisecond
 			time.Sleep(sc.retryDelay + jitter)
@@ -727,7 +727,7 @@ func (wp *WorkerPool) worker(id int) {
 			}
 
 			start := time.Now()
-			
+
 			// Add random jitter between requests
 			jitter := time.Duration(rand.Intn(2000)) * time.Millisecond
 			time.Sleep(jitter)
@@ -776,7 +776,7 @@ func main() {
 	// Seed random number generator
 	rand.Seed(time.Now().UnixNano())
 
-	fmt.Println("=== Rate Limit Bypass Demo ===\n")
+	fmt.Println("=== Rate Limit Bypass Demo ===")
 
 	// Example 1: Simple request with randomized headers only
 	fmt.Println("--- Example 1: Headers Only (No Proxies) ---")
@@ -793,7 +793,7 @@ func main() {
 
 func simpleDemo() {
 	client := NewSmartClient()
-	
+
 	// Make 3 requests with randomized headers
 	for i := 0; i < 3; i++ {
 		resp, err := client.Get("https://httpbin.org/headers")
@@ -801,26 +801,26 @@ func simpleDemo() {
 			fmt.Printf("Request %d failed: %v\n", i+1, err)
 			continue
 		}
-		
+
 		fmt.Printf("Request %d: Status %d\n", i+1, resp.StatusCode)
 		resp.Body.Close()
-		
+
 		time.Sleep(500 * time.Millisecond)
 	}
 }
 
 func proxyDemo() {
 	client := NewSmartClient()
-	
+
 	// Load proxies from free services
 	// Note: Free proxies are often slow/unreliable - this is for demonstration
 	fmt.Println("Loading proxies (this may take a moment)...")
-	
+
 	err := client.LoadProxies("proxyscrape", "proxifly")
 	if err != nil {
 		fmt.Printf("Error loading proxies: %v\n", err)
 	}
-	
+
 	if client.proxyRotator.Count() == 0 {
 		fmt.Println("No proxies loaded, falling back to direct connection")
 	}
@@ -832,7 +832,7 @@ func proxyDemo() {
 			fmt.Printf("Request %d failed: %v\n", i+1, err)
 			continue
 		}
-		
+
 		body, _ := io.ReadAll(resp.Body)
 		fmt.Printf("Request %d: Status %d, Response: %s\n", i+1, resp.StatusCode, strings.TrimSpace(string(body)))
 		resp.Body.Close()
@@ -841,11 +841,11 @@ func proxyDemo() {
 
 func workerPoolDemo() {
 	client := NewSmartClient()
-	
+
 	// Create worker pool with 3 concurrent workers
 	pool := NewWorkerPool(client, 3)
 	pool.Start()
-	
+
 	// Submit URLs
 	urls := []string{
 		"https://httpbin.org/ip",
@@ -854,13 +854,13 @@ func workerPoolDemo() {
 		"https://httpbin.org/get",
 		"https://httpbin.org/status/200",
 	}
-	
+
 	go func() {
 		for _, url := range urls {
 			pool.Submit(url)
 		}
 	}()
-	
+
 	// Collect results
 	for i := 0; i < len(urls); i++ {
 		result := <-pool.Results()
@@ -870,6 +870,6 @@ func workerPoolDemo() {
 			fmt.Printf("URL: %s - Status: %d - Duration: %v\n", result.URL, result.StatusCode, result.Duration)
 		}
 	}
-	
+
 	pool.Stop()
 }

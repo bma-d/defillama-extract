@@ -33,6 +33,8 @@ output:
 tvl:
   # Path to custom protocols JSON configuration
   custom_protocols_path: configs/custom-protocols.json
+  # Path to folder containing per-protocol custom TVL history
+  custom_data_path: custom-data
   # Whether TVL pipeline (including custom protocol loading) is enabled
   enabled: true
 

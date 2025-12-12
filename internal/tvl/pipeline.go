@@ -11,11 +11,12 @@ import (
 
 // RunnerDeps captures injectable collaborators for testing.
 type RunnerDeps struct {
-	Client    TVLClient
-	State     *TVLStateManager
-	Loader    *CustomLoader
-	OutputDir string
-	Now       func() time.Time
+	Client           TVLClient
+	State            *TVLStateManager
+	Loader           *CustomLoader
+	CustomDataLoader *CustomDataLoader
+	OutputDir        string
+	Now              func() time.Time
 }
 
 // RunTVLPipeline orchestrates the TVL pipeline end-to-end. It is designed to
@@ -63,6 +64,11 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Pro
 		loader = NewCustomLoader(cfg.TVL.CustomProtocolsPath, tvlLogger)
 	}
 
+	customDataLoader := deps.CustomDataLoader
+	if customDataLoader == nil {
+		customDataLoader = NewCustomDataLoader(cfg.TVL.CustomDataPath, tvlLogger)
+	}
+
 	state, err := stateMgr.LoadState()
 	if err != nil {
 		return err
@@ -80,7 +86,26 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Pro
 		return err
 	}
 
-	merged := MergeProtocolLists(autoSlugs, customProtocols)
+	// Build known slugs set (auto-detected + custom-protocols.json)
+	knownSlugs := make(map[string]struct{}, len(autoSlugs)+len(customProtocols))
+	for _, slug := range autoSlugs {
+		knownSlugs[slug] = struct{}{}
+	}
+	customProtocolSlugs := make(map[string]struct{}, len(customProtocols))
+	for _, p := range customProtocols {
+		knownSlugs[p.Slug] = struct{}{}
+		customProtocolSlugs[p.Slug] = struct{}{}
+	}
+
+	customDataResult, err := customDataLoader.Load(ctx, knownSlugs, customProtocolSlugs)
+	if err != nil {
+		return err
+	}
+
+	// Merge custom-data new protocols into customProtocols list
+	allCustomProtocols := append(customProtocols, customDataResult.NewProtocols...)
+
+	merged := MergeProtocolLists(autoSlugs, allCustomProtocols)
 	if len(merged) == 0 {
 		tvlLogger.Info("tvl_no_protocols", "reason", "no auto or custom slugs")
 		return nil
@@ -90,6 +115,7 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Pro
 		"timestamp", start.Format(time.RFC3339),
 		"auto_slugs", len(autoSlugs),
 		"custom_protocols", len(customProtocols),
+		"custom_data_new_protocols", len(customDataResult.NewProtocols),
 		"merged", len(merged),
 	)
 
@@ -103,7 +129,14 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Pro
 		tvlLogger.Warn("tvl_fetch_errors_present", "error", fetchErr)
 	}
 
-	output := GenerateTVLOutput(merged, tvlData)
+	mergedTVLData, mergeStats := mergeCustomTVLData(tvlData, customDataResult.History, tvlLogger)
+	tvlLogger.Info("custom_data_merge_summary",
+		"protocols_with_custom_data", mergeStats.ProtocolsWithCustomData,
+		"entries_merged", mergeStats.EntriesMerged,
+		"custom_only_protocols", mergeStats.CustomOnlyProtocols,
+	)
+
+	output := GenerateTVLOutput(merged, mergedTVLData)
 
 	if dryRun {
 		tvlLogger.Info("tvl_dry_run_skip_writes_and_state")

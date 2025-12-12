@@ -1,0 +1,30 @@
+{
+  "_comment": "Custom data file supports two modes:",
+  "_mode1": "HISTORY-ONLY: For protocols already in custom-protocols.json or auto-detected. Only slug + tvl_history required.",
+  "_mode2": "NEW PROTOCOL: For protocols not registered elsewhere. Required: slug, is-ongoing, live, simple-tvs-ratio, tvl_history. Optional: is-defillama, docs_proof, github_proof.",
+
+  "slug": "example-protocol",
+
+  "_metadata_comment": "Metadata fields below are REQUIRED for new protocols (is-ongoing, live, simple-tvs-ratio), FORBIDDEN for protocols already in custom-protocols.json",
+  "is-ongoing": false,
+  "live": true,
+  "simple-tvs-ratio": 1.0,
+
+  "_optional_metadata_comment": "Optional metadata fields for new protocols:",
+  "is-defillama": false,
+  "docs_proof": "https://example.com/docs",
+  "github_proof": "https://github.com/example/repo",
+
+  "tvl_history": [
+    {
+      "date": "2024-01-15",
+      "timestamp": 1705276800,
+      "tvl": 1500000.00
+    },
+    {
+      "date": "2024-01-16",
+      "timestamp": 1705363200,
+      "tvl": 1600000.00
+    }
+  ]
+}

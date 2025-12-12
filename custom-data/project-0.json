@@ -1,0 +1,19 @@
+{
+  "slug": "project-0",
+  "is-ongoing": false,
+  "live": true,
+  "simple-tvs-ratio": 1.0,
+  "is-defillama": false,
+  "tvl_history": [
+    {
+      "date": "2025-12-11",
+      "timestamp": 1765422000,
+      "tvl": 265869940.00
+    },
+    {
+      "date": "2025-12-12",
+      "timestamp": 1765508400,
+      "tvl": 256804283.00
+    }
+  ]
+}

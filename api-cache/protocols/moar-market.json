@@ -882,13 +882,13 @@
       "totalLiquidityUSD": 3993118
     },
     {
-      "date": 1765296311,
-      "totalLiquidityUSD": 3987424
+      "date": 1765411200,
+      "totalLiquidityUSD": 4440584
     }
   ],
   "currentChainTvls": {
-    "Aptos": 3987424.55942,
-    "Aptos-borrowed": 2623873.75191,
-    "borrowed": 2623873.75191
+    "Aptos": 4440584.49604,
+    "Aptos-borrowed": 2873884.77256,
+    "borrowed": 2873884.77256
   }
 }

@@ -55,6 +55,7 @@ type LoggingConfig struct {
 
 type TVLConfig struct {
 	CustomProtocolsPath string `yaml:"custom_protocols_path"`
+	CustomDataPath      string `yaml:"custom_data_path"`
 	Enabled             bool   `yaml:"enabled"`
 }
 
@@ -94,6 +95,9 @@ func applyEnvOverrides(cfg *Config) {
 
 	if v := os.Getenv("TVL_CUSTOM_PROTOCOLS_PATH"); v != "" {
 		cfg.TVL.CustomProtocolsPath = v
+	}
+	if v := os.Getenv("TVL_CUSTOM_DATA_PATH"); v != "" {
+		cfg.TVL.CustomDataPath = v
 	}
 	if v := os.Getenv("TVL_ENABLED"); v != "" {
 		cfg.TVL.Enabled = strings.ToLower(v) == "true"
@@ -135,6 +139,7 @@ func defaultConfig() Config {
 		},
 		TVL: TVLConfig{
 			CustomProtocolsPath: "config/custom-protocols.json",
+			CustomDataPath:      "custom-data",
 			Enabled:             true,
 		},
 	}
@@ -203,6 +208,9 @@ func (c *Config) Validate() error {
 
 	if strings.TrimSpace(c.TVL.CustomProtocolsPath) == "" {
 		return errors.New("tvl.custom_protocols_path must not be empty")
+	}
+	if strings.TrimSpace(c.TVL.CustomDataPath) == "" {
+		return errors.New("tvl.custom_data_path must not be empty")
 	}
 
 	return nil

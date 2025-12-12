@@ -87,7 +87,7 @@ development_status:
   # Epic 6: Maintenance & Data Quality (flexible - stories created ad-hoc)
   epic-6: contexted
   6-1-per-protocol-tvs-breakdown: done
-  6-2-custom-data-folder: ready-for-dev
+  6-2-custom-data-folder: done
   epic-6-retrospective: optional
 
   # Epic 7: Custom Protocols & Per-Protocol TVL Charting (6 stories)
