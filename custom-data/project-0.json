@@ -4,6 +4,8 @@
   "live": true,
   "simple-tvs-ratio": 1.0,
   "is-defillama": false,
+  "category": "Derivatives",
+  "chains": ["Solana"],
   "tvl_history": [
     {
       "date": "2025-12-11",

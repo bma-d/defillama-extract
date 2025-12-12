@@ -20,7 +20,7 @@ so that **protocols without API data can still be tracked with accurate historic
 | AC6 | Protocols with only custom data (no API response) produce valid output | Integration test |
 | AC7 | Config supports optional `custom_data_path` with default `custom-data/` | Config field added |
 | AC8 | Pipeline logs custom data load statistics (files loaded, entries merged) | Log output verification |
-| AC9 | Custom-data files can define NEW protocols with full metadata (`is-ongoing`, `live`, `simple-tvs-ratio` required) | Unit test for new protocol registration |
+| AC9 | Custom-data files can define NEW protocols with full metadata (`is-ongoing`, `live`, `simple-tvs-ratio`, `category`, `chains` required) | Unit test for new protocol registration |
 | AC10 | Custom-data files for EXISTING protocols only require `slug` + `tvl_history` | Unit test for history-only mode |
 | AC11 | Duplicate slug in both custom-protocols.json AND custom-data with metadata causes panic | Duplicate detection test |
 
@@ -71,14 +71,17 @@ so that **protocols without API data can still be tracked with accurate historic
   - [x] 6.3 Test: story shows in sprint-status.yaml and epic markdown (consistency check)
 
 - [x] **Task 7: Extend custom-data schema to support full protocol metadata** (AC: 9, 10, 11)
-  - [x] 7.1 Update `customDataFile` struct to include all `CustomProtocol` fields (`is-ongoing`, `live`, `simple-tvs-ratio`, `is-defillama`, `docs_proof`, `github_proof`)
+  - [x] 7.1 Update `customDataFile` struct to include all `CustomProtocol` fields (`is-ongoing`, `live`, `simple-tvs-ratio`, `is-defillama`, `docs_proof`, `github_proof`, `category`, `chains`)
   - [x] 7.2 Change `CustomDataLoader.Load()` signature to accept known slugs set and return `(*CustomDataResult, error)` with History map + NewProtocols slice
-  - [x] 7.3 Implement conditional validation: new protocols require mandatory fields, existing protocols only need `slug` + `tvl_history`
+  - [x] 7.3 Implement conditional validation: new protocols require mandatory fields (`is-ongoing`, `live`, `simple-tvs-ratio`, `category`, `chains`), existing protocols only need `slug` + `tvl_history`
   - [x] 7.4 Add duplicate detection: panic if slug exists in both custom-protocols.json AND custom-data with metadata
   - [x] 7.5 Update pipeline to merge new custom-data protocols into merged protocol list before TVL fetch
-  - [x] 7.6 Update `_example.json.template` to show full schema with optional metadata fields
+  - [x] 7.6 Update `_example.json.template` to show full schema with required and optional metadata fields
   - [x] 7.7 Write unit tests for: new protocol registration, history-only mode, duplicate panic
   - [x] 7.8 Update pipeline tests for new Load() signature
+  - [x] 7.9 Add `Category` and `Chains` fields to `CustomProtocol` and `MergedProtocol` models
+  - [x] 7.10 Update `merger.go` to pass `category` and `chains` through to merged protocols
+  - [x] 7.11 Fix Live field filtering for new protocols (match custom.go behavior)
 
 ## Dev Notes
 
@@ -134,6 +137,8 @@ so that **protocols without API data can still be tracked with accurate historic
   "is-ongoing": false,
   "live": true,
   "simple-tvs-ratio": 1.0,
+  "category": "Lending",
+  "chains": ["Solana"],
   "is-defillama": false,
   "docs_proof": "https://example.com/docs",
   "github_proof": "https://github.com/example/repo",
@@ -149,8 +154,10 @@ so that **protocols without API data can still be tracked with accurate historic
 
 **Validation rules:**
 - If slug exists in custom-protocols.json or auto-detected: only `slug` + `tvl_history` required
-- If slug is NEW: `slug`, `is-ongoing`, `live`, `simple-tvs-ratio`, `tvl_history` required
+- If slug is NEW: `slug`, `is-ongoing`, `live`, `simple-tvs-ratio`, `category`, `chains`, `tvl_history` required
+- Optional fields for new protocols: `is-defillama`, `docs_proof`, `github_proof`
 - If slug exists in custom-protocols.json AND custom-data has metadata fields: **PANIC** (duplicate registration)
+- Non-live protocols (`"live": false`) are filtered out and not added to the pipeline
 
 ### Project Structure Notes
 
@@ -198,9 +205,12 @@ Agent Model: ChatGPT (gpt-5.1)
 ### File List
 - custom-data/.gitkeep
 - custom-data/_example.json.template
+- custom-data/project-0.json
+- internal/models/tvl.go
 - internal/tvl/customdata.go
 - internal/tvl/customdata_test.go
 - internal/tvl/custommerge.go
+- internal/tvl/merger.go
 - internal/tvl/pipeline.go
 - internal/tvl/pipeline_test.go
 - internal/config/config.go
@@ -223,6 +233,7 @@ Agent Model: ChatGPT (gpt-5.1)
 | 2025-12-11 | BMad | Added AC9-11 and Task 7 for full protocol metadata support in custom-data files |
 | 2025-12-11 | Amelia (Dev) | Implemented Task 7: extended custom-data schema with full CustomProtocol fields, validation logic, duplicate detection, pipeline integration; all tests passing |
 | 2025-12-12 | Amelia (Reviewer) | Senior Developer Review (AI) – Approved; ACs 1-11 and all tasks verified with evidence |
+| 2025-12-12 | Amelia (Dev) | Added mandatory `category` and `chains` fields for new protocols; updated models, validation, merger, template, and tests |
 
 ## Senior Developer Review (AI)
 

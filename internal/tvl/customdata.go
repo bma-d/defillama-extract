@@ -51,7 +51,7 @@ func (l *CustomDataLoader) Stats() CustomDataStats {
 
 // customDataFile represents a custom-data JSON file. It supports two modes:
 // 1. History-only: existing protocol (in custom-protocols.json or auto-detected) - only slug + tvl_history required
-// 2. Full protocol: NEW protocol - requires slug, is-ongoing, live, simple-tvs-ratio, tvl_history
+// 2. Full protocol: NEW protocol - requires slug, is-ongoing, live, simple-tvs-ratio, category, chains, tvl_history
 type customDataFile struct {
 	Slug           string                  `json:"slug"`
 	IsOngoing      *bool                   `json:"is-ongoing,omitempty"`
@@ -60,13 +60,16 @@ type customDataFile struct {
 	IsDefillama    *bool                   `json:"is-defillama,omitempty"`
 	DocsProof      *string                 `json:"docs_proof,omitempty"`
 	GitHubProof    *string                 `json:"github_proof,omitempty"`
+	Category       string                  `json:"category,omitempty"`
+	Chains         []string                `json:"chains,omitempty"`
 	TVLHistory     []models.TVLHistoryItem `json:"tvl_history"`
 }
 
 // hasMetadata returns true if any protocol metadata fields are set (beyond slug + tvl_history)
 func (f *customDataFile) hasMetadata() bool {
 	return f.IsOngoing != nil || f.Live != nil || f.SimpleTVSRatio != nil ||
-		f.IsDefillama != nil || f.DocsProof != nil || f.GitHubProof != nil
+		f.IsDefillama != nil || f.DocsProof != nil || f.GitHubProof != nil ||
+		f.Category != "" || len(f.Chains) > 0
 }
 
 // toCustomProtocol converts to models.CustomProtocol. Only call if hasMetadata() is true.
@@ -75,6 +78,8 @@ func (f *customDataFile) toCustomProtocol() models.CustomProtocol {
 		Slug:        f.Slug,
 		DocsProof:   f.DocsProof,
 		GitHubProof: f.GitHubProof,
+		Category:    f.Category,
+		Chains:      f.Chains,
 	}
 	if f.IsOngoing != nil {
 		p.IsOngoing = *f.IsOngoing
@@ -205,7 +210,7 @@ func (l *CustomDataLoader) Load(ctx context.Context, knownSlugs, customProtocolS
 
 // validateCustomDataFileWithContext validates a custom data file based on whether it's for a known protocol.
 // - Known protocols: only slug + tvl_history required
-// - New protocols: slug, is-ongoing, live, simple-tvs-ratio, tvl_history required
+// - New protocols: slug, is-ongoing, live, simple-tvs-ratio, category, chains, tvl_history required
 func validateCustomDataFileWithContext(file customDataFile, isKnown bool) error {
 	if strings.TrimSpace(file.Slug) == "" {
 		return errors.New("slug is required")
@@ -236,11 +241,17 @@ func validateCustomDataFileWithContext(file customDataFile, isKnown bool) error 
 		if *file.SimpleTVSRatio < 0 || *file.SimpleTVSRatio > 1 {
 			return errors.New("simple-tvs-ratio must be between 0 and 1")
 		}
+		if strings.TrimSpace(file.Category) == "" {
+			return errors.New("category is required for new protocols")
+		}
+		if len(file.Chains) == 0 {
+			return errors.New("chains is required for new protocols")
+		}
 	}
 
 	// New protocol without any metadata - require all mandatory fields
 	if !isKnown && !file.hasMetadata() {
-		return errors.New("new protocol requires is-ongoing, live, and simple-tvs-ratio fields")
+		return errors.New("new protocol requires is-ongoing, live, simple-tvs-ratio, category, and chains fields")
 	}
 
 	return nil

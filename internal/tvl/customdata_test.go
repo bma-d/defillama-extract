@@ -130,6 +130,8 @@ func TestCustomDataLoader_NewProtocol_WithFullMetadata(t *testing.T) {
 		"simple-tvs-ratio": 0.75,
 		"is-defillama": false,
 		"docs_proof": "https://example.com/docs",
+		"category": "Lending",
+		"chains": ["Solana"],
 		"tvl_history": [{"date":"2024-01-01","timestamp":1704067200,"tvl":100}]
 	}`)
 
@@ -163,6 +165,12 @@ func TestCustomDataLoader_NewProtocol_WithFullMetadata(t *testing.T) {
 	}
 	if p.DocsProof == nil || *p.DocsProof != "https://example.com/docs" {
 		t.Fatalf("expected docs_proof, got %v", p.DocsProof)
+	}
+	if p.Category != "Lending" {
+		t.Fatalf("expected category Lending, got %s", p.Category)
+	}
+	if len(p.Chains) != 1 || p.Chains[0] != "Solana" {
+		t.Fatalf("expected chains [Solana], got %v", p.Chains)
 	}
 }
 

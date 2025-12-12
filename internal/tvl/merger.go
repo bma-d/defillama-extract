@@ -40,6 +40,8 @@ func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []mo
 			DocsProof:       cp.DocsProof,
 			GitHubProof:     cp.GitHubProof,
 			IsDefillama:     isDefillama,
+			Category:        cp.Category,
+			Chains:          cp.Chains,
 		}
 	}
 

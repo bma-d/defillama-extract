@@ -1,14 +1,16 @@
 {
   "_comment": "Custom data file supports two modes:",
   "_mode1": "HISTORY-ONLY: For protocols already in custom-protocols.json or auto-detected. Only slug + tvl_history required.",
-  "_mode2": "NEW PROTOCOL: For protocols not registered elsewhere. Required: slug, is-ongoing, live, simple-tvs-ratio, tvl_history. Optional: is-defillama, docs_proof, github_proof.",
+  "_mode2": "NEW PROTOCOL: For protocols not registered elsewhere. Required: slug, is-ongoing, live, simple-tvs-ratio, category, chains, tvl_history. Optional: is-defillama, docs_proof, github_proof.",
 
   "slug": "example-protocol",
 
-  "_metadata_comment": "Metadata fields below are REQUIRED for new protocols (is-ongoing, live, simple-tvs-ratio), FORBIDDEN for protocols already in custom-protocols.json",
+  "_metadata_comment": "Metadata fields below are REQUIRED for new protocols, FORBIDDEN for protocols already in custom-protocols.json",
   "is-ongoing": false,
   "live": true,
   "simple-tvs-ratio": 1.0,
+  "category": "Lending",
+  "chains": ["Solana"],
 
   "_optional_metadata_comment": "Optional metadata fields for new protocols:",
   "is-defillama": false,
