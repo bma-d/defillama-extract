@@ -10,7 +10,7 @@ import (
 
 func TestMergeProtocolLists_AutoOnly(t *testing.T) {
 	auto := []string{"alpha", "beta"}
-	got := MergeProtocolLists(auto, nil)
+	got := MergeProtocolLists(auto, nil, nil)
 
 	if got == nil {
 		t.Fatalf("expected non-nil slice")
@@ -40,7 +40,7 @@ func TestMergeProtocolLists_CustomOnly(t *testing.T) {
 		SimpleTVSRatio: 0.5,
 	}}
 
-	got := MergeProtocolLists(nil, custom)
+	got := MergeProtocolLists(nil, custom, nil)
 
 	if len(got) != 1 {
 		t.Fatalf("expected 1 protocol, got %d", len(got))
@@ -64,7 +64,7 @@ func TestMergeProtocolLists_CustomNilDateStaysNil(t *testing.T) {
 		Date:           nil,
 	}}
 
-	got := MergeProtocolLists(nil, custom)
+	got := MergeProtocolLists(nil, custom, nil)
 
 	if len(got) != 1 {
 		t.Fatalf("expected 1 protocol, got %d", len(got))
@@ -90,7 +90,7 @@ func TestMergeProtocolLists_CustomOverridesAuto(t *testing.T) {
 		DocsProof:      &docs,
 	}}
 
-	got := MergeProtocolLists(auto, custom)
+	got := MergeProtocolLists(auto, custom, nil)
 
 	if len(got) != 2 {
 		t.Fatalf("expected 2 protocols after merge, got %d", len(got))
@@ -116,7 +116,7 @@ func TestMergeProtocolLists_Sorting(t *testing.T) {
 		SimpleTVSRatio: 1,
 	}}
 
-	got := MergeProtocolLists(auto, custom)
+	got := MergeProtocolLists(auto, custom, nil)
 
 	slugs := []string{got[0].Slug, got[1].Slug, got[2].Slug}
 	expected := []string{"alpha", "charlie", "delta"}
@@ -126,7 +126,7 @@ func TestMergeProtocolLists_Sorting(t *testing.T) {
 }
 
 func TestMergeProtocolLists_EmptyInputs(t *testing.T) {
-	got := MergeProtocolLists(nil, nil)
+	got := MergeProtocolLists(nil, nil, nil)
 
 	if got == nil {
 		t.Fatalf("expected empty slice, got nil")
@@ -144,7 +144,7 @@ func TestMergeProtocolLists_NilDocsProofForCustom(t *testing.T) {
 		SimpleTVSRatio: 0.8,
 	}}
 
-	got := MergeProtocolLists(nil, custom)
+	got := MergeProtocolLists(nil, custom, nil)
 
 	p := got[0]
 	if p.DocsProof != nil {

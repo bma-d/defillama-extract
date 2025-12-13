@@ -23,6 +23,7 @@ so that **protocols without API data can still be tracked with accurate historic
 | AC9 | Custom-data files can define NEW protocols with full metadata (`is-ongoing`, `live`, `simple-tvs-ratio`, `category`, `chains` required) | Unit test for new protocol registration |
 | AC10 | Custom-data files for EXISTING protocols only require `slug` + `tvl_history` | Unit test for history-only mode |
 | AC11 | Duplicate slug in both custom-protocols.json AND custom-data with metadata causes panic | Duplicate detection test |
+| AC12 | Each protocol exposes `url` (homepage/app) in `tvl-data.json` and `custom-data.json`; custom-data protocols must include `url` (empty string allowed) | Schema + output verification |
 
 **AC Source Mapping:** AC1, AC2, AC5, AC6, AC7 align to Epic 6 story M-002 requirements. AC3, AC4, AC8 are internal quality extensions for resilience and observability. [Source: docs/epics/epic-6-maintenance.md#Active-Stories] [Source: docs/sprint-artifacts/tech-spec-epic-6.md#Overview] [Source: docs/prd.md#Success-Criteria]
 
@@ -82,6 +83,13 @@ so that **protocols without API data can still be tracked with accurate historic
   - [x] 7.9 Add `Category` and `Chains` fields to `CustomProtocol` and `MergedProtocol` models
   - [x] 7.10 Update `merger.go` to pass `category` and `chains` through to merged protocols
   - [x] 7.11 Fix Live field filtering for new protocols (match custom.go behavior)
+- [x] **Task 8: Interactive mode fixes — isolate custom-data output** (AC: 1,2,3,5,6,8,9,10,11)
+  - [x] 8.1 Emit protocols present in `custom-data/` to a new `custom-data.json` output (preserve TVL history)
+  - [x] 8.2 Exclude `custom-data` protocols from `tvl-data.json` while leaving other behavior unchanged
+  - [x] 8.3 Include `category` and `chains` from `custom-data` files in the new output entries
+  - [x] 8.4 Update tests/state to cover split outputs and ensure status reflects in-progress work
+  - [x] 8.5 Surface protocol `url` in both `tvl-data.json` and `custom-data.json`; make `url` mandatory in custom-data files (empty string permitted)
+  - [x] 8.6 Update fixtures/templates to include `url` and extend tests to cover presence/empty-url cases (AC: 12)
 
 ## Dev Notes
 
@@ -196,11 +204,13 @@ Agent Model: ChatGPT (gpt-5.1)
 
 ### Debug Log References
 - 2025-12-10: Implemented custom data loader, merge logic, config field/env override, and pipeline integration with logging; added fixtures and tests; go test ./... passing.
+- 2025-12-12: Started interactive-mode fix to separate custom-data outputs; split output plan recorded.
 
 ### Completion Notes List
 - Custom data support added: loader validates schema, tolerates bad files via warnings, merges custom history with API data (custom wins), and logs load/merge stats.
 - Config now exposes `custom_data_path` with default `custom-data` and env override `TVL_CUSTOM_DATA_PATH`; docs updated.
 - Pipeline integrates loader via RunnerDeps; supports custom-only protocols and emits metrics; full test suite passes.
+- Added URL propagation/validation for custom-data and TVL outputs; go test ./... passing (2025-12-13).
 
 ### File List
 - custom-data/.gitkeep
@@ -234,6 +244,9 @@ Agent Model: ChatGPT (gpt-5.1)
 | 2025-12-11 | Amelia (Dev) | Implemented Task 7: extended custom-data schema with full CustomProtocol fields, validation logic, duplicate detection, pipeline integration; all tests passing |
 | 2025-12-12 | Amelia (Reviewer) | Senior Developer Review (AI) – Approved; ACs 1-11 and all tasks verified with evidence |
 | 2025-12-12 | Amelia (Dev) | Added mandatory `category` and `chains` fields for new protocols; updated models, validation, merger, template, and tests |
+| 2025-12-12 | Amelia (Dev) | Initiated Task 8: split custom-data outputs into custom-data.json and adjust pipeline/tests; marked story back to in-progress for fixes |
+| 2025-12-13 | Amelia (Dev) | Added AC12 url requirement; implemented url propagation/validation for tvl-data.json and custom-data.json, updated tests and template |
+| 2025-12-13 | BMad (Reviewer) | Senior Developer Review (AI) – Approved; AC1-12 and all tasks verified |
 
 ## Senior Developer Review (AI)
 
@@ -416,3 +429,61 @@ Agent Model: ChatGPT (gpt-5.1)
 
 ### Action Items
 - [ ] None — story approved.
+
+## Senior Developer Review (AI)
+
+- Reviewer: BMad  
+- Date: 2025-12-13  
+- Outcome: Approve — all acceptance criteria (1-12) and completed tasks verified; no findings.
+
+### Summary
+- Custom-data loader, validation, merge, config/env wiring, pipeline partitioning, and outputs remain correct after AC12 (URL requirement) and split outputs; `go test ./...` passing on 2025-12-13.
+- custom-data protocols are emitted to `custom-data.json` with category/chains/url preserved; tvl-data excludes them; logging provides load/merge metrics; duplicate metadata detection enforced.
+
+### Key Findings
+- No High/Medium/Low issues found.
+
+### Acceptance Criteria Coverage
+| AC# | Description | Status | Evidence |
+|-----|-------------|--------|----------|
+| AC1 | `custom-data/` directory exists and pipeline recognizes it | Implemented | custom-data/.gitkeep; internal/tvl/pipeline.go:83-141 |
+| AC2 | JSON schema enforced | Implemented | internal/tvl/customdata.go:52-239 |
+| AC3 | Loader reads all `*.json` files | Implemented | internal/tvl/customdata.go:155-233 |
+| AC4 | Invalid JSON warns, pipeline continues | Implemented | internal/tvl/customdata.go:165-201 |
+| AC5 | Custom data wins on date conflicts | Implemented | internal/tvl/customdata.go:309-349; internal/tvl/custommerge.go:18-78 |
+| AC6 | Custom-only protocol produces valid output | Implemented | internal/tvl/custommerge.go:18-78; internal/tvl/pipeline.go:171-188 |
+| AC7 | Config supports optional `custom_data_path` defaulting to `custom-data/` | Implemented | internal/config/config.go:56-145; configs/config.yaml:35-38 |
+| AC8 | Logs custom data load statistics | Implemented | internal/tvl/customdata.go:224-231; internal/tvl/pipeline.go:148-153 |
+| AC9 | New protocols require full metadata | Implemented | internal/tvl/customdata.go:258-278 |
+| AC10 | Existing protocols only need `slug` + history | Implemented | internal/tvl/customdata.go:187-205 |
+| AC11 | Duplicate slug with metadata panics | Implemented | internal/tvl/customdata.go:191-194; internal/tvl/customdata_test.go:260-291 |
+| AC12 | URL required in custom-data protocols and propagated | Implemented | internal/tvl/customdata.go:236-245,205-210; internal/tvl/output.go:62-122,104-191 |
+
+Summary: 12/12 ACs implemented.
+
+### Task Completion Validation
+| Task/Subtask | Marked | Verified | Evidence |
+|--------------|--------|----------|----------|
+| 1.1–1.4 Custom-data dir + template + empty-dir handling | [x] | Verified | custom-data/.gitkeep; custom-data/_example.json.template; internal/tvl/customdata_test.go:14-50,73-99 |
+| 2.x Loader, schema validation, invalid file handling, tests | [x] | Verified | internal/tvl/customdata.go:52-239; internal/tvl/customdata_test.go:14-146 |
+| 3.x Merge logic & custom-only handling | [x] | Verified | internal/tvl/customdata.go:309-349; internal/tvl/custommerge.go:18-92; internal/tvl/customdata_test.go:292-329 |
+| 4.x Config field/default/env override + tests | [x] | Verified | internal/config/config.go:56-145; internal/config/config_test.go:140-217; configs/config.yaml:35-38 |
+| 5.x Pipeline integration, partitioned outputs, metrics logging + tests | [x] | Verified | internal/tvl/pipeline.go:60-200; internal/tvl/pipeline_test.go:52-211 |
+| 6.x Epic/sprint metadata updates | [x] | Verified | docs/epics/epic-6-maintenance.md:26-55; docs/sprint-artifacts/sprint-status.yaml:55-86 |
+| 7.x Full metadata support, duplicate detection, new protocol registration | [x] | Verified | internal/tvl/customdata.go:52-239; internal/tvl/customdata_test.go:148-291; internal/models/tvl.go:1-92 |
+| 8.x Split outputs for custom-data protocols with url/category/chains | [x] | Verified | internal/tvl/pipeline.go:155-200; internal/tvl/output.go:62-191; internal/tvl/pipeline_test.go:131-211 |
+
+### Test Coverage and Gaps
+- `go test ./...` (2025-12-13) — pass; no gaps noted.
+
+### Architectural Alignment
+- Uses slog structured logging (ADR-004); atomic JSON writes via storage (ADR-002); no new dependencies (ADR-005); table-driven tests per testing strategy.
+
+### Security Notes
+- Inputs limited to local JSON files; invalid/duplicate metadata handled via warnings/panic to avoid silent divergence.
+
+### Best-Practices and References
+- Config/env overrides follow existing pattern; merge logic preserves deterministic ordering; custom-data separated for provenance.
+
+### Action Items
+- [ ] None.

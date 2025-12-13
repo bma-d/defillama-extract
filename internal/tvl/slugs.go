@@ -61,11 +61,7 @@ func GetAutoDetectedSlugs(protocols []api.Protocol, oracleName string) []string 
 			continue
 		}
 
-		// Use slug if available, otherwise derive from name
-		slug := strings.TrimSpace(p.Slug)
-		if slug == "" {
-			slug = slugify(p.Name)
-		}
+		slug := protocolSlug(p)
 		if slug == "" {
 			continue
 		}
@@ -92,4 +88,13 @@ func protocolUsesOracle(p api.Protocol, oracleName string) bool {
 		return true
 	}
 	return false
+}
+
+// protocolSlug returns the provided slug if present; otherwise derives one from the name.
+func protocolSlug(p api.Protocol) string {
+	slug := strings.TrimSpace(p.Slug)
+	if slug == "" {
+		slug = slugify(p.Name)
+	}
+	return slug
 }

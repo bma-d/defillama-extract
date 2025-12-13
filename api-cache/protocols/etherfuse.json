@@ -114,14 +114,14 @@
       "totalLiquidityUSD": 7757488
     },
     {
-      "date": 1765563455,
-      "totalLiquidityUSD": 7755978
+      "date": 1765580495,
+      "totalLiquidityUSD": 7764842
     }
   ],
   "currentChainTvls": {
-    "Base": 609.59688,
-    "Polygon": 165.06603,
-    "Solana": 3266727.23648,
-    "Stellar": 4488476.34725
+    "Base": 610.12744,
+    "Polygon": 165.20969,
+    "Solana": 3270621.05702,
+    "Stellar": 4493445.64022
   }
 }

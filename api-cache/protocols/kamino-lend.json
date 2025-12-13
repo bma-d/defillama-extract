@@ -3174,13 +3174,13 @@
       "totalLiquidityUSD": 2302538886
     },
     {
-      "date": 1765565663,
-      "totalLiquidityUSD": 2273639284
+      "date": 1765580171,
+      "totalLiquidityUSD": 2271404220
     }
   ],
   "currentChainTvls": {
-    "Solana": 2273639284.63097,
-    "Solana-borrowed": 1318672493.86572,
-    "borrowed": 1318672493.86572
+    "Solana": 2271404220.02976,
+    "Solana-borrowed": 1318078629.89559,
+    "borrowed": 1318078629.89559
   }
 }

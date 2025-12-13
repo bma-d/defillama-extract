@@ -57,6 +57,7 @@ type customDataFile struct {
 	IsOngoing      *bool                   `json:"is-ongoing,omitempty"`
 	Live           *bool                   `json:"live,omitempty"`
 	SimpleTVSRatio *float64                `json:"simple-tvs-ratio,omitempty"`
+	URL            *string                 `json:"url,omitempty"`
 	IsDefillama    *bool                   `json:"is-defillama,omitempty"`
 	DocsProof      *string                 `json:"docs_proof,omitempty"`
 	GitHubProof    *string                 `json:"github_proof,omitempty"`
@@ -76,6 +77,7 @@ func (f *customDataFile) hasMetadata() bool {
 func (f *customDataFile) toCustomProtocol() models.CustomProtocol {
 	p := models.CustomProtocol{
 		Slug:        f.Slug,
+		URL:         derefString(f.URL),
 		DocsProof:   f.DocsProof,
 		GitHubProof: f.GitHubProof,
 		Category:    f.Category,
@@ -100,6 +102,15 @@ func (f *customDataFile) toCustomProtocol() models.CustomProtocol {
 type CustomDataResult struct {
 	History      map[string][]models.TVLHistoryItem
 	NewProtocols []models.CustomProtocol
+	Metadata     map[string]CustomDataAttributes
+}
+
+// CustomDataAttributes preserves optional metadata provided in custom-data
+// files for downstream outputs (e.g., category, chains).
+type CustomDataAttributes struct {
+	Category string
+	Chains   []string
+	URL      string
 }
 
 // Load reads all *.json files under the directory (non-recursive), validates
@@ -127,6 +138,7 @@ func (l *CustomDataLoader) Load(ctx context.Context, knownSlugs, customProtocolS
 	result := &CustomDataResult{
 		History:      make(map[string][]models.TVLHistoryItem),
 		NewProtocols: make([]models.CustomProtocol, 0),
+		Metadata:     make(map[string]CustomDataAttributes),
 	}
 
 	dirEntries, err := os.ReadDir(l.path)
@@ -164,6 +176,14 @@ func (l *CustomDataLoader) Load(ctx context.Context, knownSlugs, customProtocolS
 			continue
 		}
 
+		var fields map[string]json.RawMessage
+		if err := json.Unmarshal(data, &fields); err != nil {
+			l.logger.WarnContext(ctx, "custom_data_invalid_json", "path", fullPath, "error", err)
+			l.lastStats.InvalidFiles++
+			continue
+		}
+		_, hasURL := fields["url"]
+
 		slug := strings.TrimSpace(file.Slug)
 		_, isKnown := knownSlugs[slug]
 		_, isCustomProtocol := customProtocolSlugs[slug]
@@ -174,7 +194,7 @@ func (l *CustomDataLoader) Load(ctx context.Context, knownSlugs, customProtocolS
 		}
 
 		// Validate based on mode
-		if err := validateCustomDataFileWithContext(file, isKnown); err != nil {
+		if err := validateCustomDataFileWithContext(file, isKnown, hasURL); err != nil {
 			l.logger.WarnContext(ctx, "custom_data_invalid_schema", "path", fullPath, "error", err)
 			l.lastStats.InvalidFiles++
 			continue
@@ -182,6 +202,11 @@ func (l *CustomDataLoader) Load(ctx context.Context, knownSlugs, customProtocolS
 
 		normalized := normalizeHistory(file.TVLHistory)
 		result.History[slug] = normalized
+		result.Metadata[slug] = CustomDataAttributes{
+			Category: file.Category,
+			Chains:   file.Chains,
+			URL:      derefString(file.URL),
+		}
 		l.lastStats.FilesLoaded++
 		l.lastStats.EntriesLoaded += len(normalized)
 
@@ -209,11 +234,14 @@ func (l *CustomDataLoader) Load(ctx context.Context, knownSlugs, customProtocolS
 }
 
 // validateCustomDataFileWithContext validates a custom data file based on whether it's for a known protocol.
-// - Known protocols: only slug + tvl_history required
-// - New protocols: slug, is-ongoing, live, simple-tvs-ratio, category, chains, tvl_history required
-func validateCustomDataFileWithContext(file customDataFile, isKnown bool) error {
+// - Known protocols: slug + tvl_history required, url field must be present (empty string allowed)
+// - New protocols: slug, is-ongoing, live, simple-tvs-ratio, category, chains, tvl_history, url required
+func validateCustomDataFileWithContext(file customDataFile, isKnown bool, hasURL bool) error {
 	if strings.TrimSpace(file.Slug) == "" {
 		return errors.New("slug is required")
+	}
+	if !hasURL {
+		return errors.New("url is required (may be empty string if unknown)")
 	}
 	if len(file.TVLHistory) == 0 {
 		return errors.New("tvl_history must not be empty")
@@ -319,4 +347,11 @@ func MergeTVLHistory(apiData, customData []models.TVLHistoryItem) []models.TVLHi
 	})
 
 	return merged
+}
+
+func derefString(ptr *string) string {
+	if ptr == nil {
+		return ""
+	}
+	return *ptr
 }

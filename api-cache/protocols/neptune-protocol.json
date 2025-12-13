@@ -1254,12 +1254,12 @@
       "totalLiquidityUSD": 7261
     },
     {
-      "date": 1765556927,
-      "totalLiquidityUSD": 7313
+      "date": 1765588931,
+      "totalLiquidityUSD": 6961
     }
   ],
   "currentChainTvls": {
-    "Eclipse": 7313.00327,
+    "Eclipse": 6961.80735,
     "Eclipse-staking": 0,
     "staking": 0
   }

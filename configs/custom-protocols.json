@@ -3,6 +3,7 @@
     "slug": "drift",
     "is-ongoing": false,
     "live": true,
+    "url": "https://www.drift.trade/",
     "simple-tvs-ratio": 0.5,
     "is-defillama": false,
     "docs_proof": "https://docs.drift.trade/trading/market-specs#switchboard",
@@ -12,6 +13,7 @@
     "slug": "thala",
     "is-ongoing": false,
     "live": true,
+    "url": "https://app.thala.fi/",
     "simple-tvs-ratio": 0.5,
     "is-defillama": false,
     "docs_proof": "https://docs.thala.fi/overview/move-dollar-mod/oracles#switchboard",
@@ -21,6 +23,7 @@
     "slug": "save",
     "is-ongoing": false,
     "live": true,
+    "url": "https://save.finance/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": false,
     "docs_proof": "https://docs.save.finance/getting-started/faq#what-oracles-does-solend-use",
@@ -30,6 +33,7 @@
     "slug": "aries-markets",
     "is-ongoing": false,
     "live": true,
+    "url": "https://ariesmarkets.xyz/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": false,
     "docs_proof": "https://docs.ariesmarkets.xyz/aries-markets/protocol-parameters/oracles",
@@ -39,6 +43,7 @@
     "slug": "colend-protocol",
     "is-ongoing": false,
     "live": true,
+    "url": "https://www.colend.xyz/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": false,
     "docs_proof": "https://colend.gitbook.io/home/resources/oracles#integration-of-complementary-oracles"
@@ -47,6 +52,7 @@
     "slug": "marinade-liquid-staking",
     "is-ongoing": false,
     "live": true,
+    "url": "https://marinade.finance/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": false,
     "docs_proof": "https://docs.marinade.finance/marinade-protocol/protocol-overview/marinade-liquid/msol-token"
@@ -55,6 +61,7 @@
     "slug": "suilend-protocol",
     "is-ongoing": false,
     "live": true,
+    "url": "https://suilend.fi/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": false,
     "docs_proof": "https://docs.suilend.fi/security/risks",
@@ -64,6 +71,7 @@
     "slug": "echelon-market",
     "is-ongoing": false,
     "live": true,
+    "url": "https://echelon.market/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": false,
     "docs_proof": "https://docs.echelon.market/echelon/core/oracles"
@@ -72,6 +80,7 @@
     "slug": "etherfuse",
     "is-ongoing": false,
     "live": true,
+    "url": "https://www.etherfuse.com/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": false,
     "github_proof": "https://github.com/etherfuse/prices/blob/c34e3a013763a0862d61797febaf05d2226d1e1e/src/main.rs#L18"
@@ -80,7 +89,8 @@
     "slug": "kamino-lend",
     "is-ongoing": false,
     "live": true,
-    "simple-tvs-ratio": 0.0,
+    "url": "https://kamino.com/lend",
+    "simple-tvs-ratio": 0.5,
     "is-defillama": true,
     "docs_proof": "https://docs.kamino.finance/kamino-lend-litepaper#multiple-providers",
     "github_proof": "https://github.com/Kamino-Finance/klend/blob/8e2f907cc18f7d2b652d919cce7a91f9cf5b7aa8/programs/klend/src/utils/prices/switchboard.rs#L34"
@@ -89,6 +99,7 @@
     "slug": "marginfi-lending",
     "is-ongoing": false,
     "live": true,
+    "url": "https://app.marginfi.com/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.marginfi.com/protocol-design#oracle-usage",
@@ -98,6 +109,7 @@
     "slug": "scallop-lend",
     "is-ongoing": false,
     "live": true,
+    "url": "https://scallop.io/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.scallop.io/protocol/oracles#multi-oracle-planning"
@@ -106,6 +118,7 @@
     "slug": "carrot",
     "is-ongoing": false,
     "live": true,
+    "url": "https://deficarrot.com/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "github_proof": "https://github.com/DeFi-Carrot/switchboard-od-read-interface"
@@ -114,6 +127,7 @@
     "slug": "bucket-cdp",
     "is-ongoing": false,
     "live": true,
+    "url": "https://www.bucketprotocol.io/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "github_proof": "https://github.com/Bucket-Protocol/oracle"
@@ -122,6 +136,7 @@
     "slug": "synatra",
     "is-ongoing": false,
     "live": true,
+    "url": "https://synatra.xyz/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.synatra.xyz/synthetic-staking/oracles"
@@ -130,6 +145,7 @@
     "slug": "sendit",
     "is-ongoing": false,
     "live": true,
+    "url": "https://sendit.fun/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.sendit.fun/security/oracles#unverified-markets"
@@ -138,6 +154,7 @@
     "slug": "moveposition",
     "is-ongoing": false,
     "live": true,
+    "url": "https://www.moveposition.xyz/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.moveposition.xyz/asset-pricing#asset-pricing -> https://docs.concordia.systems/platform-spec/pricing-engine"
@@ -146,6 +163,7 @@
     "slug": "symmetry",
     "is-ongoing": false,
     "live": true,
+    "url": "https://symmetry.fi/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.symmetry.fi/infrastructure/price-oracles"
@@ -154,6 +172,7 @@
     "slug": "rain.fi",
     "is-ongoing": false,
     "live": true,
+    "url": "https://rain.fi/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true
   },
@@ -161,6 +180,7 @@
     "slug": "superposition",
     "is-ongoing": false,
     "live": true,
+    "url": "https://www.superposition.finance/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.superposition.finance/asset-pricing"
@@ -169,6 +189,7 @@
     "slug": "hedge",
     "is-ongoing": false,
     "live": true,
+    "url": "https://www.hedge.so/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.hedge.so/protocol-overview/security#oracles"
@@ -177,6 +198,7 @@
     "slug": "aptin-finance",
     "is-ongoing": false,
     "live": true,
+    "url": "https://aptin.io/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.aptin.io/aptin-finance/protocol/oracles"
@@ -185,6 +207,7 @@
     "slug": "weiss-finance",
     "is-ongoing": false,
     "live": true,
+    "url": "https://www.weiss.finance",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://docs.weiss.finance/docs/oracles"
@@ -193,6 +216,7 @@
     "slug": "mango-markets-v4-perps",
     "is-ongoing": false,
     "live": true,
+    "url": "https://mango-v4-ui.vercel.app/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://github.com/blockworks-foundation/mango-docs/blob/a4d15dec5b52e69fd402ea5bda83a3dba38afd1e/mango-markets/oracles.md?plain=1#L6"

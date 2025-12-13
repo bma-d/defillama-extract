@@ -14,7 +14,7 @@ import (
 func TestCustomDataLoader_LoadsValidFiles_ExistingProtocol(t *testing.T) {
 	dir := t.TempDir()
 	// alpha is a known slug - only needs slug + tvl_history
-	writeFile(t, filepath.Join(dir, "alpha.json"), `{"slug":"alpha","tvl_history":[{"date":"2024-01-01","timestamp":1704067200,"tvl":1.5}]}`)
+	writeFile(t, filepath.Join(dir, "alpha.json"), `{"slug":"alpha","url":"","tvl_history":[{"date":"2024-01-01","timestamp":1704067200,"tvl":1.5}]}`)
 	writeFile(t, filepath.Join(dir, "_example.json.template"), `{}`)
 
 	handler := &recordingHandler{}
@@ -33,6 +33,12 @@ func TestCustomDataLoader_LoadsValidFiles_ExistingProtocol(t *testing.T) {
 	if len(result.History["alpha"]) != 1 || result.History["alpha"][0].TVL != 1.5 {
 		t.Fatalf("unexpected history %+v", result.History["alpha"])
 	}
+	if result.Metadata["alpha"].Category != "" || len(result.Metadata["alpha"].Chains) != 0 {
+		t.Fatalf("expected empty metadata for alpha, got %+v", result.Metadata["alpha"])
+	}
+	if result.Metadata["alpha"].URL != "" {
+		t.Fatalf("expected empty url, got %s", result.Metadata["alpha"].URL)
+	}
 	if len(result.NewProtocols) != 0 {
 		t.Fatalf("expected no new protocols, got %d", len(result.NewProtocols))
 	}
@@ -46,7 +52,7 @@ func TestCustomDataLoader_LoadsValidFiles_ExistingProtocol(t *testing.T) {
 func TestCustomDataLoader_InvalidJSONContinues(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "bad.json"), `{"slug":`)
-	writeFile(t, filepath.Join(dir, "good.json"), `{"slug":"ok","tvl_history":[{"date":"2024-02-01","timestamp":1706745600,"tvl":2}]}`)
+	writeFile(t, filepath.Join(dir, "good.json"), `{"slug":"ok","url":"https://ok.example","tvl_history":[{"date":"2024-02-01","timestamp":1706745600,"tvl":2}]}`)
 
 	handler := &recordingHandler{}
 	loader := NewCustomDataLoader(dir, slog.New(handler))
@@ -94,7 +100,7 @@ func TestCustomDataLoader_EmptyDirectory_NoErrorAndLogsSummary(t *testing.T) {
 
 func TestCustomDataLoader_InvalidSchema_WarnsAndSkips(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "bad.json"), `{"slug":"", "tvl_history":[]}`)
+	writeFile(t, filepath.Join(dir, "bad.json"), `{"slug":"", "tvl_history":[],"url":""}`)
 
 	handler := &recordingHandler{}
 	loader := NewCustomDataLoader(dir, slog.New(handler))
@@ -120,11 +126,31 @@ func TestCustomDataLoader_InvalidSchema_WarnsAndSkips(t *testing.T) {
 	}
 }
 
+func TestCustomDataLoader_MissingURL_IsInvalid(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "missing_url.json"), `{"slug":"alpha","tvl_history":[{"date":"2024-01-01","tvl":1}]}`)
+
+	handler := &recordingHandler{}
+	loader := NewCustomDataLoader(dir, slog.New(handler))
+
+	result, err := loader.Load(context.Background(), nil, nil)
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if len(result.History) != 0 {
+		t.Fatalf("expected no histories when url missing, got %d", len(result.History))
+	}
+	if loader.Stats().InvalidFiles != 1 {
+		t.Fatalf("expected invalid file count 1, got %+v", loader.Stats())
+	}
+}
+
 func TestCustomDataLoader_NewProtocol_WithFullMetadata(t *testing.T) {
 	dir := t.TempDir()
 	// New protocol with all required metadata
 	writeFile(t, filepath.Join(dir, "newproto.json"), `{
 		"slug": "newproto",
+		"url": "https://newproto.app",
 		"is-ongoing": false,
 		"live": true,
 		"simple-tvs-ratio": 0.75,
@@ -154,6 +180,9 @@ func TestCustomDataLoader_NewProtocol_WithFullMetadata(t *testing.T) {
 	if p.Slug != "newproto" {
 		t.Fatalf("expected slug newproto, got %s", p.Slug)
 	}
+	if p.URL != "https://newproto.app" {
+		t.Fatalf("expected url https://newproto.app, got %s", p.URL)
+	}
 	if p.IsOngoing != false {
 		t.Fatalf("expected is-ongoing false, got %v", p.IsOngoing)
 	}
@@ -171,6 +200,10 @@ func TestCustomDataLoader_NewProtocol_WithFullMetadata(t *testing.T) {
 	}
 	if len(p.Chains) != 1 || p.Chains[0] != "Solana" {
 		t.Fatalf("expected chains [Solana], got %v", p.Chains)
+	}
+	meta := result.Metadata["newproto"]
+	if meta.Category != "Lending" || len(meta.Chains) != 1 || meta.Chains[0] != "Solana" {
+		t.Fatalf("expected metadata category/chains, got %+v", meta)
 	}
 }
 
@@ -227,9 +260,10 @@ func TestCustomDataLoader_ExistingProtocol_HistoryOnly(t *testing.T) {
 	dir := t.TempDir()
 	// Existing protocol - only slug + tvl_history needed
 	writeFile(t, filepath.Join(dir, "existing.json"), `{
-		"slug": "existing",
-		"tvl_history": [{"date":"2024-01-01","timestamp":1704067200,"tvl":50}]
-	}`)
+	"slug": "existing",
+	"url": "",
+	"tvl_history": [{"date":"2024-01-01","timestamp":1704067200,"tvl":50}]
+}`)
 
 	handler := &recordingHandler{}
 	loader := NewCustomDataLoader(dir, slog.New(handler))
@@ -251,12 +285,13 @@ func TestCustomDataLoader_DuplicateSlug_Panics(t *testing.T) {
 	dir := t.TempDir()
 	// Slug exists in custom-protocols.json AND custom-data has metadata -> panic
 	writeFile(t, filepath.Join(dir, "dupe.json"), `{
-		"slug": "dupe",
-		"is-ongoing": false,
-		"live": true,
-		"simple-tvs-ratio": 1.0,
-		"tvl_history": [{"date":"2024-01-01","timestamp":1704067200,"tvl":100}]
-	}`)
+	"slug": "dupe",
+	"url": "",
+	"is-ongoing": false,
+	"live": true,
+	"simple-tvs-ratio": 1.0,
+	"tvl_history": [{"date":"2024-01-01","timestamp":1704067200,"tvl":100}]
+}`)
 
 	handler := &recordingHandler{}
 	loader := NewCustomDataLoader(dir, slog.New(handler))
@@ -277,9 +312,10 @@ func TestCustomDataLoader_DuplicateSlug_HistoryOnly_NoPanic(t *testing.T) {
 	dir := t.TempDir()
 	// Slug in custom-protocols.json but custom-data has NO metadata -> OK (history-only)
 	writeFile(t, filepath.Join(dir, "dupe.json"), `{
-		"slug": "dupe",
-		"tvl_history": [{"date":"2024-01-01","timestamp":1704067200,"tvl":100}]
-	}`)
+	"slug": "dupe",
+	"url": "",
+	"tvl_history": [{"date":"2024-01-01","timestamp":1704067200,"tvl":100}]
+}`)
 
 	handler := &recordingHandler{}
 	loader := NewCustomDataLoader(dir, slog.New(handler))

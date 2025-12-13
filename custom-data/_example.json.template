@@ -4,6 +4,7 @@
   "_mode2": "NEW PROTOCOL: For protocols not registered elsewhere. Required: slug, is-ongoing, live, simple-tvs-ratio, category, chains, tvl_history. Optional: is-defillama, docs_proof, github_proof.",
 
   "slug": "example-protocol",
+  "url": "https://protocol.app",
 
   "_metadata_comment": "Metadata fields below are REQUIRED for new protocols, FORBIDDEN for protocols already in custom-protocols.json",
   "is-ongoing": false,

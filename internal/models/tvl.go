@@ -9,6 +9,7 @@ type CustomProtocol struct {
 	IsOngoing      bool     `json:"is-ongoing"`
 	Live           bool     `json:"live"`
 	Date           *int64   `json:"date,omitempty"`         // Unix timestamp, optional
+	URL            string   `json:"url,omitempty"`          // Protocol homepage/app
 	SimpleTVSRatio float64  `json:"simple-tvs-ratio"`       // TVS multiplier in range [0,1]
 	DocsProof      *string  `json:"docs_proof,omitempty"`   // Optional documentation URL
 	GitHubProof    *string  `json:"github_proof,omitempty"` // Optional repository link proving integration
@@ -24,6 +25,7 @@ type MergedProtocol struct {
 	Name            string   `json:"name"`
 	Source          string   `json:"source"`
 	IsOngoing       bool     `json:"is_ongoing"`
+	URL             string   `json:"url"`
 	SimpleTVSRatio  float64  `json:"simple_tvs_ratio"`
 	IntegrationDate *int64   `json:"integration_date"`
 	DocsProof       *string  `json:"docs_proof"`
@@ -66,11 +68,46 @@ type TVLOutputProtocol struct {
 	Slug            string           `json:"slug"`
 	Source          string           `json:"source"`
 	IsOngoing       bool             `json:"is_ongoing"`
+	URL             string           `json:"url"`
 	SimpleTVSRatio  float64          `json:"simple_tvs_ratio"`
 	IntegrationDate *int64           `json:"integration_date"`
 	DocsProof       *string          `json:"docs_proof"`
 	GitHubProof     *string          `json:"github_proof"`
 	IsDefillama     bool             `json:"is_defillama"` // True if listed in DefiLlama's /oracles endpoint
+	CurrentTVL      float64          `json:"current_tvl"`
+	TVLHistory      []TVLHistoryItem `json:"tvl_history"`
+}
+
+// CustomDataOutput captures protocols supplied via custom-data files. These
+// protocols are emitted separately (custom-data.json) instead of being mixed
+// into tvl-data.json for clearer provenance. Category and Chains are surfaced
+// to preserve author-provided metadata for downstream consumers.
+type CustomDataOutput struct {
+	Version   string                           `json:"version"`
+	Metadata  CustomDataOutputMetadata         `json:"metadata"`
+	Protocols map[string]CustomDataOutputEntry `json:"protocols"`
+}
+
+// CustomDataOutputMetadata provides high-level counts and timestamps.
+type CustomDataOutputMetadata struct {
+	LastUpdated   string `json:"last_updated"`
+	ProtocolCount int    `json:"protocol_count"`
+}
+
+// CustomDataOutputEntry mirrors TVLOutputProtocol but includes Category/Chains.
+type CustomDataOutputEntry struct {
+	Name            string           `json:"name"`
+	Slug            string           `json:"slug"`
+	Source          string           `json:"source"`
+	IsOngoing       bool             `json:"is_ongoing"`
+	URL             string           `json:"url"`
+	SimpleTVSRatio  float64          `json:"simple_tvs_ratio"`
+	IntegrationDate *int64           `json:"integration_date"`
+	DocsProof       *string          `json:"docs_proof"`
+	GitHubProof     *string          `json:"github_proof"`
+	IsDefillama     bool             `json:"is_defillama"`
+	Category        string           `json:"category,omitempty"`
+	Chains          []string         `json:"chains,omitempty"`
 	CurrentTVL      float64          `json:"current_tvl"`
 	TVLHistory      []TVLHistoryItem `json:"tvl_history"`
 }

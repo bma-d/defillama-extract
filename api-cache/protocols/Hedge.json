@@ -4962,12 +4962,12 @@
       "totalLiquidityUSD": 56190
     },
     {
-      "date": 1765552271,
-      "totalLiquidityUSD": 56331
+      "date": 1765568747,
+      "totalLiquidityUSD": 55580
     }
   ],
   "currentChainTvls": {
-    "Solana": 56331.34008,
+    "Solana": 55580.26049,
     "Solana-staking": 0,
     "staking": 0
   }

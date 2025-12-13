@@ -7,6 +7,7 @@ import (
 
 	"github.com/switchboard-xyz/defillama-extract/internal/api"
 	"github.com/switchboard-xyz/defillama-extract/internal/config"
+	"github.com/switchboard-xyz/defillama-extract/internal/models"
 )
 
 // RunnerDeps captures injectable collaborators for testing.
@@ -81,18 +82,18 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Pro
 
 	autoSlugs := GetAutoDetectedSlugs(protocols, cfg.Oracle.Name)
 
-	customProtocols, err := loader.Load(ctx)
+	baseCustomProtocols, err := loader.Load(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Build known slugs set (auto-detected + custom-protocols.json)
-	knownSlugs := make(map[string]struct{}, len(autoSlugs)+len(customProtocols))
+	knownSlugs := make(map[string]struct{}, len(autoSlugs)+len(baseCustomProtocols))
 	for _, slug := range autoSlugs {
 		knownSlugs[slug] = struct{}{}
 	}
-	customProtocolSlugs := make(map[string]struct{}, len(customProtocols))
-	for _, p := range customProtocols {
+	customProtocolSlugs := make(map[string]struct{}, len(baseCustomProtocols))
+	for _, p := range baseCustomProtocols {
 		knownSlugs[p.Slug] = struct{}{}
 		customProtocolSlugs[p.Slug] = struct{}{}
 	}
@@ -102,29 +103,44 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Pro
 		return err
 	}
 
-	// Merge custom-data new protocols into customProtocols list
-	allCustomProtocols := append(customProtocols, customDataResult.NewProtocols...)
+	autoMeta := make(map[string]api.Protocol)
+	for _, p := range protocols {
+		if !protocolUsesOracle(p, cfg.Oracle.Name) {
+			continue
+		}
+		slug := protocolSlug(p)
+		if slug == "" {
+			continue
+		}
+		autoMeta[slug] = p
+	}
 
-	merged := MergeProtocolLists(autoSlugs, allCustomProtocols)
+	// Merge custom-data new protocols into customProtocols list
+	allCustomProtocols := append(baseCustomProtocols, customDataResult.NewProtocols...)
+
+	merged := MergeProtocolLists(autoSlugs, allCustomProtocols, autoMeta)
 	if len(merged) == 0 {
 		tvlLogger.Info("tvl_no_protocols", "reason", "no auto or custom slugs")
 		return nil
 	}
 
+	fetchSlugs := make([]string, 0, len(merged))
+	for _, p := range merged {
+		if p.Source == "auto" {
+			fetchSlugs = append(fetchSlugs, p.Slug)
+		}
+	}
+
 	tvlLogger.Info("tvl_pipeline_started",
 		"timestamp", start.Format(time.RFC3339),
 		"auto_slugs", len(autoSlugs),
-		"custom_protocols", len(customProtocols),
+		"custom_protocols", len(baseCustomProtocols),
 		"custom_data_new_protocols", len(customDataResult.NewProtocols),
 		"merged", len(merged),
+		"fetch_targets", len(fetchSlugs),
 	)
 
-	slugs := make([]string, 0, len(merged))
-	for _, p := range merged {
-		slugs = append(slugs, p.Slug)
-	}
-
-	tvlData, fetchErr := FetchAllTVL(ctx, client, slugs, tvlLogger)
+	tvlData, fetchErr := FetchAllTVL(ctx, client, fetchSlugs, tvlLogger)
 	if fetchErr != nil {
 		tvlLogger.Warn("tvl_fetch_errors_present", "error", fetchErr)
 	}
@@ -136,7 +152,44 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Pro
 		"custom_only_protocols", mergeStats.CustomOnlyProtocols,
 	)
 
-	output := GenerateTVLOutput(merged, mergedTVLData)
+	customDataSlugs := make(map[string]struct{}, len(customDataResult.History))
+	for slug := range customDataResult.History {
+		customDataSlugs[slug] = struct{}{}
+	}
+
+	// Partition protocols: those with custom-data go to custom-data.json; others stay in tvl-data.json.
+	tvlProtocols := make([]models.MergedProtocol, 0, len(merged))
+	customProtocols := make([]models.MergedProtocol, 0, len(customDataSlugs))
+	for _, p := range merged {
+		if _, ok := customDataSlugs[p.Slug]; ok {
+			customProtocols = append(customProtocols, p)
+			continue
+		}
+		tvlProtocols = append(tvlProtocols, p)
+	}
+
+	// Ensure custom-only slugs missing from merged list are still emitted.
+	for slug := range customDataSlugs {
+		found := false
+		for _, p := range customProtocols {
+			if p.Slug == slug {
+				found = true
+				break
+			}
+		}
+		if !found {
+			customProtocols = append(customProtocols, models.MergedProtocol{
+				Slug:     slug,
+				Source:   "custom-data",
+				URL:      customDataResult.Metadata[slug].URL,
+				Category: customDataResult.Metadata[slug].Category,
+				Chains:   customDataResult.Metadata[slug].Chains,
+			})
+		}
+	}
+
+	output := GenerateTVLOutput(tvlProtocols, mergedTVLData)
+	customOutput := GenerateCustomDataOutput(customProtocols, mergedTVLData, customDataResult.Metadata)
 
 	if dryRun {
 		tvlLogger.Info("tvl_dry_run_skip_writes_and_state")
@@ -144,6 +197,9 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Pro
 	}
 
 	if err := WriteTVLOutputs(ctx, outputDir, output); err != nil {
+		return err
+	}
+	if err := WriteCustomDataOutputs(ctx, outputDir, customOutput); err != nil {
 		return err
 	}
 

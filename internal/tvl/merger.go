@@ -4,25 +4,30 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/switchboard-xyz/defillama-extract/internal/api"
 	"github.com/switchboard-xyz/defillama-extract/internal/models"
 )
 
 // MergeProtocolLists combines auto-detected protocol slugs with custom protocol
 // definitions, deduplicating by slug. Custom protocols always take precedence
 // over auto-detected entries when a slug exists in both inputs.
-func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []models.MergedProtocol {
+func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol, autoMeta map[string]api.Protocol) []models.MergedProtocol {
 	merged := make(map[string]models.MergedProtocol, len(autoSlugs)+len(custom))
 
 	for _, slug := range autoSlugs {
 		docs := autoDocsProof(slug)
+		meta := autoMeta[slug]
 		merged[slug] = models.MergedProtocol{
 			Slug:            slug,
 			Source:          "auto",
 			IsOngoing:       false,
+			URL:             meta.URL,
 			SimpleTVSRatio:  1.0,
 			IntegrationDate: nil,
 			DocsProof:       &docs,
 			IsDefillama:     true, // auto-detected from /oracles endpoint
+			Category:        meta.Category,
+			Chains:          meta.Chains,
 		}
 	}
 
@@ -35,6 +40,7 @@ func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol) []mo
 			Slug:            cp.Slug,
 			Source:          "custom",
 			IsOngoing:       cp.IsOngoing,
+			URL:             cp.URL,
 			SimpleTVSRatio:  cp.SimpleTVSRatio,
 			IntegrationDate: cp.Date,
 			DocsProof:       cp.DocsProof,

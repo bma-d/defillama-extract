@@ -2402,13 +2402,13 @@
       "totalLiquidityUSD": 24755802
     },
     {
-      "date": 1765563023,
-      "totalLiquidityUSD": 25313647
+      "date": 1765578455,
+      "totalLiquidityUSD": 25748151
     }
   ],
   "currentChainTvls": {
-    "CORE": 25313647.4913,
-    "CORE-borrowed": 14288611.42577,
-    "borrowed": 14288611.42577
+    "CORE": 25748151.2309,
+    "CORE-borrowed": 14323184.86958,
+    "borrowed": 14323184.86958
   }
 }
