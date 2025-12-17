@@ -4362,13 +4362,33 @@
       "totalLiquidityUSD": 50449
     },
     {
-      "date": 1765591427,
+      "date": 1765584000,
       "totalLiquidityUSD": 50453
+    },
+    {
+      "date": 1765670400,
+      "totalLiquidityUSD": 50451
+    },
+    {
+      "date": 1765756800,
+      "totalLiquidityUSD": 50452
+    },
+    {
+      "date": 1765843200,
+      "totalLiquidityUSD": 50450
+    },
+    {
+      "date": 1765929600,
+      "totalLiquidityUSD": 50450
+    },
+    {
+      "date": 1765931063,
+      "totalLiquidityUSD": 50450
     }
   ],
   "currentChainTvls": {
-    "Aptos": 50453.91647,
-    "Aptos-borrowed": 12444.27166,
-    "borrowed": 12444.27166
+    "Aptos": 50450.38289,
+    "Aptos-borrowed": 12257.67928,
+    "borrowed": 12257.67928
   }
 }

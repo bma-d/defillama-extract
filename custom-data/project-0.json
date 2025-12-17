@@ -6,6 +6,8 @@
   "is-defillama": false,
   "category": "Derivatives",
   "chains": ["Solana"],
+  "github_proof": "https://github.com/0dotxyz/switchboard-crossbar-hosting",
+  "docs_proof": "https://blog.0.xyz/blog/building-project-0-s-backend#dr-blocks-and-switchboard",
   "url": "https://www.0.xyz/",
   "tvl_history": [
     {

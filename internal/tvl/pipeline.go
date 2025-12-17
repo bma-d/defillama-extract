@@ -124,9 +124,17 @@ func RunTVLPipeline(ctx context.Context, cfg *config.Config, protocols []api.Pro
 		return nil
 	}
 
+	// Build set of slugs that exist on DefiLlama (can fetch TVL from API)
+	autoSlugSet := make(map[string]struct{}, len(autoSlugs))
+	for _, slug := range autoSlugs {
+		autoSlugSet[slug] = struct{}{}
+	}
+
+	// Fetch TVL for protocols that exist on DefiLlama, regardless of source.
+	// A custom protocol may override an auto-detected one but still needs TVL fetched.
 	fetchSlugs := make([]string, 0, len(merged))
 	for _, p := range merged {
-		if p.Source == "auto" {
+		if _, existsOnDefillama := autoSlugSet[p.Slug]; existsOnDefillama {
 			fetchSlugs = append(fetchSlugs, p.Slug)
 		}
 	}

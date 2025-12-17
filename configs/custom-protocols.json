@@ -220,5 +220,13 @@
     "simple-tvs-ratio": 0.0,
     "is-defillama": true,
     "docs_proof": "https://github.com/blockworks-foundation/mango-docs/blob/a4d15dec5b52e69fd402ea5bda83a3dba38afd1e/mango-markets/oracles.md?plain=1#L6"
+  },
+  {
+    "slug": "jito-liquid-staking",
+    "is-ongoing": false,
+    "live": true,
+    "url": "https://www.jito.network/",
+    "simple-tvs-ratio": 0.0,
+    "is-defillama": true
   }
 ]

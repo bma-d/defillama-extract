@@ -246,7 +246,23 @@
       "totalLiquidityUSD": 0
     },
     {
-      "date": 1765580831,
+      "date": 1765584000,
+      "totalLiquidityUSD": 0
+    },
+    {
+      "date": 1765670400,
+      "totalLiquidityUSD": 0
+    },
+    {
+      "date": 1765756800,
+      "totalLiquidityUSD": 0
+    },
+    {
+      "date": 1765843200,
+      "totalLiquidityUSD": 0
+    },
+    {
+      "date": 1765925807,
       "totalLiquidityUSD": 0
     }
   ],
