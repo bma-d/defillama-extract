@@ -28,3 +28,8 @@ lint:
 
 clean:
 	rm -rf bin data
+
+run:
+	rm ./bin/extractor
+	make build
+	./bin/extractor --once --config configs/config.yaml
