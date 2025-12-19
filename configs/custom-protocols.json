@@ -10,12 +10,12 @@
     "github_proof": "https://github.com/drift-labs/drift-py/blob/2e595c576b436ef23422d4cd932fe8d5318c04ae/sdk/constants.py#L215"
   },
   {
-    "slug": "thala",
+    "slug": "thala-cdp",
     "is-ongoing": false,
     "live": true,
     "url": "https://app.thala.fi/",
     "simple-tvs-ratio": 0.5,
-    "is-defillama": false,
+    "is-defillama": true,
     "docs_proof": "https://docs.thala.fi/overview/move-dollar-mod/oracles#switchboard",
     "github_proof": "https://github.com/ThalaLabs/sbv2-movement"
   },
@@ -228,5 +228,15 @@
     "url": "https://www.jito.network/",
     "simple-tvs-ratio": 0.0,
     "is-defillama": true
+  },
+  {
+    "slug": "moar-market",
+    "is-ongoing": false,
+    "live": true,
+    "url": "https://app.moar.market/",
+    "simple-tvs-ratio": 0.5,
+    "is-defillama": true,
+    "github_proof": "https://github.com/moar-market/sdk/blob/7cc2d4aa8456614b862411c9440372984f9f3669/packages/sdk/src/abis/moarTiered_tiered_oracle_abi.ts#L109",
+    "docs_proof": "https://docs.moar.market/protocol-overview/tiered-oracle#oracle-sources-and-tiers"  
   }
 ]

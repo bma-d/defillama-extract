@@ -1658,7 +1658,11 @@
       "totalLiquidityUSD": 7809504
     },
     {
-      "date": 1766091779,
+      "date": 1766102400,
+      "totalLiquidityUSD": 7794923
+    },
+    {
+      "date": 1766102663,
       "totalLiquidityUSD": 7794923
     }
   ],

@@ -1526,15 +1526,15 @@
       "totalLiquidityUSD": 10626
     },
     {
-      "date": 1766077931,
-      "totalLiquidityUSD": 10694
+      "date": 1766109791,
+      "totalLiquidityUSD": 10460
     }
   ],
   "currentChainTvls": {
-    "RENEC": 3374.34104,
-    "RENEC-borrowed": 292095.93986,
-    "Solana": 7320.33988,
-    "Solana-borrowed": 304452.3501,
-    "borrowed": 596548.28996
+    "RENEC": 3337.0704,
+    "RENEC-borrowed": 289450.1654,
+    "Solana": 7123.61907,
+    "Solana-borrowed": 304431.76865,
+    "borrowed": 593881.93405
   }
 }
