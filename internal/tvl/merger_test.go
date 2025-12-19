@@ -21,7 +21,7 @@ func TestMergeProtocolLists_AutoOnly(t *testing.T) {
 	}
 
 	for _, p := range got {
-		if p.Source != "auto" || p.SimpleTVSRatio != 1.0 || p.IsOngoing || p.IntegrationDate != nil {
+		if p.Source != "auto" || p.SimpleTVSRatio != 0.0 || p.IsOngoing || p.IntegrationDate != nil {
 			t.Fatalf("auto defaults not applied: %+v", p)
 		}
 		if p.DocsProof == nil || *p.DocsProof != autoDocsProof(p.Slug) {

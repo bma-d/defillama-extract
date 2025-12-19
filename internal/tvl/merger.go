@@ -22,7 +22,7 @@ func MergeProtocolLists(autoSlugs []string, custom []models.CustomProtocol, auto
 			Source:          "auto",
 			IsOngoing:       false,
 			URL:             meta.URL,
-			SimpleTVSRatio:  1.0,
+			SimpleTVSRatio:  0.0, // Default to 0; only custom-protocols.json can set non-zero values
 			IntegrationDate: nil,
 			DocsProof:       &docs,
 			IsDefillama:     true, // auto-detected from /oracles endpoint
