@@ -4,10 +4,10 @@
     "is-ongoing": false,
     "live": true,
     "url": "https://www.drift.trade/",
-    "simple-tvs-ratio": 0.5,
+    "simple-tvs-ratio": 0.0,
     "is-defillama": false,
     "docs_proof": "https://docs.drift.trade/trading/market-specs#switchboard",
-    "github_proof": "https://github.com/drift-labs/drift-py/blob/2e595c576b436ef23422d4cd932fe8d5318c04ae/sdk/constants.py#L215"
+    "github_proof": "https://github.com/drift-labs/protocol-v2/blob/024db6abba2bcefb0e9f494a2d4f42a8337f8ae9/sdk/src/constants/perpMarkets.ts#L325"
   },
   {
     "slug": "thala-cdp",
