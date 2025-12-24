@@ -9,5 +9,8 @@ vendor/
 # Test artifacts
 internal/api/api-cache/
 
+# API cache
+api-cache/
+
 # OS/filesystem
 .DS_Store
